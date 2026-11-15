@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MADHAV ENTERPRISES &amp; SHIVOM SALES — ERP &amp; Field Portal</title>
+  <title>MADHAV ENTERPRISES &amp; SHIVOM SALES — ERP Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -110,6 +110,18 @@
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #facc15; }
     .dot.live { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
 
+    .badge-admin {
+      background: #facc15;
+      color: #713f12;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     .btn {
       border: none;
       border-radius: 8px;
@@ -159,13 +171,29 @@
     }
     .nav-tab:hover { color: var(--primary); }
     .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .nav-tab.field-tab { color: #0f766e; font-weight: 800; }
-    .nav-tab.field-tab.active { color: #0f766e; border-bottom-color: #0f766e; }
+    .nav-tab.open-tab { color: #0f766e; font-weight: 700; }
+    .nav-tab.open-tab.active { color: #0f766e; border-bottom-color: #0f766e; }
+    .admin-only-item { display: none; }
 
     /* Layout Container */
     .container { max-width: 1440px; margin: 18px auto; padding: 0 16px; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+
+    /* Notice Banner for Open Portal */
+    .open-notice-banner {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #0f766e;
+      font-size: 0.82rem;
+    }
 
     /* KPI Grid */
     .kpi-grid {
@@ -249,7 +277,6 @@
     .pill-yellow { background: var(--yellow-bg); color: var(--yellow-txt); }
     .pill-green { background: var(--green-bg); color: var(--green-txt); }
     .pill-gray { background: #f1f5f9; color: var(--muted); }
-    .pill-teal { background: #ccfbf1; color: #0f766e; }
 
     /* Forms */
     .form-grid {
@@ -272,66 +299,6 @@
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,58,95,0.1); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
     @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    /* ==================== FIELD MODE STYLES ==================== */
-    .field-hero-bar {
-      background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-      color: #fff;
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 4px 12px rgba(15,118,110,0.2);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .field-hero-info h2 { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .field-hero-info p { font-size: 0.8rem; opacity: 0.9; margin-top: 3px; }
-    .field-stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .field-stat-box {
-      background: rgba(255,255,255,0.16);
-      backdrop-filter: blur(4px);
-      padding: 8px 14px;
-      border-radius: 10px;
-      text-align: center;
-    }
-    .field-stat-box .fs-num { font-size: 1.15rem; font-weight: 800; }
-    .field-stat-box .fs-txt { font-size: 0.68rem; opacity: 0.85; text-transform: uppercase; }
-
-    /* Field Sub-Tabs Switcher */
-    .field-subtabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-    .field-subtab-btn {
-      flex: 1;
-      min-width: 150px;
-      padding: 11px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #fff;
-      font-size: 0.84rem;
-      font-weight: 700;
-      color: var(--muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      transition: 0.15s ease;
-    }
-    .field-subtab-btn.active {
-      background: #0f766e;
-      color: #fff;
-      border-color: #0f766e;
-      box-shadow: 0 3px 10px rgba(15,118,110,0.25);
-    }
 
     /* Filter Chips Bar */
     .chip-bar {
@@ -356,7 +323,7 @@
     .chip:hover { border-color: #0f766e; color: #0f766e; }
     .chip.active { background: #0f766e; color: #fff; border-color: #0f766e; }
 
-    /* Field Card Grid */
+    /* Card Grid */
     .field-card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -366,7 +333,7 @@
       .field-card-grid { grid-template-columns: 1fr; }
     }
 
-    /* Dealer Outstanding Mobile Card */
+    /* Dealer Outstanding Card */
     .dealer-card {
       background: #fff;
       border-radius: 12px;
@@ -386,7 +353,7 @@
       margin-bottom: 10px;
     }
     .dealer-name { font-size: 0.96rem; font-weight: 800; color: var(--primary); }
-    .dealer-area { font-size: 0.78rem; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .dealer-area { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
     .dealer-bal-box { text-align: right; }
     .dealer-bal-num { font-size: 1.25rem; font-weight: 800; color: #dc2626; }
     .dealer-bal-zero { color: #166534; }
@@ -400,9 +367,9 @@
       border-bottom: 1px dashed var(--border);
       margin: 8px 0 12px;
     }
-    .dealer-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .dealer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* Field Stock Mobile Card */
+    /* Stock Card */
     .stock-card {
       background: #fff;
       border-radius: 12px;
@@ -431,7 +398,7 @@
       background: #f8fafc;
       padding: 8px 10px;
       border-radius: 8px;
-      margin: 8px 0 12px;
+      margin-top: 8px;
     }
 
     /* Modals */
@@ -469,7 +436,6 @@
       margin: 12px 0;
     }
 
-    /* Ledger Modal Table */
     .ledger-row {
       display: flex;
       justify-content: space-between;
@@ -596,7 +562,7 @@
     </div>
   </div>
 
-  <!-- ==================== MAIN ERP APP SHELL ==================== -->
+  <!-- ==================== MAIN APP SHELL ==================== -->
   <div id="appShell" style="display:none;">
     <header class="topbar">
       <div class="brand">
@@ -609,126 +575,115 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="btn btn-amber btn-sm" onclick="switchTab('field', document.querySelector('[data-tab=field]'))">🎯 Field Mode</button>
+        <span id="adminBadgeWrap" style="display:none;">
+          <span class="badge-admin">👑 Owner Admin</span>
+        </span>
         <button class="btn btn-outline btn-sm" onclick="returnToGateway()">⇄ Switch Co.</button>
         <span class="badge-status">
           <span class="dot live" id="syncDot"></span>
-          <span id="syncText">Live Cloud Sync</span>
+          <span id="syncText">Live Sync</span>
         </span>
-        <button class="btn btn-white btn-sm" onclick="exportToExcel()">Export Excel</button>
+        <span id="ownerLoginBtnWrap">
+          <button class="btn btn-amber btn-sm" onclick="openLoginModal()">🔐 Owner Login</button>
+        </span>
+        <span id="ownerLogoutBtnWrap" style="display:none;">
+          <button class="btn btn-white btn-sm" onclick="exportToExcel()">Export Excel</button>
+          <button class="btn btn-danger btn-sm" onclick="ownerLogout()">🚪 Logout</button>
+        </span>
       </div>
     </header>
 
+    <!-- Navigation Bar: Open Portal has ONLY 2 TABS. Admin Login unlocks the rest! -->
     <nav class="nav-bar">
-      <button class="nav-tab field-tab active" data-tab="field" onclick="switchTab('field', this)">🎯 1. Field Mobile Mode</button>
-      <button class="nav-tab" data-tab="dashboard" onclick="switchTab('dashboard', this)">2. Dashboard</button>
-      <button class="nav-tab" data-tab="stock" onclick="switchTab('stock', this)">3. Stock &amp; Inventory</button>
-      <button class="nav-tab" data-tab="orders" onclick="switchTab('orders', this)">4. Order, Dispatch &amp; Bill</button>
-      <button class="nav-tab" data-tab="collection" onclick="switchTab('collection', this)">5. Collection (Cash / Bank)</button>
-      <button class="nav-tab" data-tab="ageing" onclick="switchTab('ageing', this)">6. Party Balance &amp; Ageing</button>
-      <button class="nav-tab" data-tab="masters" onclick="switchTab('masters', this)">7. Master Data &amp; Team</button>
+      <button class="nav-tab open-tab active" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 1. लाईव्ह स्टॉक व रेट (Stock)</button>
+      <button class="nav-tab open-tab" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 2. उधारी यादी (Outstanding)</button>
+      <!-- Admin Only Tabs -->
+      <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 New Bill / GST Invoice</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 Record Collection</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
     </nav>
 
     <main class="container">
 
-      <!-- ==================== TAB: FIELD MODE (MOBILE-FIRST) ==================== -->
-      <section id="tab-field" class="tab-panel active">
-        <!-- Field Summary Banner -->
-        <div class="field-hero-bar">
-          <div class="field-hero-info">
-            <h2>🎯 Field Sales &amp; Recovery Counter</h2>
-            <p>Executive: <strong>Prashik Hajare (Manager &amp; Recovery)</strong> | Live Cloud Sync Active</p>
+      <!-- ==================== OPEN TAB 1: LIVE STOCK & RATES (READ-ONLY) ==================== -->
+      <section id="tab-open-stock" class="tab-panel active">
+        <div class="open-notice-banner">
+          <div>
+            <strong>📦 गोदाम लाईव्ह स्टॉक व डीलर रेट कार्ड (Live Stock View)</strong>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">गोदामातील उपलब्ध माल, डीलर रेट आणि चालू स्कीम्स पाहण्यासाठी</div>
           </div>
-          <div class="field-stat-row">
-            <div class="field-stat-box">
-              <div class="fs-num" id="fStatCash">₹0</div>
-              <div class="fs-txt">Today's Cash</div>
-            </div>
-            <div class="field-stat-box">
-              <div class="fs-num" id="fStatBank">₹0</div>
-              <div class="fs-txt">Today's Online/UPI</div>
-            </div>
-            <div class="field-stat-box">
-              <div class="fs-num" id="fStatTotal">₹0</div>
-              <div class="fs-txt">Total Today Col.</div>
-            </div>
-          </div>
+          <span class="pill pill-green">✓ Read-Only View</span>
         </div>
 
-        <!-- Field Sub-navigation Switcher -->
-        <div class="field-subtabs">
-          <button class="field-subtab-btn active" id="fTabBtnDues" onclick="switchFieldSection('dues')">
-            🔴 1. उधारी वसुली (Outstanding)
-          </button>
-          <button class="field-subtab-btn" id="fTabBtnStock" onclick="switchFieldSection('stock')">
-            📦 2. लाईव्ह स्टॉक व रेट (Stock)
-          </button>
-        </div>
-
-        <!-- FIELD SECTION 1: OUTSTANDING & CALL -->
-        <div id="fieldSecDues">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <span class="card-title">मार्केट उधारी व वसुली यादी (Dealer Outstandings)</span>
-                <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">एरिया निवडून थेट कॉल करा, WhatsApp रिमाइंडर पाठवा किंवा पैसे जमा करा</div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <select id="fieldDueFilter" class="form-control" style="width:160px;" onchange="renderFieldDealers()">
-                  <option value="DUE_ONLY">फक्त बाकी असलेले (> ₹0)</option>
-                  <option value="ALL">सर्व ६३ पार्ट्या (All)</option>
-                  <option value="Red">Red Alert (≥90d / ≥20k)</option>
-                  <option value="Yellow">Yellow Alert (≥60d / ≥15k)</option>
-                  <option value="Settled">शून्य बाकी (₹0)</option>
-                </select>
-                <input type="text" id="fieldDealerSearch" class="form-control" style="width:200px;" placeholder="डीलर, एरिया, मोबाईल..." oninput="renderFieldDealers()" />
-              </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">उपलब्ध प्रॉडक्ट यादी (Available Inventory)</span>
             </div>
-
-            <!-- Route / Area Chips Bar -->
-            <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-              <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">एरियानुसार निवडा (Route Filter):</div>
-              <div class="chip-bar" id="fieldAreaChips"></div>
-            </div>
-
-            <div style="padding:16px;">
-              <div class="field-card-grid" id="fieldDealerCards"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="openStockFilter" class="form-control" style="width:160px;" onchange="renderOpenStock()">
+                <option value="ALL">सर्व आयटम्स</option>
+                <option value="AVAIL">उपलब्ध माल (> 0)</option>
+                <option value="LOW">कमी स्टॉक (Low Stock)</option>
+              </select>
+              <input type="text" id="openStockSearch" class="form-control" style="width:200px;" placeholder="आयटम, कोड, HSN..." oninput="renderOpenStock()" />
             </div>
           </div>
-        </div>
 
-        <!-- FIELD SECTION 2: LIVE STOCK & RATE CARD -->
-        <div id="fieldSecStock" style="display:none;">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <span class="card-title">गोदाम लाईव्ह स्टॉक व डीलर रेट कार्ड</span>
-                <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">उपलब्ध नग, डीलर रेट आणि स्कीम तपासून जागेवर नवीन ऑर्डर बुक करा</div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <select id="fieldStockFilter" class="form-control" style="width:160px;" onchange="renderFieldStock()">
-                  <option value="ALL">सर्व आयटम्स</option>
-                  <option value="AVAIL">उपलब्ध स्टॉक (> 0)</option>
-                  <option value="LOW">कमी स्टॉक (Low Stock)</option>
-                </select>
-                <input type="text" id="fieldStockSearch" class="form-control" style="width:200px;" placeholder="आयटम, कोड, HSN..." oninput="renderFieldStock()" />
-              </div>
-            </div>
+          <!-- Category Chips -->
+          <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">कॅटेगरीनुसार निवडा:</div>
+            <div class="chip-bar" id="openCategoryChips"></div>
+          </div>
 
-            <!-- Category Chips Bar -->
-            <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-              <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">कॅटेगरीनुसार निवडा:</div>
-              <div class="chip-bar" id="fieldCategoryChips"></div>
-            </div>
-
-            <div style="padding:16px;">
-              <div class="field-card-grid" id="fieldStockCards"></div>
-            </div>
+          <div style="padding:16px;">
+            <div class="field-card-grid" id="openStockCards"></div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== TAB 2: DASHBOARD ==================== -->
+      <!-- ==================== OPEN TAB 2: OUTSTANDING BALANCES (READ-ONLY) ==================== -->
+      <section id="tab-open-dues" class="tab-panel">
+        <div class="open-notice-banner">
+          <div>
+            <strong>🔴 मार्केट उधारी यादी (Outstanding Ledger View)</strong>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">डीलरची शिल्लक बाकी पाहण्यासाठी, कॉल लावण्यासाठी व WhatsApp मेसेज पाठवण्यासाठी</div>
+          </div>
+          <span class="pill pill-red">Total Due: ₹3,24,350</span>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">सर्व डीलर्सची बाकी यादी (Dealer Balances)</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="openDueFilter" class="form-control" style="width:160px;" onchange="renderOpenDealers()">
+                <option value="DUE_ONLY">फक्त बाकी असलेले (> ₹0)</option>
+                <option value="ALL">सर्व ६३ पार्ट्या (All)</option>
+                <option value="Red">Red Alert (≥90d / ≥20k)</option>
+                <option value="Yellow">Yellow Alert (≥60d / ≥15k)</option>
+                <option value="Settled">शून्य बाकी (₹0)</option>
+              </select>
+              <input type="text" id="openDealerSearch" class="form-control" style="width:200px;" placeholder="डीलर, एरिया, मोबाईल..." oninput="renderOpenDealers()" />
+            </div>
+          </div>
+
+          <!-- Route / Area Chips -->
+          <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">एरियानुसार निवडा (Route Filter):</div>
+            <div class="chip-bar" id="openAreaChips"></div>
+          </div>
+
+          <div style="padding:16px;">
+            <div class="field-card-grid" id="openDealerCards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== ADMIN TAB 1: DASHBOARD ==================== -->
       <section id="tab-dashboard" class="tab-panel">
         <div class="kpi-grid">
           <div class="kpi-card">
@@ -783,7 +738,7 @@
           <div class="card">
             <div class="card-header">
               <span class="card-title">Receivables Ageing Alert Summary</span>
-              <button class="btn btn-primary btn-sm" onclick="switchTab('ageing', document.querySelector('[data-tab=ageing]'))">View All Parties</button>
+              <button class="btn btn-primary btn-sm" onclick="switchTab('open-dues', document.querySelector('[data-tab=open-dues]'))">View All Parties</button>
             </div>
             <div class="table-wrap">
               <table>
@@ -803,7 +758,7 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">Recent Invoices &amp; Order Dispatches</span>
-            <button class="btn btn-primary btn-sm" onclick="switchTab('orders', document.querySelector('[data-tab=orders]'))">+ New Order / Bill</button>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('admin-orders', document.querySelector('[data-tab=admin-orders]'))">+ New Order / Bill</button>
           </div>
           <div class="table-wrap">
             <table>
@@ -826,8 +781,8 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 3: STOCK & INVENTORY ==================== -->
-      <section id="tab-stock" class="tab-panel">
+      <!-- ==================== ADMIN TAB 2: INWARD STOCK ==================== -->
+      <section id="tab-admin-stock" class="tab-panel">
         <div class="card">
           <div class="card-header"><span class="card-title">Add New Purchase / Inward Stock Entry</span></div>
           <form class="form-grid" onsubmit="handleInwardStock(event)">
@@ -852,7 +807,7 @@
 
         <div class="card">
           <div class="card-header">
-            <span class="card-title">Live Stock &amp; Inventory Register</span>
+            <span class="card-title">Live Stock &amp; Inventory Register (Admin View)</span>
             <div style="display:flex;gap:8px;">
               <select id="stockFilter" class="form-control" style="width:170px;" onchange="renderStockTable()">
                 <option value="ALL">All Items</option>
@@ -886,8 +841,8 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 4: ORDER, DISPATCH & BILL ==================== -->
-      <section id="tab-orders" class="tab-panel">
+      <!-- ==================== ADMIN TAB 3: ORDER, DISPATCH & BILL ==================== -->
+      <section id="tab-admin-orders" class="tab-panel">
         <div class="card">
           <div class="card-header"><span class="card-title">Book New Sales Order / Generate GST Bill</span></div>
           <form class="form-grid" onsubmit="handleCreateOrder(event)">
@@ -896,7 +851,7 @@
               <input type="date" id="ordDate" class="form-control" required />
             </div>
             <div class="form-group" style="grid-column: span 2;">
-              <label>Party / Dealer Name (Active Parties)</label>
+              <label>Party / Dealer Name</label>
               <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." required />
             </div>
             <div class="form-group">
@@ -970,8 +925,8 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 5: COLLECTION ==================== -->
-      <section id="tab-collection" class="tab-panel">
+      <!-- ==================== ADMIN TAB 4: COLLECTION ==================== -->
+      <section id="tab-admin-collection" class="tab-panel">
         <div class="card">
           <div class="card-header"><span class="card-title">Record Payment Collection (Cash / Bank)</span></div>
           <form class="form-grid" onsubmit="handleCreateCollection(event)">
@@ -1033,47 +988,8 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 6: PARTY BALANCE & AGEING ==================== -->
-      <section id="tab-ageing" class="tab-panel">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Party Balances &amp; Ageing Alerts</span>
-            <div style="display:flex;gap:8px;">
-              <select id="ageingFilter" class="form-control" style="width:180px;" onchange="renderAgeingTable()">
-                <option value="DUE_ONLY">With Balance (> ₹0)</option>
-                <option value="ALL">All Parties</option>
-                <option value="Red">Red Alert (≥90d / ≥20k)</option>
-                <option value="Yellow">Yellow Alert (≥60d / ≥15k)</option>
-                <option value="Green">Green Alert (≥30d / ≥10k)</option>
-                <option value="Settled">Settled (₹0 Balance)</option>
-              </select>
-              <input type="text" id="ageingSearch" class="form-control" style="width:220px;" placeholder="Search party, area, phone..." oninput="renderAgeingTable()" />
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Party Name</th>
-                  <th>Area / Mobile</th>
-                  <th class="text-right">Opening Bal</th>
-                  <th class="text-right">Dispatched Sales</th>
-                  <th class="text-right">Cash Paid</th>
-                  <th class="text-right">Bank Paid</th>
-                  <th class="text-right">Net Balance</th>
-                  <th class="text-center">Days</th>
-                  <th class="text-center">Alert</th>
-                  <th class="text-center">WhatsApp</th>
-                </tr>
-              </thead>
-              <tbody id="ageingTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== TAB 7: MASTERS & TEAM ==================== -->
-      <section id="tab-masters" class="tab-panel">
+      <!-- ==================== ADMIN TAB 5: MASTERS & TEAM ==================== -->
+      <section id="tab-admin-masters" class="tab-panel">
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><span class="card-title">Add New Product</span></div>
@@ -1144,7 +1060,10 @@
         </div>
 
         <div class="card">
-          <div class="card-header"><span class="card-title">Management &amp; Sales Team</span></div>
+          <div class="card-header">
+            <span class="card-title">Management &amp; Sales Team</span>
+            <button class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="openModal('firebaseModal')">Cloud Sync Config</button>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -1162,83 +1081,19 @@
   <datalist id="partyDatalist"></datalist>
   <datalist id="productDatalist"></datalist>
 
-  <!-- ==================== QUICK FIELD COLLECTION MODAL ==================== -->
-  <div class="modal-backdrop" id="fieldCollectModal">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="margin:0;color:#0f766e;">💵 पैसे जमा करा (Quick Receipt)</h3>
-        <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('fieldCollectModal')">✕</button>
-      </div>
-      <p id="fcPartyHeader" style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;"></p>
-      <form onsubmit="submitFieldCollection(event)">
-        <input type="hidden" id="fcPartyId" />
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>जमा रक्कम (Amount in ₹)</label>
-          <input type="number" id="fcAmount" class="form-control font-bold" min="1" step="0.01" placeholder="उदा. 5000" style="font-size:1.1rem;color:#15803d;" required />
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>पेमेंट पद्धत (Mode)</label>
-          <select id="fcMode" class="form-control" required>
-            <option value="Cash">रोख (Cash)</option>
-            <option value="Bank">ऑनलाईन (GPay / PhonePe / UPI)</option>
-            <option value="Bank">बँक चेक (Cheque)</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>कोणाकडे जमा झाले? (Collected By)</label>
-          <select id="fcSalesperson" class="form-control" required>
-            <option value="Prashik Hajare">प्राशिक हजारे (Prashik)</option>
-            <option value="Roshan Thakre">रोशन ठाकरे (Roshan)</option>
-          </select>
-        </div>
+  <!-- ==================== OWNER LOGIN MODAL ==================== -->
+  <div class="modal-backdrop" id="ownerLoginModal">
+    <div class="modal" style="max-width:380px;text-align:center;">
+      <div style="font-size:2.4rem;margin-bottom:8px;">🔐</div>
+      <h3 style="margin-bottom:4px;color:var(--primary);">Owner Login</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">Enter your PIN to access billing, inventory &amp; admin controls.</p>
+      <form onsubmit="verifyOwnerLogin(event)">
         <div class="form-group" style="margin-bottom:18px;">
-          <label>रिमार्क / संदर्भ (Remark)</label>
-          <input type="text" id="fcRemark" class="form-control" placeholder="उदा. Cash to Prashik / Online UPI" />
+          <input type="password" id="ownerPinInput" class="form-control text-center font-bold" maxlength="10" placeholder="••••" style="font-size:1.4rem;letter-spacing:6px;padding:12px;" required autofocus />
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;">
-          <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('fieldCollectModal')">रद्द करा</button>
-          <button type="submit" class="btn btn-success">✓ पावती सेव्ह करा</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ==================== QUICK FIELD ORDER MODAL ==================== -->
-  <div class="modal-backdrop" id="fieldOrderModal">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="margin:0;color:#1e3a5f;">🛒 नवीन ऑर्डर बुक करा (Book Order)</h3>
-        <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('fieldOrderModal')">✕</button>
-      </div>
-      <p id="foHeader" style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;"></p>
-      <form onsubmit="submitFieldOrder(event)">
-        <input type="hidden" id="foPartyId" />
-        <input type="hidden" id="foProductId" />
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>डीलर / पार्टी निवडा</label>
-          <input type="text" list="partyDatalist" id="foPartyInput" class="form-control" placeholder="Type party name..." required />
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>प्रॉडक्ट निवडा</label>
-          <input type="text" list="productDatalist" id="foProductInput" class="form-control" placeholder="Type product name or code..." onchange="updateFieldOrderPreview()" oninput="updateFieldOrderPreview()" required />
-        </div>
-        <div class="grid-2" style="margin-bottom:12px;">
-          <div class="form-group">
-            <label>ऑर्डर नग (Qty) <span id="foAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
-            <input type="number" id="foQty" class="form-control font-bold" min="1" value="1" oninput="updateFieldOrderTotal()" required />
-          </div>
-          <div class="form-group">
-            <label>डीलर रेट (₹)</label>
-            <input type="number" id="foRate" class="form-control font-bold" min="0" step="0.01" oninput="updateFieldOrderTotal()" required />
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:18px;">
-          <label>एकूण बिल रक्कम (Total Amount)</label>
-          <input type="text" id="foTotalPreview" class="form-control font-bold" readonly value="₹0.00" style="font-size:1.1rem;color:#1e3a5f;" />
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;">
-          <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('fieldOrderModal')">रद्द करा</button>
-          <button type="submit" class="btn btn-primary">✓ ऑर्डर कन्फर्म करा</button>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;" onclick="closeModal('ownerLoginModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Login</button>
         </div>
       </form>
     </div>
@@ -4496,10 +4351,16 @@
     const STORAGE_KEY = "madhav_enterprises_erp_v3";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
+    const AUTH_SESSION_KEY = "madhav_admin_session";
+
+    // Secret Verification Hash for PIN
+    const PIN_HASH = "ba258b5a7eb00f1bb2da1943f42c46d45ae030163ba9fdfad4eefad0d9cb2319";
+    const PIN_NUM = 1753594;
 
     let activeCompany = "MADHAV";
-    let activeFieldArea = "ALL";
-    let activeFieldCategory = "ALL";
+    let activeArea = "ALL";
+    let activeCategory = "ALL";
+    let isAdminLoggedIn = false;
 
     let state = {
       products: [],
@@ -4532,6 +4393,10 @@
       const today = "2026-11-16";
       document.getElementById("ordDate").value = today;
       document.getElementById("colDate").value = today;
+
+      // Check Admin Session
+      isAdminLoggedIn = sessionStorage.getItem(AUTH_SESSION_KEY) === "true";
+      updateAdminUI();
 
       const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
       if (savedCo && COMPANIES[savedCo]) {
@@ -4608,9 +4473,14 @@
     }
 
     function switchTab(tabId, btnEl) {
+      if (!isAdminLoggedIn && (tabId === "dashboard" || tabId.startsWith("admin-"))) {
+        tabId = "open-stock";
+        btnEl = document.querySelector('[data-tab="open-stock"]');
+      }
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
-      document.getElementById("tab-" + tabId).classList.add("active");
+      const targetPanel = document.getElementById("tab-" + tabId);
+      if (targetPanel) targetPanel.classList.add("active");
       if (btnEl) btnEl.classList.add("active");
       else {
         const matchingTab = document.querySelector('[data-tab="' + tabId + '"]');
@@ -4619,15 +4489,73 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function switchFieldSection(secKey) {
-      document.getElementById("fTabBtnDues").classList.toggle("active", secKey === "dues");
-      document.getElementById("fTabBtnStock").classList.toggle("active", secKey === "stock");
-      document.getElementById("fieldSecDues").style.display = secKey === "dues" ? "block" : "none";
-      document.getElementById("fieldSecStock").style.display = secKey === "stock" ? "block" : "none";
-    }
-
     function openModal(id) { document.getElementById(id).classList.add("open"); }
     function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+    // ==================== OWNER AUTHENTICATION ====================
+    function openLoginModal() {
+      document.getElementById("ownerPinInput").value = "";
+      openModal("ownerLoginModal");
+      setTimeout(() => document.getElementById("ownerPinInput").focus(), 150);
+    }
+
+    function simpleHash(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    async function verifyOwnerLogin(e) {
+      e.preventDefault();
+      const entered = document.getElementById("ownerPinInput").value.trim();
+
+      let isMatch = false;
+      if (window.crypto && crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(entered));
+          const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+          if (hex === PIN_HASH) isMatch = true;
+        } catch (err) {}
+      }
+      if (!isMatch && simpleHash(entered) === PIN_NUM) {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        isAdminLoggedIn = true;
+        sessionStorage.setItem(AUTH_SESSION_KEY, "true");
+        closeModal("ownerLoginModal");
+        updateAdminUI();
+        switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
+        showToast("Welcome Owner! Full Admin Controls Unlocked.");
+      } else {
+        alert("Invalid PIN. Access denied.");
+        document.getElementById("ownerPinInput").value = "";
+        document.getElementById("ownerPinInput").focus();
+      }
+    }
+
+    function ownerLogout() {
+      isAdminLoggedIn = false;
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      updateAdminUI();
+      switchTab("open-stock", document.querySelector('[data-tab=open-stock]'));
+      showToast("Logged out to Open Portal View.");
+    }
+
+    function updateAdminUI() {
+      const adminItems = document.querySelectorAll(".admin-only-item");
+      adminItems.forEach(el => {
+        el.style.display = isAdminLoggedIn ? "inline-block" : "none";
+      });
+
+      document.getElementById("adminBadgeWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
+      document.getElementById("ownerLoginBtnWrap").style.display = isAdminLoggedIn ? "none" : "inline-block";
+      document.getElementById("ownerLogoutBtnWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
+    }
 
     // ==================== FIREBASE CLOUD SYNC ====================
     const DEFAULT_FIREBASE_CONFIG = {
@@ -4677,7 +4605,7 @@
       db = firebase.firestore();
       isFirebaseLive = true;
       document.getElementById("syncDot").classList.add("live");
-      document.getElementById("syncText").textContent = "Firebase Live Sync";
+      document.getElementById("syncText").textContent = "Live Sync";
 
       const prefix = activeCompany.toLowerCase() + "_";
       ["products", "parties", "salespersons", "orders", "collections"].forEach(col => {
@@ -4778,17 +4706,15 @@
       });
     }
 
-    // ==================== RENDER FUNCTIONS ====================
+    // ==================== REFRESH ALL ====================
     function refreshAll() {
       populateDropdowns();
-      renderFieldHero();
-      renderFieldDealers();
-      renderFieldStock();
+      renderOpenStock();
+      renderOpenDealers();
       renderDashboard();
       renderStockTable();
       renderOrdersTable();
       renderCollectionTable();
-      renderAgeingTable();
       renderMasterSalespersons();
     }
 
@@ -4811,27 +4737,87 @@
       document.getElementById("colSalesperson").innerHTML = spHtml;
     }
 
-    // ==================== FIELD MODE RENDERING ====================
-    function renderFieldHero() {
-      const today = "2026-11-16";
-      const prashikCols = state.collections.filter(c => c.salespersonName.includes("Prashik") || c.salespersonName.includes("Hajare"));
-      const cashToday = prashikCols.filter(c => c.mode === "Cash" && (!c.date || c.date >= today)).reduce((s, c) => s + Number(c.amount || 0), 0);
-      const bankToday = prashikCols.filter(c => c.mode === "Bank" && (!c.date || c.date >= today)).reduce((s, c) => s + Number(c.amount || 0), 0);
+    // ==================== OPEN PORTAL: LIVE STOCK ====================
+    function renderOpenStock() {
+      const stock = getComputedStock();
+      const q = (document.getElementById("openStockSearch").value || "").toLowerCase().trim();
+      const filterMode = document.getElementById("openStockFilter").value;
 
-      const allPrashikCash = prashikCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
-      const allPrashikBank = prashikCols.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
+      // Category chips
+      const catMap = {};
+      stock.forEach(p => {
+        const g = (p.group || "General").trim();
+        catMap[g] = (catMap[g] || 0) + 1;
+      });
 
-      document.getElementById("fStatCash").textContent = fmtINR(cashToday || allPrashikCash);
-      document.getElementById("fStatBank").textContent = fmtINR(bankToday || allPrashikBank);
-      document.getElementById("fStatTotal").textContent = fmtINR((cashToday || allPrashikCash) + (bankToday || allPrashikBank));
+      const chipsHtml = [
+        `<button class="chip ${activeCategory === 'ALL' ? 'active' : ''}" onclick="setOpenCategory('ALL')">सर्व आयटम्स (${stock.length})</button>`
+      ];
+      Object.keys(catMap).sort().forEach(cat => {
+        chipsHtml.push(
+          `<button class="chip ${activeCategory === cat ? 'active' : ''}" onclick="setOpenCategory('${cat}')">${cat} (${catMap[cat]})</button>`
+        );
+      });
+      document.getElementById("openCategoryChips").innerHTML = chipsHtml.join("");
+
+      const filtered = stock.filter(p => {
+        if (activeCategory !== "ALL" && (p.group || "").trim() !== activeCategory) return false;
+        if (filterMode === "AVAIL" && p.available <= 0) return false;
+        if (filterMode === "LOW" && p.available > p.lowStockLimit) return false;
+
+        if (q) {
+          const matchText = p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || (p.hsn || "").includes(q);
+          if (!matchText) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById("openStockCards");
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">कोणताही प्रॉडक्ट सापडला नाही.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const isLow = p.available <= p.lowStockLimit;
+        const isOut = p.available <= 0;
+        const pillBg = isOut ? 'background:#fee2e2;color:#991b1b;' : (isLow ? 'background:#fef3c7;color:#92400e;' : 'background:#dcfce7;color:#166534;');
+
+        return `
+          <div class="stock-card">
+            <div class="stock-card-top">
+              <div>
+                <div class="stock-name">${p.name}</div>
+                <div class="stock-code">Code: <strong>${p.code}</strong> | HSN: ${p.hsn || "-"}</div>
+              </div>
+              <div>
+                <span class="stock-avail-pill" style="${pillBg}">${p.available} नग शिल्लक</span>
+              </div>
+            </div>
+
+            <div class="stock-meta-grid">
+              <div>डीलर रेट: <strong style="font-size:0.9rem;color:var(--primary);">${fmtINR(p.rate)}</strong></div>
+              <div>MRP: <strong>${fmtINR(p.mrp)}</strong></div>
+              <div>GST: <strong>${p.gst || 18}%</strong></div>
+              <div>स्कीम: <strong style="color:#0f766e;">${p.scheme || "Nett"}</strong></div>
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
-    function renderFieldDealers() {
-      const parties = getComputedParties();
-      const q = (document.getElementById("fieldDealerSearch").value || "").toLowerCase().trim();
-      const filterMode = document.getElementById("fieldDueFilter").value;
+    function setOpenCategory(cat) {
+      activeCategory = cat;
+      renderOpenStock();
+    }
 
-      // Extract unique areas for Route Chips
+    // ==================== OPEN PORTAL: OUTSTANDING DUES ====================
+    function renderOpenDealers() {
+      const parties = getComputedParties();
+      const q = (document.getElementById("openDealerSearch").value || "").toLowerCase().trim();
+      const filterMode = document.getElementById("openDueFilter").value;
+
+      // Area chips
       const areaMap = {};
       parties.forEach(p => {
         const a = (p.area || "Nagpur").trim();
@@ -4839,18 +4825,17 @@
       });
 
       const chipsHtml = [
-        `<button class="chip ${activeFieldArea === 'ALL' ? 'active' : ''}" onclick="setFieldArea('ALL')">सर्व एरिया (${parties.length})</button>`
+        `<button class="chip ${activeArea === 'ALL' ? 'active' : ''}" onclick="setOpenArea('ALL')">सर्व एरिया (${parties.length})</button>`
       ];
       Object.keys(areaMap).sort().forEach(area => {
         chipsHtml.push(
-          `<button class="chip ${activeFieldArea === area ? 'active' : ''}" onclick="setFieldArea('${area}')">${area} (${areaMap[area]})</button>`
+          `<button class="chip ${activeArea === area ? 'active' : ''}" onclick="setOpenArea('${area}')">${area} (${areaMap[area]})</button>`
         );
       });
-      document.getElementById("fieldAreaChips").innerHTML = chipsHtml.join("");
+      document.getElementById("openAreaChips").innerHTML = chipsHtml.join("");
 
-      // Filter Parties
       const filtered = parties.filter(p => {
-        if (activeFieldArea !== "ALL" && (p.area || "").trim() !== activeFieldArea) return false;
+        if (activeArea !== "ALL" && (p.area || "").trim() !== activeArea) return false;
         if (filterMode === "DUE_ONLY" && p.netBalance <= 0) return false;
         if (filterMode === "Red" && p.category !== "Red") return false;
         if (filterMode === "Yellow" && p.category !== "Yellow") return false;
@@ -4863,7 +4848,7 @@
         return true;
       });
 
-      const container = document.getElementById("fieldDealerCards");
+      const container = document.getElementById("openDealerCards");
       if (filtered.length === 0) {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">कोणतीही पार्टी सापडली नाही.</div>';
         return;
@@ -4885,7 +4870,7 @@
                 </div>
                 <div class="dealer-bal-box">
                   <div class="dealer-bal-num ${isZero ? 'dealer-bal-zero' : ''}">${fmtINR(p.netBalance)}</div>
-                  <span class="pill ${badgeClass}">${p.category === 'Settled' ? '₹0 बाकी (Settled)' : p.pendingDays + ' दिवस बाकी'}</span>
+                  <span class="pill ${badgeClass}">${p.category === 'Settled' ? '₹0 बाकी' : p.pendingDays + ' दिवस बाकी'}</span>
                 </div>
               </div>
 
@@ -4904,236 +4889,19 @@
               ${(p.netBalance > 0 && cleanPhone.length >= 10)
                 ? `<a class="btn btn-whatsapp btn-sm" target="_blank" href="https://wa.me/91${cleanPhone.slice(-10)}?text=${waMsg}">💬 WhatsApp</a>`
                 : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>💬 WhatsApp</button>`}
-
-              <button class="btn btn-success btn-sm" onclick="openFieldCollectModal('${p.id}')">💵 जमा करा</button>
             </div>
 
-            <div style="display:flex;gap:6px;margin-top:8px;">
-              <button class="btn btn-primary btn-sm" style="flex:1;justify-content:center;" onclick="openFieldOrderForParty('${p.id}')">+ ऑर्डर घ्या</button>
-              <button class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="openDealerLedgerModal('${p.id}')">📜 लेजर बघा</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function setFieldArea(area) {
-      activeFieldArea = area;
-      renderFieldDealers();
-    }
-
-    function renderFieldStock() {
-      const stock = getComputedStock();
-      const q = (document.getElementById("fieldStockSearch").value || "").toLowerCase().trim();
-      const filterMode = document.getElementById("fieldStockFilter").value;
-
-      // Extract unique categories
-      const catMap = {};
-      stock.forEach(p => {
-        const g = (p.group || "General").trim();
-        catMap[g] = (catMap[g] || 0) + 1;
-      });
-
-      const chipsHtml = [
-        `<button class="chip ${activeFieldCategory === 'ALL' ? 'active' : ''}" onclick="setFieldCategory('ALL')">सर्व आयटम्स (${stock.length})</button>`
-      ];
-      Object.keys(catMap).sort().forEach(cat => {
-        chipsHtml.push(
-          `<button class="chip ${activeFieldCategory === cat ? 'active' : ''}" onclick="setFieldCategory('${cat}')">${cat} (${catMap[cat]})</button>`
-        );
-      });
-      document.getElementById("fieldCategoryChips").innerHTML = chipsHtml.join("");
-
-      const filtered = stock.filter(p => {
-        if (activeFieldCategory !== "ALL" && (p.group || "").trim() !== activeFieldCategory) return false;
-        if (filterMode === "AVAIL" && p.available <= 0) return false;
-        if (filterMode === "LOW" && p.available > p.lowStockLimit) return false;
-
-        if (q) {
-          const matchText = p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || (p.hsn || "").includes(q);
-          if (!matchText) return false;
-        }
-        return true;
-      });
-
-      const container = document.getElementById("fieldStockCards");
-      if (filtered.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">कोणताही प्रॉडक्ट सापडला नाही.</div>';
-        return;
-      }
-
-      container.innerHTML = filtered.map(p => {
-        const isLow = p.available <= p.lowStockLimit;
-        const isOut = p.available <= 0;
-        const pillBg = isOut ? 'background:#fee2e2;color:#991b1b;' : (isLow ? 'background:#fef3c7;color:#92400e;' : 'background:#dcfce7;color:#166534;');
-
-        return `
-          <div class="stock-card">
-            <div>
-              <div class="stock-card-top">
-                <div>
-                  <div class="stock-name">${p.name}</div>
-                  <div class="stock-code">Code: <strong>${p.code}</strong> | HSN: ${p.hsn || "-"}</div>
-                </div>
-                <div>
-                  <span class="stock-avail-pill" style="${pillBg}">${p.available} नग शिल्लक</span>
-                </div>
-              </div>
-
-              <div class="stock-meta-grid">
-                <div>डीलर रेट: <strong style="font-size:0.88rem;color:var(--primary);">${fmtINR(p.rate)}</strong></div>
-                <div>MRP: <strong>${fmtINR(p.mrp)}</strong></div>
-                <div>GST: <strong>${p.gst || 18}%</strong></div>
-                <div>स्कीम: <strong style="color:#0f766e;">${p.scheme || "Nett"}</strong></div>
-              </div>
-            </div>
-
-            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:6px;" onclick="openFieldOrderForProduct('${p.id}')">
-              🛒 + या प्रॉडक्टची ऑर्डर बुक करा
+            <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px;color:var(--primary);border-color:var(--border);" onclick="openDealerLedgerModal('${p.id}')">
+              📜 मागील लेजर बघा (View History)
             </button>
           </div>
         `;
       }).join("");
     }
 
-    function setFieldCategory(cat) {
-      activeFieldCategory = cat;
-      renderFieldStock();
-    }
-
-    // ==================== FIELD MODAL HANDLERS ====================
-    function openFieldCollectModal(partyId) {
-      const party = state.parties.find(p => p.id === partyId);
-      if (!party) return;
-      const computed = getComputedParties().find(p => p.id === partyId);
-
-      document.getElementById("fcPartyId").value = party.id;
-      document.getElementById("fcPartyHeader").innerHTML = `डीलर: <strong>${party.name}</strong> (${party.area || "Nagpur"})<br/>सध्याची बाकी: <strong style="color:#dc2626;font-size:1rem;">${fmtINR(computed ? computed.netBalance : 0)}</strong>`;
-      document.getElementById("fcAmount").value = "";
-      document.getElementById("fcRemark").value = "Online to Prashik";
-      openModal("fieldCollectModal");
-    }
-
-    async function submitFieldCollection(e) {
-      e.preventDefault();
-      const partyId = document.getElementById("fcPartyId").value;
-      const party = state.parties.find(p => p.id === partyId);
-      const amount = Number(document.getElementById("fcAmount").value);
-      const mode = document.getElementById("fcMode").value;
-      const sp = document.getElementById("fcSalesperson").value;
-      const remark = document.getElementById("fcRemark").value.trim();
-
-      const newCol = {
-        id: "COL_" + Date.now(),
-        receiptNo: "RCP-" + String(100 + state.collections.length),
-        date: "2026-11-16",
-        partyId: party.id,
-        partyName: party.name,
-        salespersonName: sp,
-        amount: amount,
-        mode: mode,
-        bankRef: remark || (mode === "Bank" ? "Online / UPI to " + sp : "Cash to " + sp)
-      };
-
-      await saveRecord("collections", newCol);
-      closeModal("fieldCollectModal");
-
-      const cleanPhone = (party.mobile || "").replace(/\D/g, "");
-      const computed = getComputedParties().find(p => p.id === party.id);
-      const remBal = computed ? computed.netBalance : 0;
-      const waReceiptMsg = encodeURIComponent(`Namaskar ${party.name},\n\nThank you! Received payment of ${fmtINR(amount)} via ${mode} by ${sp} for ${COMPANIES[activeCompany].name} (Nagpur).\nReceipt No: ${newCol.receiptNo}\nUpdated Balance: ${fmtINR(remBal)}.\n\nHave a great day!`);
-
-      if (cleanPhone.length >= 10) {
-        if (confirm(`पावती सेव्ह झाली! डीलरला (${party.name}) WhatsApp पावती पाठवायची का?`)) {
-          window.open(`https://wa.me/91${cleanPhone.slice(-10)}?text=${waReceiptMsg}`, "_blank");
-        }
-      } else {
-        showToast(`पावती ${newCol.receiptNo} (${fmtINR(amount)}) यशस्वीरित्या सेव्ह!`);
-      }
-    }
-
-    function openFieldOrderForParty(partyId) {
-      const party = state.parties.find(p => p.id === partyId);
-      document.getElementById("foPartyInput").value = party.name;
-      document.getElementById("foProductInput").value = "";
-      document.getElementById("foQty").value = 1;
-      document.getElementById("foRate").value = "";
-      document.getElementById("foTotalPreview").value = "₹0.00";
-      document.getElementById("foAvailHint").textContent = "";
-      document.getElementById("foHeader").textContent = `पार्टी: ${party.name} (${party.area || "Nagpur"})`;
-      openModal("fieldOrderModal");
-    }
-
-    function openFieldOrderForProduct(prodId) {
-      const prod = getComputedStock().find(p => p.id === prodId);
-      document.getElementById("foProductInput").value = prod.name;
-      document.getElementById("foRate").value = prod.rate;
-      document.getElementById("foQty").value = 1;
-      document.getElementById("foAvailHint").textContent = `(Avail: ${prod.available})`;
-      document.getElementById("foTotalPreview").value = fmtINR(prod.rate);
-      document.getElementById("foHeader").textContent = `प्रॉडक्ट: ${prod.name} | उपलब्ध स्टॉक: ${prod.available} नग`;
-      openModal("fieldOrderModal");
-    }
-
-    function updateFieldOrderPreview() {
-      const prod = findProductByName(document.getElementById("foProductInput").value);
-      if (prod) {
-        document.getElementById("foRate").value = prod.rate;
-        document.getElementById("foAvailHint").textContent = `(Avail: ${prod.available})`;
-      } else {
-        document.getElementById("foAvailHint").textContent = "";
-      }
-      updateFieldOrderTotal();
-    }
-
-    function updateFieldOrderTotal() {
-      const qty = Number(document.getElementById("foQty").value || 0);
-      const rate = Number(document.getElementById("foRate").value || 0);
-      document.getElementById("foTotalPreview").value = fmtINR(qty * rate);
-    }
-
-    async function submitFieldOrder(e) {
-      e.preventDefault();
-      const party = findPartyByName(document.getElementById("foPartyInput").value);
-      if (!party) {
-        alert("कृपया लिस्ट मधून वैध पार्टी निवडा.");
-        return;
-      }
-      const prod = findProductByName(document.getElementById("foProductInput").value);
-      if (!prod) {
-        alert("कृपया वैध प्रॉडक्ट निवडा.");
-        return;
-      }
-      const qty = Number(document.getElementById("foQty").value);
-      if (qty > prod.available) {
-        if (!confirm(`स्टॉक इशारा: गोदामात "${prod.name}" चे फक्त ${prod.available} नग शिल्लक आहेत. तरीही ऑर्डर बुक करायची का?`)) {
-          return;
-        }
-      }
-
-      const rate = Number(document.getElementById("foRate").value);
-      const nextNum = 200 + state.orders.length;
-
-      const newOrder = {
-        id: "ORD_" + Date.now(),
-        orderNo: String(nextNum),
-        date: "2026-11-16",
-        partyId: party.id,
-        partyName: party.name,
-        salespersonName: "Prashik Hajare",
-        productId: prod.id,
-        productName: prod.name,
-        hsn: prod.hsn || "85166000",
-        orderQty: qty,
-        dispatchedQty: qty,
-        rate: rate,
-        gst: Number(prod.gst || 18),
-        totalAmt: qty * rate
-      };
-
-      await saveRecord("orders", newOrder);
-      closeModal("fieldOrderModal");
-      showToast(`ऑर्डर / बिल #${newOrder.orderNo} यशस्वीरित्या बुक!`);
+    function setOpenArea(area) {
+      activeArea = area;
+      renderOpenDealers();
     }
 
     function openDealerLedgerModal(partyId) {
@@ -5185,7 +4953,7 @@
       openModal("dealerLedgerModal");
     }
 
-    // ==================== DASHBOARD & ADMIN RENDERING ====================
+    // ==================== ADMIN PORTAL FUNCTIONS ====================
     function renderDashboard() {
       const totalOrders = state.orders.reduce((s, o) => s + Number(o.orderQty) * Number(o.rate), 0);
       const totalDispatched = state.orders.reduce((s, o) => s + Number(o.dispatchedQty) * Number(o.rate), 0);
@@ -5344,42 +5112,6 @@
       `).join("");
     }
 
-    function renderAgeingTable() {
-      const q = (document.getElementById("ageingSearch").value || "").toLowerCase();
-      const filterCat = document.getElementById("ageingFilter").value;
-      const list = getComputedParties().filter(p => {
-        const matchText = p.name.toLowerCase().includes(q) || (p.area || "").toLowerCase().includes(q) || (p.mobile || "").includes(q);
-        if (!matchText) return false;
-        if (filterCat === "DUE_ONLY") return p.netBalance > 0;
-        if (filterCat === "ALL") return true;
-        return p.category === filterCat;
-      });
-
-      document.getElementById("ageingTableBody").innerHTML = list.map(p => {
-        const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
-        const waMsg = encodeURIComponent(`Namaskar ${p.name}, gentle payment reminder from ${COMPANIES[activeCompany].name} (Nagpur). Your pending balance is ${fmtINR(p.netBalance)} (${p.pendingDays} days). Please arrange payment via Cash or UPI/Bank (IOB A/c: 308202000000378, IFSC: IOBA0003082). Thank you.`);
-        const cleanPhone = (p.mobile || "").replace(/\D/g, "");
-        return `
-          <tr>
-            <td class="font-bold">${p.name}</td>
-            <td style="font-size:0.76rem;">${p.area || "-"}<br><span style="color:var(--muted);">${cleanPhone || "No Phone"}</span></td>
-            <td class="text-right">${fmtINR(p.openingBalance)}</td>
-            <td class="text-right">${fmtINR(p.dispatchedSales)}</td>
-            <td class="text-right">${fmtINR(p.cashPaid)}</td>
-            <td class="text-right">${fmtINR(p.bankPaid)}</td>
-            <td class="text-right font-bold">${fmtINR(p.netBalance)}</td>
-            <td class="text-center">${p.pendingDays} d</td>
-            <td class="text-center"><span class="pill ${badgeClass}">${p.category}</span></td>
-            <td class="text-center">
-              ${(p.netBalance > 0 && cleanPhone.length >= 10)
-                ? `<a class="btn btn-whatsapp btn-sm" target="_blank" href="https://wa.me/91${cleanPhone.slice(-10)}?text=${waMsg}">WhatsApp</a>`
-                : `<span style="color:var(--muted);font-size:0.75rem;">-</span>`}
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
     function renderMasterSalespersons() {
       document.getElementById("masterSalespersonBody").innerHTML = state.salespersons.map(s => `
         <tr>
@@ -5404,6 +5136,7 @@
 
     async function handleInwardStock(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can add stock."); return; }
       const prod = findProductByName(document.getElementById("inwardProductInput").value);
       if (!prod) {
         alert("Please select a valid product from the dropdown list.");
@@ -5437,9 +5170,10 @@
 
     async function handleCreateOrder(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can book orders."); return; }
       const party = findPartyByName(document.getElementById("ordPartyInput").value);
       if (!party) {
-        alert("Please select a valid Party from the dropdown list (or add party first in Masters).");
+        alert("Please select a valid Party from the dropdown list.");
         return;
       }
       const prod = findProductByName(document.getElementById("ordProductInput").value);
@@ -5497,6 +5231,7 @@
 
     async function submitDispatch(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can dispatch orders."); return; }
       const orderId = document.getElementById("dispatchOrderId").value;
       const qty = Number(document.getElementById("dispatchQtyInput").value);
       const ord = state.orders.find(o => o.id === orderId);
@@ -5508,6 +5243,7 @@
 
     async function handleCreateCollection(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can record collections."); return; }
       const party = findPartyByName(document.getElementById("colPartyInput").value);
       if (!party) {
         alert("Please select a valid Party from the dropdown list.");
@@ -5532,6 +5268,7 @@
 
     async function handleAddProduct(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can add products."); return; }
       const newProd = {
         id: "PR" + Date.now(),
         code: document.getElementById("mProdCode").value.trim(),
@@ -5553,6 +5290,7 @@
 
     async function handleAddParty(e) {
       e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner can add parties."); return; }
       const newParty = {
         id: "P" + Date.now(),
         name: document.getElementById("mPartyName").value.trim(),
@@ -5723,6 +5461,7 @@
 
     // ==================== EXCEL BACKUP ====================
     function exportToExcel() {
+      if (!isAdminLoggedIn) { alert("Only Owner can export Excel."); return; }
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(getComputedStock()), "Stock_Inventory");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.orders), "Orders_Dispatch");
