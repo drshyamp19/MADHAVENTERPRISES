@@ -638,8 +638,8 @@
 
     <!-- Navigation Bar: Open Portal has ONLY 2 TABS. Admin Login unlocks the rest! -->
     <nav class="nav-bar">
-      <button class="nav-tab open-tab active" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 1. लाईव्ह स्टॉक व रेट (Stock)</button>
-      <button class="nav-tab open-tab" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 2. उधारी यादी (Outstanding)</button>
+      <button class="nav-tab open-tab active" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 1. Live Stock &amp; Rates</button>
+      <button class="nav-tab open-tab" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 2. Outstanding Dues</button>
       <!-- Admin Only Tabs -->
       <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
       <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
@@ -654,8 +654,8 @@
       <section id="tab-open-stock" class="tab-panel active">
         <div class="open-notice-banner">
           <div>
-            <strong>📦 गोदाम लाईव्ह स्टॉक व डीलर रेट कार्ड (Live Stock View)</strong>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">गोदामातील उपलब्ध माल, डीलर रेट आणि चालू स्कीम्स पाहण्यासाठी</div>
+            <strong>📦 Warehouse Live Stock &amp; Dealer Rate Card</strong>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Real-time available inventory, dealer net rates &amp; active trade schemes</div>
           </div>
           <span class="pill pill-green">✓ Read-Only View</span>
         </div>
@@ -663,21 +663,21 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <span class="card-title">उपलब्ध प्रॉडक्ट यादी (Available Inventory)</span>
+              <span class="card-title">Available Products Inventory</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <select id="openStockFilter" class="form-control" style="width:160px;" onchange="renderOpenStock()">
-                <option value="ALL">सर्व आयटम्स</option>
-                <option value="AVAIL">उपलब्ध माल (> 0)</option>
-                <option value="LOW">कमी स्टॉक (Low Stock)</option>
+                <option value="ALL">All Items</option>
+                <option value="AVAIL">In Stock (> 0)</option>
+                <option value="LOW">Low Stock Alerts</option>
               </select>
-              <input type="text" id="openStockSearch" class="form-control" style="width:200px;" placeholder="आयटम, कोड, HSN..." oninput="renderOpenStock()" />
+              <input type="text" id="openStockSearch" class="form-control" style="width:200px;" placeholder="Search item, code, HSN..." oninput="renderOpenStock()" />
             </div>
           </div>
 
           <!-- Category Chips -->
           <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">कॅटेगरीनुसार निवडा:</div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">Filter by Category:</div>
             <div class="chip-bar" id="openCategoryChips"></div>
           </div>
 
@@ -691,8 +691,8 @@
       <section id="tab-open-dues" class="tab-panel">
         <div class="open-notice-banner">
           <div>
-            <strong>🔴 मार्केट उधारी यादी (Outstanding Ledger View)</strong>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">डीलरची शिल्लक बाकी पाहण्यासाठी, कॉल लावण्यासाठी व WhatsApp मेसेज पाठवण्यासाठी</div>
+            <strong>🔴 Outstanding Market Dues &amp; Receivables</strong>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Track dealer pending balances, direct phone call &amp; WhatsApp payment reminders</div>
           </div>
           <span class="pill pill-red">Total Due: ₹3,24,350</span>
         </div>
@@ -700,24 +700,24 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <span class="card-title">सर्व डीलर्सची बाकी यादी (Dealer Balances)</span>
+              <span class="card-title">Dealer Outstanding Balances</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <select id="openDueFilter" class="form-control" style="width:205px;" onchange="renderOpenDealers()">
-                <option value="DUE_ONLY">फक्त बाकी असलेले (> ₹0)</option>
-                <option value="Red">🔴 रेड अलर्ट (६०+ दिवस / > ₹20k)</option>
-                <option value="Yellow">🟡 यलो अलर्ट (३०-६० दिवस / ₹10-20k)</option>
-                <option value="Green">🟢 सुरक्षित बाकी (< ३० दिवस / < ₹10k)</option>
-                <option value="Settled">⚪ शून्य बाकी (₹0)</option>
-                <option value="ALL">सर्व ६३ पार्ट्या (All)</option>
+              <select id="openDueFilter" class="form-control" style="width:215px;" onchange="renderOpenDealers()">
+                <option value="DUE_ONLY">Pending Dues (> ₹0)</option>
+                <option value="Red">🔴 Red Alert (≥60 Days / > ₹20k)</option>
+                <option value="Yellow">🟡 Yellow Alert (30-60 Days / ₹10-20k)</option>
+                <option value="Green">🟢 Safe / Active (&lt; 30 Days / &lt; ₹10k)</option>
+                <option value="Settled">⚪ Settled Balances (₹0)</option>
+                <option value="ALL">All 63 Parties</option>
               </select>
-              <input type="text" id="openDealerSearch" class="form-control" style="width:200px;" placeholder="डीलर, एरिया, मोबाईल..." oninput="renderOpenDealers()" />
+              <input type="text" id="openDealerSearch" class="form-control" style="width:200px;" placeholder="Search dealer, area, mobile..." oninput="renderOpenDealers()" />
             </div>
           </div>
 
           <!-- Route / Area Chips -->
           <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">एरियानुसार निवडा (Route Filter):</div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">Filter by Route / Area:</div>
             <div class="chip-bar" id="openAreaChips"></div>
           </div>
 
@@ -1147,8 +1147,8 @@
   <div class="modal-backdrop" id="dealerLedgerModal">
     <div class="modal modal-lg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 id="ledgerModalTitle" style="margin:0;color:var(--primary);">डीलर लेजर इतिहास</h3>
-        <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('dealerLedgerModal')">✕ बंद करा</button>
+        <h3 id="ledgerModalTitle" style="margin:0;color:var(--primary);">Dealer Ledger &amp; History</h3>
+        <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('dealerLedgerModal')">✕ Close</button>
       </div>
       <div id="ledgerModalContent"></div>
     </div>
@@ -1788,7 +1788,7 @@
       {
         "id": "PR001",
         "code": "5060",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef SS Cooker - 2Ltr - Classic",
         "hsn": "73239310",
         "mrp": 2335,
@@ -1802,7 +1802,7 @@
       {
         "id": "PR002",
         "code": "5037",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef SS Cooker - 3Ltr - Classic",
         "hsn": "73239310",
         "mrp": 2665,
@@ -1816,7 +1816,7 @@
       {
         "id": "PR003",
         "code": "5038",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef SS Cooker - 5Ltr - Classic",
         "hsn": "73239310",
         "mrp": 3555,
@@ -1830,7 +1830,7 @@
       {
         "id": "PR008",
         "code": "5062",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef SS Innerlid Cooker - 3Ltr - Classic",
         "hsn": "73239310",
         "mrp": 2945,
@@ -1844,7 +1844,7 @@
       {
         "id": "PR009",
         "code": "5063",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef SS Innerlid Cooker - 5Ltr - Classic",
         "hsn": "73239310",
         "mrp": 3740,
@@ -1858,7 +1858,7 @@
       {
         "id": "PR010",
         "code": "5108",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef TRI PLY Cooker 1Ltr - Fusion",
         "hsn": "73239310",
         "mrp": 2375,
@@ -1872,7 +1872,7 @@
       {
         "id": "PR011",
         "code": "5109",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef TRI PLY Cooker 1.5Ltr - Fusion",
         "hsn": "73239310",
         "mrp": 2535,
@@ -1886,7 +1886,7 @@
       {
         "id": "PR012",
         "code": "5075",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef TRI PLY Cooker 2Ltr - Fusion",
         "hsn": "73239310",
         "mrp": 2765,
@@ -1900,7 +1900,7 @@
       {
         "id": "PR013",
         "code": "5076",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef TRI PLY Cooker 3Ltr - Fusion",
         "hsn": "73239310",
         "mrp": 3225,
@@ -1914,7 +1914,7 @@
       {
         "id": "PR014",
         "code": "5077",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "Greenchef TRI PLY Cooker 5Ltr - Fusion",
         "hsn": "73239310",
         "mrp": 3900,
@@ -1928,7 +1928,7 @@
       {
         "id": "PR029",
         "code": "6001",
-        "group": "नॉन-स्टिक भांडी (Non-Stick)",
+        "group": "Non-Stick Cookware",
         "name": "Greenchef Flat Tawa 250 - Namo",
         "hsn": "76151021",
         "mrp": 955,
@@ -1942,7 +1942,7 @@
       {
         "id": "PR038",
         "code": "6093",
-        "group": "नॉन-स्टिक भांडी (Non-Stick)",
+        "group": "Non-Stick Cookware",
         "name": "Greenchef Flat Tawa 280 IB - REGAL",
         "hsn": "76151021",
         "mrp": 1355,
@@ -1956,7 +1956,7 @@
       {
         "id": "PR103",
         "code": "7019",
-        "group": "इंडक्शन शेगडी (Induction)",
+        "group": "Induction Cooktops",
         "name": "Greenchef Induction Cook Top - Ember",
         "hsn": "85166000",
         "mrp": 3775,
@@ -1970,7 +1970,7 @@
       {
         "id": "PR105",
         "code": "7022",
-        "group": "इंडक्शन शेगडी (Induction)",
+        "group": "Induction Cooktops",
         "name": "Greenchef Infrared Induction Cooktop - Jawa Pro",
         "hsn": "85166000",
         "mrp": 6220,
@@ -1984,7 +1984,7 @@
       {
         "id": "PR107",
         "code": "7027",
-        "group": "इंडक्शन शेगडी (Induction)",
+        "group": "Induction Cooktops",
         "name": "Greenchef infrared - induction cooktop - Rapid duo",
         "hsn": "85166000",
         "mrp": 16699,
@@ -1998,7 +1998,7 @@
       {
         "id": "PR111",
         "code": "27004",
-        "group": "इतर / लायटर (Accessories)",
+        "group": "Appliances & Accessories",
         "name": "Greenchef Electric Cooker RC 1.81Ltr Carlo",
         "hsn": "73239310",
         "mrp": 4877.78,
@@ -2012,7 +2012,7 @@
       {
         "id": "PR115",
         "code": "23006",
-        "group": "इलेक्ट्रिक किटली (Kettles)",
+        "group": "Electric Kettles",
         "name": "Greenchef S S Kettle 1.5ltrs - Swift",
         "hsn": "85166000",
         "mrp": 1250,
@@ -2026,7 +2026,7 @@
       {
         "id": "PR116",
         "code": "23010",
-        "group": "इलेक्ट्रिक किटली (Kettles)",
+        "group": "Electric Kettles",
         "name": "Greenchef SS Kettle 1.8ltrs - Glitter",
         "hsn": "85166000",
         "mrp": 1750,
@@ -2040,7 +2040,7 @@
       {
         "id": "PR134",
         "code": "23507",
-        "group": "इतर / लायटर (Accessories)",
+        "group": "Appliances & Accessories",
         "name": "Greenchef Electric OTG - 9ltrs",
         "hsn": "85166000",
         "mrp": 4459,
@@ -2054,7 +2054,7 @@
       {
         "id": "PR138",
         "code": "14406",
-        "group": "मिक्सर ग्राइंडर (Mixers)",
+        "group": "Mixer Grinders",
         "name": "Greenchef Blender - Nutri Smash - 2 JAR",
         "hsn": "85094010",
         "mrp": 3349,
@@ -2068,7 +2068,7 @@
       {
         "id": "PR140",
         "code": "4030",
-        "group": "मिक्सर ग्राइंडर (Mixers)",
+        "group": "Mixer Grinders",
         "name": "Greenchef Mixer Grinder 600W 3Jars - Focal",
         "hsn": "85094010",
         "mrp": 4220,
@@ -2082,7 +2082,7 @@
       {
         "id": "PR151",
         "code": "4046",
-        "group": "मिक्सर ग्राइंडर (Mixers)",
+        "group": "Mixer Grinders",
         "name": "Greenchef Mixer Grinder 600W 4Jars - Misty (3 dry jar + 1 juicer jar)",
         "hsn": "85094010",
         "mrp": 4899,
@@ -2096,7 +2096,7 @@
       {
         "id": "PR158",
         "code": "2007",
-        "group": "गॅस शेगडी (Gas Stoves)",
+        "group": "Gas Stoves",
         "name": "Greenchef SS LPG Stove T/B - Slim",
         "hsn": "73211110",
         "mrp": 7335,
@@ -2110,7 +2110,7 @@
       {
         "id": "PR178",
         "code": "1045",
-        "group": "गॅस शेगडी (Gas Stoves)",
+        "group": "Gas Stoves",
         "name": "Greenchef Glasstop T/B - Orbit (Jumbo Burner)",
         "hsn": "73211110",
         "mrp": 7766.67,
@@ -2124,7 +2124,7 @@
       {
         "id": "PR214",
         "code": "12001",
-        "group": "इतर / लायटर (Accessories)",
+        "group": "Appliances & Accessories",
         "name": "Greenchef Gas Lighter with knife",
         "hsn": "96131000",
         "mrp": 199,
@@ -2138,7 +2138,7 @@
       {
         "id": "PR218",
         "code": "8566000",
-        "group": "इतर / लायटर (Accessories)",
+        "group": "Appliances & Accessories",
         "name": "Air fryer 4.2 lit",
         "hsn": "8566000",
         "mrp": 4999,
@@ -2152,7 +2152,7 @@
       {
         "id": "PR219",
         "code": "GC-MOVA",
-        "group": "मिक्सर ग्राइंडर (Mixers)",
+        "group": "Mixer Grinders",
         "name": "Mixer mova 600 w",
         "hsn": "85094010",
         "mrp": 3499,
@@ -2166,7 +2166,7 @@
       {
         "id": "PR028",
         "code": "GC-28",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "compact 3 ltr",
         "hsn": "85166000",
         "mrp": 0,
@@ -2180,7 +2180,7 @@
       {
         "id": "PR029",
         "code": "GC-29",
-        "group": "प्रेशर कुकर (Cookers)",
+        "group": "Pressure Cookers",
         "name": "compact 1.5 ltr",
         "hsn": "85166000",
         "mrp": 0,
@@ -4237,7 +4237,7 @@
       {
         "id": "SH001",
         "code": "SH-PIPE-01",
-        "group": "सुरक्षित गॅस पाईप (Gas Pipes)",
+        "group": "Safety Gas Pipes",
         "name": "BHARAT Hose Pipe",
         "hsn": "85166000",
         "mrp": 320,
@@ -4250,7 +4250,7 @@
       {
         "id": "SH002",
         "code": "SH-PIPE-02",
-        "group": "सुरक्षित गॅस पाईप (Gas Pipes)",
+        "group": "Safety Gas Pipes",
         "name": "HP Hose Pipe",
         "hsn": "85166000",
         "mrp": 350,
@@ -4263,7 +4263,7 @@
       {
         "id": "SH003",
         "code": "SH-FAN-01",
-        "group": "सिलिंग फॅन व पंखे (Ceiling Fans)",
+        "group": "Ceiling Fans",
         "name": "CLASSIC Speedo Fan",
         "hsn": "84145120",
         "mrp": 2200,
@@ -4276,7 +4276,7 @@
       {
         "id": "SH004",
         "code": "SH-FAN-02",
-        "group": "सिलिंग फॅन व पंखे (Ceiling Fans)",
+        "group": "Ceiling Fans",
         "name": "CG Speedo Fan",
         "hsn": "84145120",
         "mrp": 2400,
@@ -4289,7 +4289,7 @@
       {
         "id": "SH005",
         "code": "SH-FAN-03",
-        "group": "सिलिंग फॅन व पंखे (Ceiling Fans)",
+        "group": "Ceiling Fans",
         "name": "CRETA Speedo Fan",
         "hsn": "84145120",
         "mrp": 2300,
@@ -4302,7 +4302,7 @@
       {
         "id": "SH006",
         "code": "SH-ROD-01",
-        "group": "वॉटर हीटर रॉड (Water Heaters)",
+        "group": "Water Heaters",
         "name": "CRISTAL Immersion Rods 1500W",
         "hsn": "85166000",
         "mrp": 450,
@@ -4315,7 +4315,7 @@
       {
         "id": "SH007",
         "code": "SH-SPARE-01",
-        "group": "सिलिंग फॅन व पंखे (Ceiling Fans)",
+        "group": "Ceiling Fans",
         "name": "SPEEDO Mundi / Motor",
         "hsn": "84149030",
         "mrp": 850,
@@ -4328,7 +4328,7 @@
       {
         "id": "SH008",
         "code": "SH-APPL-01",
-        "group": "गॅस शेगडी स्पेअर्स (Stove Spares)",
+        "group": "Stove Spares",
         "name": "FIREOX Stove",
         "hsn": "73211110",
         "mrp": 2999,
@@ -4341,7 +4341,7 @@
       {
         "id": "SH009",
         "code": "SH-ROD-02",
-        "group": "वॉटर हीटर रॉड (Water Heaters)",
+        "group": "Water Heaters",
         "name": "Rodstar Immersion Rod",
         "hsn": "85166000",
         "mrp": 399,
@@ -4354,7 +4354,7 @@
       {
         "id": "SH010",
         "code": "SH-MIX-01",
-        "group": "मिक्सर ग्राइंडर (Mixers)",
+        "group": "Mixer Grinders",
         "name": "Luxer Mixer Grinder 500W",
         "hsn": "85094010",
         "mrp": 2699,
@@ -4367,7 +4367,7 @@
       {
         "id": "SH011",
         "code": "SH-IRON-01",
-        "group": "इस्त्री (Dry Iron)",
+        "group": "Dry Irons",
         "name": "Polar Dry Iron Heavy",
         "hsn": "85164000",
         "mrp": 899,
@@ -4500,18 +4500,15 @@
         persistLocal();
       }
 
-      // Auto-migrate old category codes to clean Marathi categories
+      // Auto-migrate old category codes to clean English categories
       if (state.products && state.products.length > 0) {
         let changed = false;
         const seedProducts = SEED_DATA[activeCompany.toLowerCase()].products;
         state.products.forEach(p => {
-          const g = p.group || "";
-          if (g.startsWith("FG -") || g.startsWith("Traded -") || g === "LIGHTER" || g === "Kitchen Appliances" || g.includes("Import") || g.includes("Ceiling Fan") || g.includes("Gas Pipe")) {
-            const sp = seedProducts.find(s => s.id === p.id || s.code === p.code);
-            if (sp && sp.group) {
-              p.group = sp.group;
-              changed = true;
-            }
+          const sp = seedProducts.find(s => s.id === p.id || s.code === p.code);
+          if (sp && sp.group && p.group !== sp.group) {
+            p.group = sp.group;
+            changed = true;
           }
         });
         if (changed) persistLocal();
@@ -4741,24 +4738,24 @@
         }
 
         let category = "Settled";
-        let alertBadge = "✓ शून्य बाकी (₹०)";
+        let alertBadge = "✓ Settled (₹0 Balance)";
         let alertClass = "card-settled";
 
         if (netBalance <= 0) {
           category = "Settled";
-          alertBadge = "✓ शून्य बाकी (Clear)";
+          alertBadge = "✓ Settled (₹0 Balance)";
           alertClass = "card-settled";
         } else if (pendingDays >= 60 || netBalance >= 20000) {
           category = "Red";
-          alertBadge = "🔴 रेड अलर्ट (" + pendingDays + " दिवस | तातडीची वसुली)";
+          alertBadge = "🔴 Red Alert (" + pendingDays + " Days Overdue | Urgent)";
           alertClass = "card-alert-red";
         } else if ((pendingDays >= 30 && pendingDays < 60) || (netBalance >= 10000 && netBalance < 20000)) {
           category = "Yellow";
-          alertBadge = "🟡 यलो अलर्ट (" + pendingDays + " दिवस बाकी)";
+          alertBadge = "🟡 Yellow Alert (" + pendingDays + " Days Overdue)";
           alertClass = "card-alert-yellow";
         } else {
           category = "Green";
-          alertBadge = "🟢 सुरक्षित बाकी (" + pendingDays + " दिवस)";
+          alertBadge = "🟢 Safe / Active (" + pendingDays + " Days)";
           alertClass = "card-alert-green";
         }
 
@@ -4817,26 +4814,26 @@
       const q = (document.getElementById("openStockSearch").value || "").toLowerCase().trim();
       const filterMode = document.getElementById("openStockFilter").value;
 
-      // Category chips with clean Marathi names and sorted by priority
+      // Category chips with clean English names and sorted by priority
       const catMap = {};
       stock.forEach(p => {
-        const g = (p.group || "इतर").trim();
+        const g = (p.group || "General").trim();
         catMap[g] = (catMap[g] || 0) + 1;
       });
 
       const preferredOrder = [
-        "प्रेशर कुकर (Cookers)",
-        "गॅस शेगडी (Gas Stoves)",
-        "मिक्सर ग्राइंडर (Mixers)",
-        "इंडक्शन शेगडी (Induction)",
-        "इलेक्ट्रिक किटली (Kettles)",
-        "नॉन-स्टिक भांडी (Non-Stick)",
-        "इतर / लायटर (Accessories)",
-        "सिलिंग फॅन व पंखे (Ceiling Fans)",
-        "सुरक्षित गॅस पाईप (Gas Pipes)",
-        "वॉटर हीटर रॉड (Water Heaters)",
-        "इस्त्री (Dry Iron)",
-        "गॅस शेगडी स्पेअर्स (Stove Spares)"
+        "Pressure Cookers",
+        "Gas Stoves",
+        "Mixer Grinders",
+        "Induction Cooktops",
+        "Electric Kettles",
+        "Non-Stick Cookware",
+        "Appliances & Accessories",
+        "Safety Gas Pipes",
+        "Ceiling Fans",
+        "Water Heaters",
+        "Dry Irons",
+        "Stove Spares"
       ];
 
       const sortedCats = Object.keys(catMap).sort((a, b) => {
@@ -4849,7 +4846,7 @@
       });
 
       const chipsHtml = [
-        `<button class="chip ${activeCategory === 'ALL' ? 'active' : ''}" onclick="setOpenCategory('ALL')">सर्व आयटम्स (${stock.length})</button>`
+        `<button class="chip ${activeCategory === 'ALL' ? 'active' : ''}" onclick="setOpenCategory('ALL')">All Products (${stock.length})</button>`
       ];
       sortedCats.forEach(cat => {
         chipsHtml.push(
@@ -4872,7 +4869,7 @@
 
       const container = document.getElementById("openStockCards");
       if (filtered.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">कोणताही प्रॉडक्ट सापडला नाही.</div>';
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">No matching products found.</div>';
         return;
       }
 
@@ -4890,15 +4887,15 @@
                 <div class="stock-code">Code: <strong>${p.code}</strong> | HSN: ${p.hsn || "-"}</div>
               </div>
               <div>
-                <span class="stock-avail-pill" style="${pillBg}">${p.available} नग शिल्लक</span>
+                <span class="stock-avail-pill" style="${pillBg}">${p.available} In Stock</span>
               </div>
             </div>
 
             <div class="stock-meta-grid">
-              <div>डीलर रेट: <strong style="font-size:0.9rem;color:var(--primary);">${fmtINR(p.rate)}</strong></div>
+              <div>Dealer Rate: <strong style="font-size:0.9rem;color:var(--primary);">${fmtINR(p.rate)}</strong></div>
               <div>MRP: <strong>${fmtINR(p.mrp)}</strong></div>
               <div>GST: <strong>${p.gst || 18}%</strong></div>
-              <div>स्कीम: <strong style="color:#0f766e;">${p.scheme || "Nett"}</strong></div>
+              <div>Scheme: <strong style="color:#0f766e;">${p.scheme || "Nett"}</strong></div>
             </div>
           </div>
         `;
@@ -4924,7 +4921,7 @@
       });
 
       const chipsHtml = [
-        `<button class="chip ${activeArea === 'ALL' ? 'active' : ''}" onclick="setOpenArea('ALL')">सर्व एरिया (${parties.length})</button>`
+        `<button class="chip ${activeArea === 'ALL' ? 'active' : ''}" onclick="setOpenArea('ALL')">All Areas (${parties.length})</button>`
       ];
       Object.keys(areaMap).sort().forEach(area => {
         chipsHtml.push(
@@ -4949,7 +4946,7 @@
 
       const container = document.getElementById("openDealerCards");
       if (filtered.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">कोणतीही पार्टी सापडली नाही.</div>';
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">No matching dealers found.</div>';
         return;
       }
 
@@ -4983,21 +4980,21 @@
                 </div>
                 <div class="dealer-bal-box">
                   <div class="dealer-bal-num ${isZero ? 'dealer-bal-zero' : ''}">${fmtINR(p.netBalance)}</div>
-                  <div style="font-size:0.7rem;color:var(--muted);font-weight:600;">शिल्लक बाकी</div>
+                  <div style="font-size:0.7rem;color:var(--muted);font-weight:600;">Balance Due</div>
                 </div>
               </div>
 
               <div class="dealer-meta-row">
-                <div>एकूण विक्री: <strong>${fmtINR(p.dispatchedSales)}</strong></div>
-                <div>जमा: <strong>${fmtINR(p.totalPaid)}</strong></div>
-                <div>शेवटचे: <strong>${p.lastDateStr || "-"}</strong></div>
+                <div>Total Sales: <strong>${fmtINR(p.dispatchedSales)}</strong></div>
+                <div>Received: <strong>${fmtINR(p.totalPaid)}</strong></div>
+                <div>Last Txn: <strong>${p.lastDateStr || "-"}</strong></div>
               </div>
             </div>
 
             <div class="dealer-actions">
               ${cleanPhone.length >= 10
-                ? `<a class="btn btn-call btn-sm" href="tel:${cleanPhone}">📞 कॉल</a>`
-                : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>📞 कॉल</button>`}
+                ? `<a class="btn btn-call btn-sm" href="tel:${cleanPhone}">📞 Call</a>`
+                : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>📞 Call</button>`}
 
               ${(p.netBalance > 0 && cleanPhone.length >= 10)
                 ? `<a class="btn btn-whatsapp btn-sm" target="_blank" href="https://wa.me/91${cleanPhone.slice(-10)}?text=${waMsg}">💬 WhatsApp</a>`
@@ -5005,7 +5002,7 @@
             </div>
 
             <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px;color:var(--primary);border-color:var(--border);" onclick="openDealerLedgerModal('${p.id}')">
-              📜 मागील लेजर बघा (View History)
+              📜 View Ledger History
             </button>
           </div>
         `;
@@ -5023,16 +5020,16 @@
 
       document.getElementById("ledgerModalTitle").textContent = `${computed.name} (${computed.area || "Nagpur"})`;
       let billsHtml = computed.partyOrders.length === 0
-        ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">कोणतीही मागील बिले नाहीत.</div>'
+        ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">No prior bills found.</div>'
         : computed.partyOrders.map(o => `
             <div class="ledger-row">
-              <div><strong>Bill #${o.orderNo}</strong> (${o.date})<br/><span style="color:var(--muted);">${o.productName} (${o.orderQty} नग)</span></div>
+              <div><strong>Bill #${o.orderNo}</strong> (${o.date})<br/><span style="color:var(--muted);">${o.productName} (${o.orderQty} Units)</span></div>
               <div class="text-right font-bold" style="color:var(--primary);">+${fmtINR(o.totalAmt)}</div>
             </div>
           `).join("");
 
       let paysHtml = computed.partyCols.length === 0
-        ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">कोणतीही मागील जमा पावती नाही.</div>'
+        ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">No prior payment receipts found.</div>'
         : computed.partyCols.map(c => `
             <div class="ledger-row">
               <div><strong>${c.receiptNo}</strong> (${c.date})<br/><span style="color:var(--muted);">${c.bankRef || c.mode} (${c.salespersonName})</span></div>
@@ -5043,22 +5040,22 @@
       document.getElementById("ledgerModalContent").innerHTML = `
         <div style="background:#f8fafc;padding:12px;border-radius:10px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">निव्वळ बाकी रक्कम:</div>
+            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Net Balance Due:</div>
             <div style="font-size:1.35rem;font-weight:800;color:#dc2626;">${fmtINR(computed.netBalance)}</div>
           </div>
           <div style="text-align:right;">
-            <div>एकूण विक्री: <strong>${fmtINR(computed.dispatchedSales)}</strong></div>
-            <div>एकूण जमा: <strong>${fmtINR(computed.totalPaid)}</strong></div>
+            <div>Total Sales: <strong>${fmtINR(computed.dispatchedSales)}</strong></div>
+            <div>Total Received: <strong>${fmtINR(computed.totalPaid)}</strong></div>
           </div>
         </div>
 
         <div class="grid-2">
           <div>
-            <h4 style="font-size:0.85rem;color:var(--primary);margin-bottom:8px;border-bottom:2px solid var(--primary);padding-bottom:4px;">📜 मागील बिलांची यादी (Bills)</h4>
+            <h4 style="font-size:0.85rem;color:var(--primary);margin-bottom:8px;border-bottom:2px solid var(--primary);padding-bottom:4px;">📜 Invoices &amp; Billed Sales</h4>
             ${billsHtml}
           </div>
           <div>
-            <h4 style="font-size:0.85rem;color:#15803d;margin-bottom:8px;border-bottom:2px solid #15803d;padding-bottom:4px;">💵 जमा पावत्यांची यादी (Receipts)</h4>
+            <h4 style="font-size:0.85rem;color:#15803d;margin-bottom:8px;border-bottom:2px solid #15803d;padding-bottom:4px;">💵 Payment Receipts Recorded</h4>
             ${paysHtml}
           </div>
         </div>
