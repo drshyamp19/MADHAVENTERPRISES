@@ -250,4 +250,645 @@
       display: inline-block;
       padding: 3px 9px;
       border-radius: 999px;
-      font-size:
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pill-red { background: var(--red-bg); color: var(--red-txt); }
+    .pill-yellow { background: var(--yellow-bg); color: var(--yellow-txt); }
+    .pill-green { background: var(--green-bg); color: var(--green-txt); }
+    .pill-gray { background: #e2e8f0; color: #334155; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      max-width: 540px;
+      width: 100%;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal.modal-lg { max-width: 840px; }
+    .modal h3 { font-size: 1.05rem; color: var(--primary); margin-bottom: 8px; }
+    .modal p { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; line-height: 1.45; }
+    textarea.code-box {
+      width: 100%;
+      height: 140px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .invoice-paper {
+      border: 1.5px solid #1e293b;
+      padding: 18px;
+      background: #fff;
+      color: #0f172a;
+      font-size: 12px;
+    }
+    .inv-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1e3a5f;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .inv-top img { height: 68px; width: auto; }
+    .inv-company { text-align: right; }
+    .inv-company h2 { font-size: 18px; font-weight: 800; color: #1e3a5f; }
+    .inv-company div { font-size: 11px; color: #334155; line-height: 1.4; }
+    .inv-title-bar {
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      background: #f1f5f9;
+      padding: 5px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 10px;
+    }
+    .inv-meta-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      border: 1px solid #94a3b8;
+      margin-bottom: 10px;
+    }
+    .inv-meta-box { padding: 8px 10px; font-size: 11.5px; line-height: 1.45; }
+    .inv-meta-box:first-child { border-right: 1px solid #94a3b8; }
+    .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11.5px; }
+    .inv-table th, .inv-table td {
+      border: 1px solid #94a3b8;
+      padding: 6px 8px;
+      position: static;
+    }
+    .inv-table th { background: #1e3a5f; color: #fff; }
+    .inv-footer-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      border: 1px solid #94a3b8;
+      margin-top: 8px;
+    }
+    .inv-footer-box { padding: 8px 10px; font-size: 11px; line-height: 1.45; }
+    .inv-footer-box:first-child { border-right: 1px solid #94a3b8; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #invoicePrintArea, #invoicePrintArea * { visibility: visible; }
+      #invoicePrintArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none;
+        padding: 0;
+      }
+      .no-print { display: none !important; }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: #fff;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: 0.25s ease;
+      z-index: 200;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== GATEWAY / COMPANY SELECTOR SCREEN ==================== -->
+  <div id="gatewayScreen">
+    <div style="text-align:center; max-width:680px;">
+      <h1 style="font-size:2.1rem; font-weight:800; margin-bottom:10px;">Select Enterprise Portal</h1>
+      <p style="font-size:0.95rem; opacity:0.85;">Manage Stock, Orders, GST Billing &amp; Recovery across your business units.</p>
+    </div>
+    <div class="gateway-card-wrap">
+      <div class="gateway-card" onclick="selectCompany('MADHAV')">
+        <div class="brand-logo-wrap" style="display:inline-flex;margin-bottom:14px;padding:8px 16px;">
+          <img id="gatewayLogo1" alt="Madhav Logo" />
+        </div>
+        <h2>MADHAV ENTERPRISES</h2>
+        <p>Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur<br/><strong>Active Parties: 30 | Active Stock: Greenchef Items</strong></p>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;">Open Madhav ERP</button>
+      </div>
+      <div class="gateway-card" onclick="selectCompany('SHIVOM')">
+        <div style="font-size:2.5rem;margin-bottom:14px;">⚡</div>
+        <h2>SHIVOM SALES &amp; SERVICES</h2>
+        <p>10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur<br/><strong>Active Stock: Fans, Gas Pipes, Immersion Rods, Mixers</strong></p>
+        <button class="btn btn-success" style="width:100%;justify-content:center;">Open Shivom ERP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN ERP APP SHELL ==================== -->
+  <div id="appShell" style="display:none;">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo-wrap">
+          <img id="headerLogo" alt="Enterprise Logo" />
+        </div>
+        <div>
+          <h1 id="headerTitle">MADHAV ENTERPRISES</h1>
+          <p id="headerSub">Plot No 408, Besan Bag, Indora, Nagpur | GSTIN: 27BQIPP3836Q1ZZ | Ph: 7499477581</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-outline btn-sm" onclick="returnToGateway()">⇄ Switch Company</button>
+        <span class="badge-status">
+          <span class="dot live"></span>
+          <span id="syncText">Live Sync Active</span>
+        </span>
+        <button class="btn btn-white btn-sm" onclick="exportToExcel()">Export Excel (.xlsx)</button>
+      </div>
+    </header>
+
+    <nav class="nav-bar">
+      <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard', this)">1. Dashboard</button>
+      <button class="nav-tab" data-tab="stock" onclick="switchTab('stock', this)">2. Stock &amp; Inventory</button>
+      <button class="nav-tab" data-tab="orders" onclick="switchTab('orders', this)">3. Order, Dispatch &amp; Bill</button>
+      <button class="nav-tab" data-tab="collection" onclick="switchTab('collection', this)">4. Collection (Cash / Bank)</button>
+      <button class="nav-tab" data-tab="ageing" onclick="switchTab('ageing', this)">5. Party Balance &amp; Ageing</button>
+      <button class="nav-tab" data-tab="masters" onclick="switchTab('masters', this)">6. Master Data &amp; Team</button>
+    </nav>
+
+    <main class="container">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-panel active">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Order Booking</div>
+            <div class="kpi-val" id="kpiOrders">₹0</div>
+            <div class="kpi-sub" id="kpiOrdersCount">0 Orders Booked</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Dispatched Sales</div>
+            <div class="kpi-val" id="kpiDispatched">₹0</div>
+            <div class="kpi-sub" id="kpiPendingDispatch">Pending Dispatch: ₹0</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Cash Collection</div>
+            <div class="kpi-val" id="kpiCash">₹0</div>
+            <div class="kpi-sub">Counter Cash Received</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Bank / UPI Collection</div>
+            <div class="kpi-val" id="kpiBank">₹0</div>
+            <div class="kpi-sub">Bank Deposits / UPI</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">Net Party Receivable</div>
+            <div class="kpi-val" id="kpiReceivable">₹0</div>
+            <div class="kpi-sub">Active Parties With Dues</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Team Performance (Roshan Thakre &amp; Prashik Hajare)</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Team Member &amp; Role</th>
+                    <th class="text-right">Orders Booked</th>
+                    <th class="text-right">Dispatched</th>
+                    <th class="text-right">Cash Col.</th>
+                    <th class="text-right">Bank Col.</th>
+                    <th class="text-right">Total Col.</th>
+                  </tr>
+                </thead>
+                <tbody id="dashSalespersonBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Receivables Ageing Alert Summary</span>
+              <button class="btn btn-primary btn-sm" onclick="switchTab('ageing', document.querySelector('[data-tab=ageing]'))">View All Parties</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Alert Category</th>
+                    <th class="text-center">Parties</th>
+                    <th class="text-right">Pending Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="dashAgeingBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Invoices &amp; Order Dispatches</span>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('orders', document.querySelector('[data-tab=orders]'))">+ New Order / Bill</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bill No</th>
+                  <th>Date</th>
+                  <th>Party Name</th>
+                  <th>Booked By</th>
+                  <th>Item</th>
+                  <th class="text-center">Ord / Disp</th>
+                  <th class="text-right">Total Amt</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Invoice</th>
+                </tr>
+              </thead>
+              <tbody id="dashRecentOrdersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: STOCK & INVENTORY -->
+      <section id="tab-stock" class="tab-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Add New Purchase / Inward Stock Entry</span></div>
+          <form class="form-grid" onsubmit="handleInwardStock(event)">
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Select Product</label>
+              <input type="text" list="productDatalist" id="inwardProductInput" class="form-control" placeholder="Type product name..." required />
+            </div>
+            <div class="form-group">
+              <label>Inward Quantity Received (+)</label>
+              <input type="number" id="inwardQty" class="form-control" min="1" placeholder="e.g. 24" required />
+            </div>
+            <div class="form-group">
+              <label>Supplier / Ref Note</label>
+              <input type="text" id="inwardNote" class="form-control" placeholder="e.g. Supplier Invoice" />
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-success" style="width:100%">+ Add Inward Stock</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Live Stock &amp; Inventory Register</span>
+            <input type="text" id="stockSearch" class="form-control" style="width:230px;" placeholder="Search item or HSN..." oninput="renderStockTable()" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Product Name</th>
+                  <th>Group / HSN</th>
+                  <th class="text-right">Dealer Rate</th>
+                  <th class="text-center">GST</th>
+                  <th class="text-right">Opening</th>
+                  <th class="text-right">Inward</th>
+                  <th class="text-right">Booked</th>
+                  <th class="text-right">Dispatched</th>
+                  <th class="text-right">Available</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ORDER, DISPATCH & BILL -->
+      <section id="tab-orders" class="tab-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Book New Sales Order / Generate Bill</span></div>
+          <form class="form-grid" onsubmit="handleCreateOrder(event)">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="ordDate" class="form-control" required />
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Party / Dealer Name (Active Parties)</label>
+              <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." required />
+            </div>
+            <div class="form-group">
+              <label>Booked By</label>
+              <select id="ordSalesperson" class="form-control" required></select>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Select Product</label>
+              <input type="text" list="productDatalist" id="ordProductInput" class="form-control" placeholder="Type product name..." onchange="updateOrderRatePreview()" oninput="updateOrderRatePreview()" required />
+            </div>
+            <div class="form-group">
+              <label>Order Qty <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
+              <input type="number" id="ordQty" class="form-control" min="1" value="1" oninput="updateOrderTotalPreview()" required />
+            </div>
+            <div class="form-group">
+              <label>Rate Incl. GST (₹)</label>
+              <input type="number" id="ordRate" class="form-control" min="0" step="0.01" oninput="updateOrderTotalPreview()" required />
+            </div>
+            <div class="form-group">
+              <label>GST %</label>
+              <select id="ordGst" class="form-control" onchange="updateOrderTotalPreview()">
+                <option value="18">18% GST</option>
+                <option value="5">5% GST</option>
+                <option value="12">12% GST</option>
+                <option value="0">0% Exempt</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Immediate Dispatch?</label>
+              <select id="ordImmediateDispatch" class="form-control">
+                <option value="YES">Yes — Full Dispatch Now</option>
+                <option value="NO">No — Keep Pending</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Total Amount (₹)</label>
+              <input type="text" id="ordTotalPreview" class="form-control font-bold" readonly value="₹0.00" />
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary" style="width:100%">Save Order &amp; Bill</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Order &amp; Dispatch Register</span>
+            <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Bill No, Party or Item..." oninput="renderOrdersTable()" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bill No</th>
+                  <th>Date</th>
+                  <th>Party Name</th>
+                  <th>Booked By</th>
+                  <th>Product</th>
+                  <th class="text-right">Ord Qty</th>
+                  <th class="text-right">Disp Qty</th>
+                  <th class="text-right">Total Amt</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: COLLECTION -->
+      <section id="tab-collection" class="tab-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Record Payment Collection (Cash / Bank)</span></div>
+          <form class="form-grid" onsubmit="handleCreateCollection(event)">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="colDate" class="form-control" required />
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Party Name</label>
+              <input type="text" list="partyDatalist" id="colPartyInput" class="form-control" placeholder="Type party name..." required />
+            </div>
+            <div class="form-group">
+              <label>Collected By</label>
+              <select id="colSalesperson" class="form-control" required></select>
+            </div>
+            <div class="form-group">
+              <label>Amount Received (₹)</label>
+              <input type="number" id="colAmount" class="form-control" min="1" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label>Mode</label>
+              <select id="colMode" class="form-control" required>
+                <option value="Cash">Cash</option>
+                <option value="Bank">Bank / UPI</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Reference / Remark</label>
+              <input type="text" id="colRef" class="form-control" placeholder="e.g. Online to Prashik / Cash to Roshan" />
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-success" style="width:100%">+ Save Receipt</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Collection Ledger</span>
+            <input type="text" id="colSearch" class="form-control" style="width:240px;" placeholder="Search party..." oninput="renderCollectionTable()" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receipt No</th>
+                  <th>Date</th>
+                  <th>Party Name</th>
+                  <th>Collected By</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th class="text-center">Mode</th>
+                  <th>Reference</th>
+                </tr>
+              </thead>
+              <tbody id="collectionTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: PARTY BALANCE & AGEING -->
+      <section id="tab-ageing" class="tab-panel">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Active Party Balances &amp; Ageing Alerts</span>
+            <input type="text" id="ageingSearch" class="form-control" style="width:220px;" placeholder="Search party..." oninput="renderAgeingTable()" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Party Name</th>
+                  <th>Area / Mobile</th>
+                  <th class="text-right">Opening Bal</th>
+                  <th class="text-right">Dispatched</th>
+                  <th class="text-right">Cash Paid</th>
+                  <th class="text-right">Bank Paid</th>
+                  <th class="text-right">Net Balance</th>
+                  <th class="text-center">Days</th>
+                  <th class="text-center">Alert</th>
+                  <th class="text-center">WhatsApp</th>
+                </tr>
+              </thead>
+              <tbody id="ageingTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: MASTERS & TEAM -->
+      <section id="tab-masters" class="tab-panel">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Add New Product</span></div>
+            <form class="form-grid" onsubmit="handleAddProduct(event)">
+              <div class="form-group">
+                <label>Code</label>
+                <input type="text" id="mProdCode" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="mProdName" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Rate (₹)</label>
+                <input type="number" id="mProdRate" class="form-control" min="1" required />
+              </div>
+              <div class="form-group">
+                <label>Opening Stk</label>
+                <input type="number" id="mProdOpen" class="form-control" min="0" value="0" required />
+              </div>
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width:100%">+ Save</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Add Active Party</span></div>
+            <form class="form-grid" onsubmit="handleAddParty(event)">
+              <div class="form-group">
+                <label>Party Name</label>
+                <input type="text" id="mPartyName" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Mobile</label>
+                <input type="text" id="mPartyMobile" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Area</label>
+                <input type="text" id="mPartyArea" class="form-control" required />
+              </div>
+              <div class="form-group">
+                <label>Opening Bal (₹)</label>
+                <input type="number" id="mPartyOpen" class="form-control" min="0" value="0" required />
+              </div>
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="width:100%">+ Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Management &amp; Sales Team</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Role</th><th>Mobile</th><th>Assigned Area</th></tr>
+              </thead>
+              <tbody id="masterSalespersonBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <datalist id="partyDatalist"></datalist>
+  <datalist id="productDatalist"></datalist>
+
+  <div class="modal-backdrop" id="dispatchModal">
+    <div class="modal">
+      <h3>Dispatch Order</h3>
+      <p id="dispatchModalInfo"></p>
+      <form onsubmit="submitDispatch(event)">
+        <input type="hidden" id="dispatchOrderId" />
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Quantity to Dispatch Now</label>
+          <input type="number" id="dispatchQtyInput" class="form-control" min="1" required />
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('dispatchModal')">Cancel</button>
+          <button type="submit" class="btn btn-success btn-sm">Confirm Dispatch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="invoiceModal">
+    <div class="modal modal-lg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
+        <h3 style="margin:0;">Official Tax Invoice Preview</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="window.print()">Print / Save PDF</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('invoiceModal')">Close</button>
+        </div>
+      </div>
+      <div id="invoicePrintArea" class="invoice-paper"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="firebaseModal">
+    <div class="modal">
+      <h3>Firebase Firestore Sync</h3>
+      <p>Connected to <code>madhaventerprises-e78e5</code>.</p>
+      <textarea id="firebaseConfigInput" class="code-box"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;">
+        <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('firebaseModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const LOGO_B64 = "data:image/png;base64,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++w65f17s/w81775/X2+3f97u+372P/X7vv773O17vu32/f37v75+73t98zfe7v/v359e/x9w7b/PffP3v/2z17f/fv9+/ft7f191/O+0vvv357//3w3ufP29v353u3v//7398bO10uvl9vudvf/vf3a59+7t/v7/928/X/vP993vvvfz7vv7f37s/vf929u3v7v//7zve+/v37v902u3uf/v87tv74vPtf13uPvvf3v3vt/v1ufv//v//vffX5v3//8fv/v9u9vd337tfv79n7e1v7u7tvft79v72tvt/vv3vf3/vdvrv7+/v7//fvvu+vP/u/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/v/image_6b0be5.png" alt="gitjsdelivr.com/drshyamp19/MADHAVENTERPRISESCHV5050f505 | Vercelॉपवर थेट डाऊनलोड फाईल डाऊनलोड करण्यासाठी खाली दिलेल्या पायऱ्या फॉलो करा:
+
+### कॉम्प्युटरवरून डाऊनलोड करण्याचे मार्ग:
+1. तुम्ही तुमच्या **GitHub** रिपॉझिटरीवर (`https://github.com/drshyamp19/MADHAVENTERPRISES`) जा.
+2. तिथे तुम्हाला **`MADHAV_SHIVOM_DualPortal_Ready.zip`** ही फाईल किंवा तिचा फोल्डर दिसेल.
+3. त्या फाईलवर क्लिक करून उजव्या कोपऱ्यात **Download** बटण दाबा, किंवा थेट मी वर कोड दिलाच आहे.
+
+किंवा जर तुम्हाला **नव्याने कॉपी करायचे असेल**, तर वर दिलेल्या कोड बॉक्समधील संपूर्ण कोड कॉपी करा आणि तुमच्या कॉम्प्युटरवर `index.html` फाईल तयार करून त्यात पेस्ट करा. काम अगदी सोपे होईल!
