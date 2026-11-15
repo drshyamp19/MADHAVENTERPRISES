@@ -1,11 +1,21 @@
-# MADHAV ENTERPRISES — Stock, Order, GST Billing & Recovery ERP
+# MADHAV & SHIVOM ENTERPRISES — Dual ERP Portal
+
+Stock, Order, GST Billing & Recovery ERP for:
+1. **MADHAV ENTERPRISES**: Greenchef Appliances & Cookware (Nagpur)
+   - **Active Parties:** 63 Verified Dealers
+   - **Total Net Receivable:** ₹3,24,350/-
+   - **Active Inventory:** 29 Greenchef Cookware & Appliance Items
+   - **Address:** Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur - 440014
+   - **GSTIN:** 27BQIPP3836Q1ZZ | **Phone:** 7499477581
+2. **SHIVOM SALES & SERVICES**: Fans, Gas Pipes, Immersion Rods, Mixers & Irons
+   - **Active Inventory:** 11 Electrical & Hardware Items (Speedo Fans, Bharat/HP Pipes, Cristal Rods, Luxer Mixer, Polar Iron)
+   - **Address:** 10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur - 440014
+   - **Phone:** 7499477581
 
 - **Owner:** Roshan Thakre
 - **Manager:** Prashik Hajare
-- **Address:** Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur - 440014
-- **GSTIN:** 27BQIPP3836Q1ZZ
 - **Firebase Project:** `madhaventerprises-e78e5`
 
 ## Deployment (GitHub + Vercel)
-1. Upload `index.html`, `vercel.json`, and `README.md` to the root of `https://github.com/drshyamp19/MADHAVENTERPRISES`.
-2. Import the repository in Vercel and click **Deploy**.
+1. Repository: `https://github.com/drshyamp19/MADHAVENTERPRISES`
+2. Auto-deployed on Vercel with single-file zero-build architecture.
