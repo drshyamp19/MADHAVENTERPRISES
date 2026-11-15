@@ -473,15 +473,57 @@
       border-radius: 8px;
       text-align: right;
     }
-    .stock-meta-grid {
+    /* Stock 3-Box Stats Grid */
+    .stock-stats-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1.2fr;
       gap: 6px;
-      font-size: 0.75rem;
-      background: #f8fafc;
-      padding: 8px 10px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .stock-stat-box {
+      padding: 7px 6px;
       border-radius: 8px;
-      margin-top: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .stock-stat-label {
+      font-size: 0.67rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+    .stock-stat-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .stock-stat-box.booked {
+      background: #fffdf5;
+      border-color: #fde68a;
+    }
+    .stock-stat-box.booked .stock-stat-val {
+      color: #b45309;
+    }
+    .stock-stat-box.available {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .stock-stat-box.available .stock-stat-val {
+      color: #15803d;
+    }
+    .stock-stat-box.available.out-of-stock {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .stock-stat-box.available.out-of-stock .stock-stat-val {
+      color: #dc2626;
     }
 
     /* Modals */
@@ -4437,7 +4479,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v5";
+    const STORAGE_KEY = "madhav_shivom_erp_v6";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -4754,16 +4796,26 @@
     // ==================== BUSINESS CALCULATIONS ====================
     function getComputedStock() {
       return state.products.map(p => {
-        const booked = state.orders
-          .filter(o => o.productId === p.id)
-          .reduce((s, o) => s + Number(o.orderQty || 0), 0);
+        // Total Inward = Opening Stock + Inward Stock added by Owner
+        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0);
+
+        // Dispatched = Quantity already sent out of warehouse to stores
         const dispatched = state.orders
           .filter(o => o.productId === p.id)
           .reduce((s, o) => s + Number(o.dispatchedQty || 0), 0);
-        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0);
-        const physical = totalIn - dispatched;
-        const available = totalIn - booked;
-        return { ...p, booked, dispatched, physical, available };
+
+        // Physical Total Stock currently inside warehouse
+        const totalStock = Math.max(0, totalIn - dispatched);
+
+        // Pending Booked = Orders booked by stores but not yet dispatched (orderQty - dispatchedQty)
+        const bookedStock = state.orders
+          .filter(o => o.productId === p.id)
+          .reduce((s, o) => s + Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)), 0);
+
+        // Net Available for booking = totalStock minus bookedStock
+        const available = Math.max(0, totalStock - bookedStock);
+
+        return { ...p, totalStock, bookedStock, dispatched, physical: totalStock, available };
       });
     }
 
@@ -4940,15 +4992,23 @@
                 <div class="stock-code">Code: <strong>${p.code}</strong> | HSN: ${p.hsn || "-"}</div>
               </div>
               <div>
-                <span class="stock-avail-pill" style="${pillBg}">${p.available} In Stock</span>
+                <span class="stock-avail-pill" style="${pillBg}">${p.available > 0 ? p.available + ' Units' : 'Out of Stock'}</span>
               </div>
             </div>
 
-            <div class="stock-meta-grid">
-              <div>Dealer Rate: <strong style="font-size:0.9rem;color:var(--primary);">${fmtINR(p.rate)}</strong></div>
-              <div>MRP: <strong>${fmtINR(p.mrp)}</strong></div>
-              <div>GST: <strong>${p.gst || 18}%</strong></div>
-              <div>Scheme: <strong style="color:#0f766e;">${p.scheme || "Nett"}</strong></div>
+            <div class="stock-stats-grid">
+              <div class="stock-stat-box">
+                <span class="stock-stat-label">Total Stock</span>
+                <span class="stock-stat-val">${p.totalStock}</span>
+              </div>
+              <div class="stock-stat-box booked">
+                <span class="stock-stat-label">Booked</span>
+                <span class="stock-stat-val">${p.bookedStock}</span>
+              </div>
+              <div class="stock-stat-box available ${p.available <= 0 ? 'out-of-stock' : ''}">
+                <span class="stock-stat-label">Available</span>
+                <span class="stock-stat-val">${p.available}</span>
+              </div>
             </div>
           </div>
         `;
