@@ -630,7 +630,7 @@
             <img id="gatewayLogo1" alt="Madhav Logo" />
           </div>
           <h2>MADHAV ENTERPRISES</h2>
-          <p>Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur<br/><strong>Active Parties: 63 | Stock: Greenchef Cookware &amp; Appliances</strong></p>
+          <p>Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur<br/><strong>Stock: Greenchef Cookware &amp; Appliances</strong></p>
         </div>
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px;">Open Madhav ERP</button>
       </div>
@@ -638,7 +638,7 @@
         <div>
           <div style="font-size:3rem;margin-bottom:14px;">⚡</div>
           <h2>SHIVOM SALES &amp; SERVICES</h2>
-          <p>10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur<br/><strong>Active Stock: Fans, Gas Pipes, Immersion Rods, Mixers, Irons</strong></p>
+          <p>10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur<br/><strong>Active Parties: 63 | Market Dues: ₹3,24,350 | Stock: Fans, Gas Pipes, Mixers</strong></p>
         </div>
         <button class="btn btn-success" style="width:100%;justify-content:center;margin-top:10px;">Open Shivom ERP</button>
       </div>
@@ -742,7 +742,7 @@
             <strong>🔴 Outstanding Market Dues &amp; Receivables</strong>
             <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Track dealer pending balances, direct phone call &amp; WhatsApp payment reminders</div>
           </div>
-          <span class="pill pill-red">Total Due: ₹3,24,350</span>
+          <span class="pill pill-red" id="openTotalDuePill">Total Due: ₹0.00</span>
         </div>
 
         <div class="card">
@@ -1263,6 +1263,435 @@
 
     const SEED_DATA = {
   "madhav": {
+    "parties": [],
+    "products": [
+      {
+        "id": "PR001",
+        "code": "5060",
+        "group": "Pressure Cookers",
+        "name": "Greenchef SS Cooker - 2Ltr - Classic",
+        "hsn": "73239310",
+        "mrp": 2335,
+        "rate": 1085,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 20,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR002",
+        "code": "5037",
+        "group": "Pressure Cookers",
+        "name": "Greenchef SS Cooker - 3Ltr - Classic",
+        "hsn": "73239310",
+        "mrp": 2665,
+        "rate": 1332.5,
+        "gst": 5,
+        "scheme": "11:1 M 2 M",
+        "lowStockLimit": 3,
+        "openingStock": 20,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR003",
+        "code": "5038",
+        "group": "Pressure Cookers",
+        "name": "Greenchef SS Cooker - 5Ltr - Classic",
+        "hsn": "73239310",
+        "mrp": 3555,
+        "rate": 1699,
+        "gst": 5,
+        "scheme": "11:1 M 2 M",
+        "lowStockLimit": 3,
+        "openingStock": 2,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR008",
+        "code": "5062",
+        "group": "Pressure Cookers",
+        "name": "Greenchef SS Innerlid Cooker - 3Ltr - Classic",
+        "hsn": "73239310",
+        "mrp": 2945,
+        "rate": 1589,
+        "gst": 5,
+        "scheme": "11:1 M 2 M",
+        "lowStockLimit": 3,
+        "openingStock": 18,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR009",
+        "code": "5063",
+        "group": "Pressure Cookers",
+        "name": "Greenchef SS Innerlid Cooker - 5Ltr - Classic",
+        "hsn": "73239310",
+        "mrp": 3740,
+        "rate": 2089,
+        "gst": 5,
+        "scheme": "11:1 M 2 M",
+        "lowStockLimit": 3,
+        "openingStock": 9,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR010",
+        "code": "5108",
+        "group": "Pressure Cookers",
+        "name": "Greenchef TRI PLY Cooker 1Ltr - Fusion",
+        "hsn": "73239310",
+        "mrp": 2375,
+        "rate": 1145,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 17,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR011",
+        "code": "5109",
+        "group": "Pressure Cookers",
+        "name": "Greenchef TRI PLY Cooker 1.5Ltr - Fusion",
+        "hsn": "73239310",
+        "mrp": 2535,
+        "rate": 1230,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 12,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR012",
+        "code": "5075",
+        "group": "Pressure Cookers",
+        "name": "Greenchef TRI PLY Cooker 2Ltr - Fusion",
+        "hsn": "73239310",
+        "mrp": 2765,
+        "rate": 1350,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 11,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR013",
+        "code": "5076",
+        "group": "Pressure Cookers",
+        "name": "Greenchef TRI PLY Cooker 3Ltr - Fusion",
+        "hsn": "73239310",
+        "mrp": 3225,
+        "rate": 1575,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 24,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR014",
+        "code": "5077",
+        "group": "Pressure Cookers",
+        "name": "Greenchef TRI PLY Cooker 5Ltr - Fusion",
+        "hsn": "73239310",
+        "mrp": 3900,
+        "rate": 1899,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 15,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR029",
+        "code": "6001",
+        "group": "Non-Stick Cookware",
+        "name": "Greenchef Flat Tawa 250 - Namo",
+        "hsn": "76151021",
+        "mrp": 955,
+        "rate": 450,
+        "gst": 5,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 12,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR038",
+        "code": "6093",
+        "group": "Non-Stick Cookware",
+        "name": "Greenchef Flat Tawa 280 IB - REGAL",
+        "hsn": "76151021",
+        "mrp": 1355,
+        "rate": 650,
+        "gst": 5,
+        "scheme": "17 : 3 M2M",
+        "lowStockLimit": 3,
+        "openingStock": 9,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR103",
+        "code": "7019",
+        "group": "Induction Cooktops",
+        "name": "Greenchef Induction Cook Top - Ember",
+        "hsn": "85166000",
+        "mrp": 3775,
+        "rate": 1699,
+        "gst": 18,
+        "scheme": "11:1 M2M",
+        "lowStockLimit": 3,
+        "openingStock": 19,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR105",
+        "code": "7022",
+        "group": "Induction Cooktops",
+        "name": "Greenchef Infrared Induction Cooktop - Jawa Pro",
+        "hsn": "85166000",
+        "mrp": 6220,
+        "rate": 2799,
+        "gst": 18,
+        "scheme": "15:1 M2M",
+        "lowStockLimit": 3,
+        "openingStock": 36,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR107",
+        "code": "7027",
+        "group": "Induction Cooktops",
+        "name": "Greenchef infrared - induction cooktop - Rapid duo",
+        "hsn": "85166000",
+        "mrp": 16699,
+        "rate": 7499,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 3,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR111",
+        "code": "27004",
+        "group": "Appliances & Accessories",
+        "name": "Greenchef Electric Cooker RC 1.81Ltr Carlo",
+        "hsn": "73239310",
+        "mrp": 4877.78,
+        "rate": 2200,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 4,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR115",
+        "code": "23006",
+        "group": "Electric Kettles",
+        "name": "Greenchef S S Kettle 1.5ltrs - Swift",
+        "hsn": "85166000",
+        "mrp": 1250,
+        "rate": 535,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 117,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR116",
+        "code": "23010",
+        "group": "Electric Kettles",
+        "name": "Greenchef SS Kettle 1.8ltrs - Glitter",
+        "hsn": "85166000",
+        "mrp": 1750,
+        "rate": 805,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 25,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR134",
+        "code": "23507",
+        "group": "Appliances & Accessories",
+        "name": "Greenchef Electric OTG - 9ltrs",
+        "hsn": "85166000",
+        "mrp": 4459,
+        "rate": 1799,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 5,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR138",
+        "code": "14406",
+        "group": "Mixer Grinders",
+        "name": "Greenchef Blender - Nutri Smash - 2 JAR",
+        "hsn": "85094010",
+        "mrp": 3349,
+        "rate": 1499,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 17,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR140",
+        "code": "4030",
+        "group": "Mixer Grinders",
+        "name": "Greenchef Mixer Grinder 600W 3Jars - Focal",
+        "hsn": "85094010",
+        "mrp": 4220,
+        "rate": 1999,
+        "gst": 18,
+        "scheme": "17:1 M2M",
+        "lowStockLimit": 3,
+        "openingStock": 6,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR151",
+        "code": "4046",
+        "group": "Mixer Grinders",
+        "name": "Greenchef Mixer Grinder 600W 4Jars - Misty (3 dry jar + 1 juicer jar)",
+        "hsn": "85094010",
+        "mrp": 4899,
+        "rate": 2350,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 1,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR158",
+        "code": "2007",
+        "group": "Gas Stoves",
+        "name": "Greenchef SS LPG Stove T/B - Slim",
+        "hsn": "73211110",
+        "mrp": 7335,
+        "rate": 3465,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 16,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR178",
+        "code": "1045",
+        "group": "Gas Stoves",
+        "name": "Greenchef Glasstop T/B - Orbit (Jumbo Burner)",
+        "hsn": "73211110",
+        "mrp": 7766.67,
+        "rate": 3699,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 3,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR214",
+        "code": "12001",
+        "group": "Appliances & Accessories",
+        "name": "Greenchef Gas Lighter with knife",
+        "hsn": "96131000",
+        "mrp": 199,
+        "rate": 57,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 327,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR218",
+        "code": "8566000",
+        "group": "Appliances & Accessories",
+        "name": "Air fryer 4.2 lit",
+        "hsn": "8566000",
+        "mrp": 4999,
+        "rate": 2999,
+        "gst": 18,
+        "scheme": "Nett Billing",
+        "lowStockLimit": 3,
+        "openingStock": 5,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR219",
+        "code": "GC-MOVA",
+        "group": "Mixer Grinders",
+        "name": "Mixer mova 600 w",
+        "hsn": "85094010",
+        "mrp": 3499,
+        "rate": 2070,
+        "gst": 18,
+        "scheme": "Nett Billing",
+        "lowStockLimit": 3,
+        "openingStock": 10,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR028",
+        "code": "GC-28",
+        "group": "Pressure Cookers",
+        "name": "compact 3 ltr",
+        "hsn": "85166000",
+        "mrp": 0,
+        "rate": 0,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 13,
+        "inwardStock": 0
+      },
+      {
+        "id": "PR029",
+        "code": "GC-29",
+        "group": "Pressure Cookers",
+        "name": "compact 1.5 ltr",
+        "hsn": "85166000",
+        "mrp": 0,
+        "rate": 0,
+        "gst": 18,
+        "scheme": "Nett Billing !!!",
+        "lowStockLimit": 3,
+        "openingStock": 1,
+        "inwardStock": 0
+      }
+    ],
+    "orders": [],
+    "collections": [],
+    "salespersons": [
+      {
+        "id": "SP01",
+        "name": "Roshan Thakre",
+        "role": "Owner",
+        "mobile": "7499477581",
+        "area": "Nagpur & Vidarbha H.O."
+      },
+      {
+        "id": "SP02",
+        "name": "Prashik Hajare",
+        "role": "Manager",
+        "mobile": "9588406934",
+        "area": "Field Sales & Recovery"
+      }
+    ]
+  },
+  "shivom": {
     "parties": [
       {
         "id": "P001",
@@ -1834,409 +2263,146 @@
     ],
     "products": [
       {
-        "id": "PR001",
-        "code": "5060",
-        "group": "Pressure Cookers",
-        "name": "Greenchef SS Cooker - 2Ltr - Classic",
-        "hsn": "73239310",
-        "mrp": 2335,
-        "rate": 1085,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 20,
+        "id": "SH001",
+        "code": "SH-PIPE-01",
+        "group": "Safety Gas Pipes",
+        "name": "BHARAT Hose Pipe",
+        "hsn": "85166000",
+        "mrp": 320,
+        "rate": 160,
+        "gst": 18,
+        "lowStockLimit": 20,
+        "openingStock": 660,
         "inwardStock": 0
       },
       {
-        "id": "PR002",
-        "code": "5037",
-        "group": "Pressure Cookers",
-        "name": "Greenchef SS Cooker - 3Ltr - Classic",
-        "hsn": "73239310",
-        "mrp": 2665,
-        "rate": 1332.5,
-        "gst": 5,
-        "scheme": "11:1 M 2 M",
-        "lowStockLimit": 3,
-        "openingStock": 20,
+        "id": "SH002",
+        "code": "SH-PIPE-02",
+        "group": "Safety Gas Pipes",
+        "name": "HP Hose Pipe",
+        "hsn": "85166000",
+        "mrp": 350,
+        "rate": 175,
+        "gst": 18,
+        "lowStockLimit": 20,
+        "openingStock": 226,
         "inwardStock": 0
       },
       {
-        "id": "PR003",
-        "code": "5038",
-        "group": "Pressure Cookers",
-        "name": "Greenchef SS Cooker - 5Ltr - Classic",
-        "hsn": "73239310",
-        "mrp": 3555,
-        "rate": 1699,
-        "gst": 5,
-        "scheme": "11:1 M 2 M",
-        "lowStockLimit": 3,
-        "openingStock": 2,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR008",
-        "code": "5062",
-        "group": "Pressure Cookers",
-        "name": "Greenchef SS Innerlid Cooker - 3Ltr - Classic",
-        "hsn": "73239310",
-        "mrp": 2945,
-        "rate": 1589,
-        "gst": 5,
-        "scheme": "11:1 M 2 M",
-        "lowStockLimit": 3,
-        "openingStock": 18,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR009",
-        "code": "5063",
-        "group": "Pressure Cookers",
-        "name": "Greenchef SS Innerlid Cooker - 5Ltr - Classic",
-        "hsn": "73239310",
-        "mrp": 3740,
-        "rate": 2089,
-        "gst": 5,
-        "scheme": "11:1 M 2 M",
-        "lowStockLimit": 3,
-        "openingStock": 9,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR010",
-        "code": "5108",
-        "group": "Pressure Cookers",
-        "name": "Greenchef TRI PLY Cooker 1Ltr - Fusion",
-        "hsn": "73239310",
-        "mrp": 2375,
-        "rate": 1145,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 17,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR011",
-        "code": "5109",
-        "group": "Pressure Cookers",
-        "name": "Greenchef TRI PLY Cooker 1.5Ltr - Fusion",
-        "hsn": "73239310",
-        "mrp": 2535,
-        "rate": 1230,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 12,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR012",
-        "code": "5075",
-        "group": "Pressure Cookers",
-        "name": "Greenchef TRI PLY Cooker 2Ltr - Fusion",
-        "hsn": "73239310",
-        "mrp": 2765,
+        "id": "SH003",
+        "code": "SH-FAN-01",
+        "group": "Ceiling Fans",
+        "name": "CLASSIC Speedo Fan",
+        "hsn": "84145120",
+        "mrp": 2200,
         "rate": 1350,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 11,
+        "gst": 18,
+        "lowStockLimit": 10,
+        "openingStock": 113,
         "inwardStock": 0
       },
       {
-        "id": "PR013",
-        "code": "5076",
-        "group": "Pressure Cookers",
-        "name": "Greenchef TRI PLY Cooker 3Ltr - Fusion",
-        "hsn": "73239310",
-        "mrp": 3225,
-        "rate": 1575,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 24,
+        "id": "SH004",
+        "code": "SH-FAN-02",
+        "group": "Ceiling Fans",
+        "name": "CG Speedo Fan",
+        "hsn": "84145120",
+        "mrp": 2400,
+        "rate": 1450,
+        "gst": 18,
+        "lowStockLimit": 5,
+        "openingStock": 7,
         "inwardStock": 0
       },
       {
-        "id": "PR014",
-        "code": "5077",
-        "group": "Pressure Cookers",
-        "name": "Greenchef TRI PLY Cooker 5Ltr - Fusion",
-        "hsn": "73239310",
-        "mrp": 3900,
-        "rate": 1899,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 15,
+        "id": "SH005",
+        "code": "SH-FAN-03",
+        "group": "Ceiling Fans",
+        "name": "CRETA Speedo Fan",
+        "hsn": "84145120",
+        "mrp": 2300,
+        "rate": 1400,
+        "gst": 18,
+        "lowStockLimit": 5,
+        "openingStock": 30,
         "inwardStock": 0
       },
       {
-        "id": "PR029",
-        "code": "6001",
-        "group": "Non-Stick Cookware",
-        "name": "Greenchef Flat Tawa 250 - Namo",
-        "hsn": "76151021",
-        "mrp": 955,
+        "id": "SH006",
+        "code": "SH-ROD-01",
+        "group": "Water Heaters",
+        "name": "CRISTAL Immersion Rods 1500W",
+        "hsn": "85166000",
+        "mrp": 450,
+        "rate": 210,
+        "gst": 18,
+        "lowStockLimit": 20,
+        "openingStock": 300,
+        "inwardStock": 0
+      },
+      {
+        "id": "SH007",
+        "code": "SH-SPARE-01",
+        "group": "Ceiling Fans",
+        "name": "SPEEDO Mundi / Motor",
+        "hsn": "84149030",
+        "mrp": 850,
         "rate": 450,
-        "gst": 5,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 12,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR038",
-        "code": "6093",
-        "group": "Non-Stick Cookware",
-        "name": "Greenchef Flat Tawa 280 IB - REGAL",
-        "hsn": "76151021",
-        "mrp": 1355,
-        "rate": 650,
-        "gst": 5,
-        "scheme": "17 : 3 M2M",
-        "lowStockLimit": 3,
-        "openingStock": 9,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR103",
-        "code": "7019",
-        "group": "Induction Cooktops",
-        "name": "Greenchef Induction Cook Top - Ember",
-        "hsn": "85166000",
-        "mrp": 3775,
-        "rate": 1699,
         "gst": 18,
-        "scheme": "11:1 M2M",
-        "lowStockLimit": 3,
-        "openingStock": 19,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR105",
-        "code": "7022",
-        "group": "Induction Cooktops",
-        "name": "Greenchef Infrared Induction Cooktop - Jawa Pro",
-        "hsn": "85166000",
-        "mrp": 6220,
-        "rate": 2799,
-        "gst": 18,
-        "scheme": "15:1 M2M",
-        "lowStockLimit": 3,
-        "openingStock": 36,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR107",
-        "code": "7027",
-        "group": "Induction Cooktops",
-        "name": "Greenchef infrared - induction cooktop - Rapid duo",
-        "hsn": "85166000",
-        "mrp": 16699,
-        "rate": 7499,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 3,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR111",
-        "code": "27004",
-        "group": "Appliances & Accessories",
-        "name": "Greenchef Electric Cooker RC 1.81Ltr Carlo",
-        "hsn": "73239310",
-        "mrp": 4877.78,
-        "rate": 2200,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 4,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR115",
-        "code": "23006",
-        "group": "Electric Kettles",
-        "name": "Greenchef S S Kettle 1.5ltrs - Swift",
-        "hsn": "85166000",
-        "mrp": 1250,
-        "rate": 535,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 117,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR116",
-        "code": "23010",
-        "group": "Electric Kettles",
-        "name": "Greenchef SS Kettle 1.8ltrs - Glitter",
-        "hsn": "85166000",
-        "mrp": 1750,
-        "rate": 805,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 25,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR134",
-        "code": "23507",
-        "group": "Appliances & Accessories",
-        "name": "Greenchef Electric OTG - 9ltrs",
-        "hsn": "85166000",
-        "mrp": 4459,
-        "rate": 1799,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
+        "lowStockLimit": 5,
         "openingStock": 5,
         "inwardStock": 0
       },
       {
-        "id": "PR138",
-        "code": "14406",
-        "group": "Mixer Grinders",
-        "name": "Greenchef Blender - Nutri Smash - 2 JAR",
-        "hsn": "85094010",
-        "mrp": 3349,
-        "rate": 1499,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 17,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR140",
-        "code": "4030",
-        "group": "Mixer Grinders",
-        "name": "Greenchef Mixer Grinder 600W 3Jars - Focal",
-        "hsn": "85094010",
-        "mrp": 4220,
-        "rate": 1999,
-        "gst": 18,
-        "scheme": "17:1 M2M",
-        "lowStockLimit": 3,
-        "openingStock": 6,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR151",
-        "code": "4046",
-        "group": "Mixer Grinders",
-        "name": "Greenchef Mixer Grinder 600W 4Jars - Misty (3 dry jar + 1 juicer jar)",
-        "hsn": "85094010",
-        "mrp": 4899,
-        "rate": 2350,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 1,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR158",
-        "code": "2007",
-        "group": "Gas Stoves",
-        "name": "Greenchef SS LPG Stove T/B - Slim",
+        "id": "SH008",
+        "code": "SH-APPL-01",
+        "group": "Stove Spares",
+        "name": "FIREOX Stove",
         "hsn": "73211110",
-        "mrp": 7335,
-        "rate": 3465,
+        "mrp": 2999,
+        "rate": 1650,
         "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 16,
+        "lowStockLimit": 2,
+        "openingStock": 0,
         "inwardStock": 0
       },
       {
-        "id": "PR178",
-        "code": "1045",
-        "group": "Gas Stoves",
-        "name": "Greenchef Glasstop T/B - Orbit (Jumbo Burner)",
-        "hsn": "73211110",
-        "mrp": 7766.67,
-        "rate": 3699,
+        "id": "SH009",
+        "code": "SH-ROD-02",
+        "group": "Water Heaters",
+        "name": "Rodstar Immersion Rod",
+        "hsn": "85166000",
+        "mrp": 399,
+        "rate": 195,
         "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 3,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR214",
-        "code": "12001",
-        "group": "Appliances & Accessories",
-        "name": "Greenchef Gas Lighter with knife",
-        "hsn": "96131000",
-        "mrp": 199,
-        "rate": 57,
-        "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 327,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR218",
-        "code": "8566000",
-        "group": "Appliances & Accessories",
-        "name": "Air fryer 4.2 lit",
-        "hsn": "8566000",
-        "mrp": 4999,
-        "rate": 2999,
-        "gst": 18,
-        "scheme": "Nett Billing",
-        "lowStockLimit": 3,
-        "openingStock": 5,
-        "inwardStock": 0
-      },
-      {
-        "id": "PR219",
-        "code": "GC-MOVA",
-        "group": "Mixer Grinders",
-        "name": "Mixer mova 600 w",
-        "hsn": "85094010",
-        "mrp": 3499,
-        "rate": 2070,
-        "gst": 18,
-        "scheme": "Nett Billing",
-        "lowStockLimit": 3,
+        "lowStockLimit": 5,
         "openingStock": 10,
         "inwardStock": 0
       },
       {
-        "id": "PR028",
-        "code": "GC-28",
-        "group": "Pressure Cookers",
-        "name": "compact 3 ltr",
-        "hsn": "85166000",
-        "mrp": 0,
-        "rate": 0,
+        "id": "SH010",
+        "code": "SH-MIX-01",
+        "group": "Mixer Grinders",
+        "name": "Luxer Mixer Grinder 500W",
+        "hsn": "85094010",
+        "mrp": 2699,
+        "rate": 1450,
         "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 13,
+        "lowStockLimit": 10,
+        "openingStock": 61,
         "inwardStock": 0
       },
       {
-        "id": "PR029",
-        "code": "GC-29",
-        "group": "Pressure Cookers",
-        "name": "compact 1.5 ltr",
-        "hsn": "85166000",
-        "mrp": 0,
-        "rate": 0,
+        "id": "SH011",
+        "code": "SH-IRON-01",
+        "group": "Dry Irons",
+        "name": "Polar Dry Iron Heavy",
+        "hsn": "85164000",
+        "mrp": 899,
+        "rate": 490,
         "gst": 18,
-        "scheme": "Nett Billing !!!",
-        "lowStockLimit": 3,
-        "openingStock": 1,
+        "lowStockLimit": 5,
+        "openingStock": 7,
         "inwardStock": 0
       }
     ],
@@ -4268,179 +4434,10 @@
         "area": "Field Sales & Recovery"
       }
     ]
-  },
-  "shivom": {
-    "parties": [
-      {
-        "id": "SHP01",
-        "name": "Shivom General Counter",
-        "area": "Bazonbagh Indora",
-        "mobile": "7499477581",
-        "gstin": "",
-        "openingBalance": 0,
-        "lastPaymentDate": "2026-11-15"
-      }
-    ],
-    "products": [
-      {
-        "id": "SH001",
-        "code": "SH-PIPE-01",
-        "group": "Safety Gas Pipes",
-        "name": "BHARAT Hose Pipe",
-        "hsn": "85166000",
-        "mrp": 320,
-        "rate": 160,
-        "gst": 18,
-        "lowStockLimit": 20,
-        "openingStock": 660,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH002",
-        "code": "SH-PIPE-02",
-        "group": "Safety Gas Pipes",
-        "name": "HP Hose Pipe",
-        "hsn": "85166000",
-        "mrp": 350,
-        "rate": 175,
-        "gst": 18,
-        "lowStockLimit": 20,
-        "openingStock": 226,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH003",
-        "code": "SH-FAN-01",
-        "group": "Ceiling Fans",
-        "name": "CLASSIC Speedo Fan",
-        "hsn": "84145120",
-        "mrp": 2200,
-        "rate": 1350,
-        "gst": 18,
-        "lowStockLimit": 10,
-        "openingStock": 113,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH004",
-        "code": "SH-FAN-02",
-        "group": "Ceiling Fans",
-        "name": "CG Speedo Fan",
-        "hsn": "84145120",
-        "mrp": 2400,
-        "rate": 1450,
-        "gst": 18,
-        "lowStockLimit": 5,
-        "openingStock": 7,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH005",
-        "code": "SH-FAN-03",
-        "group": "Ceiling Fans",
-        "name": "CRETA Speedo Fan",
-        "hsn": "84145120",
-        "mrp": 2300,
-        "rate": 1400,
-        "gst": 18,
-        "lowStockLimit": 5,
-        "openingStock": 30,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH006",
-        "code": "SH-ROD-01",
-        "group": "Water Heaters",
-        "name": "CRISTAL Immersion Rods 1500W",
-        "hsn": "85166000",
-        "mrp": 450,
-        "rate": 210,
-        "gst": 18,
-        "lowStockLimit": 20,
-        "openingStock": 300,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH007",
-        "code": "SH-SPARE-01",
-        "group": "Ceiling Fans",
-        "name": "SPEEDO Mundi / Motor",
-        "hsn": "84149030",
-        "mrp": 850,
-        "rate": 450,
-        "gst": 18,
-        "lowStockLimit": 5,
-        "openingStock": 5,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH008",
-        "code": "SH-APPL-01",
-        "group": "Stove Spares",
-        "name": "FIREOX Stove",
-        "hsn": "73211110",
-        "mrp": 2999,
-        "rate": 1650,
-        "gst": 18,
-        "lowStockLimit": 2,
-        "openingStock": 0,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH009",
-        "code": "SH-ROD-02",
-        "group": "Water Heaters",
-        "name": "Rodstar Immersion Rod",
-        "hsn": "85166000",
-        "mrp": 399,
-        "rate": 195,
-        "gst": 18,
-        "lowStockLimit": 5,
-        "openingStock": 10,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH010",
-        "code": "SH-MIX-01",
-        "group": "Mixer Grinders",
-        "name": "Luxer Mixer Grinder 500W",
-        "hsn": "85094010",
-        "mrp": 2699,
-        "rate": 1450,
-        "gst": 18,
-        "lowStockLimit": 10,
-        "openingStock": 61,
-        "inwardStock": 0
-      },
-      {
-        "id": "SH011",
-        "code": "SH-IRON-01",
-        "group": "Dry Irons",
-        "name": "Polar Dry Iron Heavy",
-        "hsn": "85164000",
-        "mrp": 899,
-        "rate": 490,
-        "gst": 18,
-        "lowStockLimit": 5,
-        "openingStock": 7,
-        "inwardStock": 0
-      }
-    ],
-    "orders": [],
-    "collections": [],
-    "salespersons": [
-      {
-        "id": "SP01",
-        "name": "Roshan Thakre",
-        "role": "Owner",
-        "mobile": "7499477581",
-        "area": "Management"
-      }
-    ]
   }
 };
 
-    const STORAGE_KEY = "madhav_enterprises_erp_v3";
+    const STORAGE_KEY = "madhav_shivom_erp_v5";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -4449,7 +4446,7 @@
     const PIN_HASH = "ba258b5a7eb00f1bb2da1943f42c46d45ae030163ba9fdfad4eefad0d9cb2319";
     const PIN_NUM = 1753594;
 
-    let activeCompany = "MADHAV";
+    let activeCompany = "SHIVOM";
     let activeArea = "ALL";
     let activeCategory = "ALL";
     let isAdminLoggedIn = false;
@@ -4491,7 +4488,7 @@
       updateAdminUI();
 
       const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
-      selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
+      selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "SHIVOM");
 
       initFirebase();
     }
@@ -4966,6 +4963,10 @@
     // ==================== OPEN PORTAL: OUTSTANDING DUES ====================
     function renderOpenDealers() {
       const parties = getComputedParties();
+      const totalDue = parties.reduce((s, p) => s + Math.max(0, p.netBalance), 0);
+      const duePill = document.getElementById("openTotalDuePill");
+      if (duePill) duePill.textContent = "Total Due: " + fmtINR(totalDue);
+
       const q = (document.getElementById("openDealerSearch").value || "").toLowerCase().trim();
       const filterMode = document.getElementById("openDueFilter").value;
 
