@@ -96,6 +96,46 @@
     .brand p { font-size: 0.72rem; opacity: 0.9; margin-top: 2px; }
     .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+    /* Header Company Switcher Tabs */
+    .company-switcher {
+      display: inline-flex;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      gap: 3px;
+    }
+    .co-tab-btn {
+      padding: 5px 11px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .co-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .co-tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+    .co-tab-btn.active.madhav-active {
+      color: #1e3a5f;
+    }
+    .co-tab-btn.active.shivom-active {
+      color: #0f766e;
+    }
+
     .badge-status {
       padding: 5px 10px;
       border-radius: 999px;
@@ -621,7 +661,15 @@
         <span id="adminBadgeWrap" style="display:none;">
           <span class="badge-admin">👑 Owner Admin</span>
         </span>
-        <button class="btn btn-outline btn-sm" onclick="returnToGateway()">⇄ Switch Co.</button>
+        <!-- 2 Company Options in place of Switch button -->
+        <div class="company-switcher">
+          <button id="coBtnMadhav" class="co-tab-btn active madhav-active" onclick="selectCompany('MADHAV')">
+            🏢 Madhav
+          </button>
+          <button id="coBtnShivom" class="co-tab-btn" onclick="selectCompany('SHIVOM')">
+            ⚡ Shivom
+          </button>
+        </div>
         <span class="badge-status">
           <span class="dot live" id="syncDot"></span>
           <span id="syncText">Live Sync</span>
@@ -4443,12 +4491,7 @@
       updateAdminUI();
 
       const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
-      if (savedCo && COMPANIES[savedCo]) {
-        selectCompany(savedCo);
-      } else {
-        document.getElementById("gatewayScreen").style.display = "flex";
-        document.getElementById("appShell").style.display = "none";
-      }
+      selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
 
       initFirebase();
     }
@@ -4469,6 +4512,19 @@
         logoWrap.innerHTML = '<img id="headerLogo" src="' + SHOP_LOGO + '" alt="Logo" style="height:42px;width:auto;display:block;" />';
       } else {
         logoWrap.innerHTML = '<span style="font-size:1.8rem;padding:0 6px;">⚡</span>';
+      }
+
+      // Update Header Switcher Buttons
+      const btnM = document.getElementById("coBtnMadhav");
+      const btnS = document.getElementById("coBtnShivom");
+      if (btnM && btnS) {
+        if (coKey === "MADHAV") {
+          btnM.className = "co-tab-btn active madhav-active";
+          btnS.className = "co-tab-btn";
+        } else {
+          btnS.className = "co-tab-btn active shivom-active";
+          btnM.className = "co-tab-btn";
+        }
       }
 
       loadCompanyState();
