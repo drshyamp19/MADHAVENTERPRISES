@@ -150,6 +150,26 @@
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #facc15; }
     .dot.live { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
 
+    
+    .badge-staff {
+      background: #ccfbf1;
+      color: #0f766e;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid #99f6e4;
+    }
+    .btn-teal {
+      background: #0f766e;
+      color: #fff;
+    }
+    .btn-teal:hover {
+      background: #115e59;
+    }
     .badge-admin {
       background: #facc15;
       color: #713f12;
@@ -716,6 +736,13 @@
           <span class="dot live" id="syncDot"></span>
           <span id="syncText">Live Sync</span>
         </span>
+        <span id="staffBadgeWrap" style="display:none;align-items:center;gap:6px;">
+          <span class="badge-staff" id="staffUserName">👤 Staff</span>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="staffLogout()">🚪 Logout</button>
+        </span>
+        <span id="staffLoginBtnWrap">
+          <button class="btn btn-teal btn-sm" onclick="openStaffLoginModal()">📱 Sales Team Login</button>
+        </span>
         <span id="ownerLoginBtnWrap">
           <button class="btn btn-amber btn-sm" onclick="openLoginModal()">🔐 Owner Login</button>
         </span>
@@ -730,11 +757,13 @@
     <nav class="nav-bar">
       <button class="nav-tab open-tab active" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 1. Live Stock &amp; Rates</button>
       <button class="nav-tab open-tab" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 2. Outstanding Dues</button>
+      <!-- Staff & Admin Shared Tabs -->
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 3. Book Order</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 4. Record Collection</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="staff-cash" onclick="switchTab('staff-cash', this)">🤝 5. Cash Handover &amp; Bank</button>
       <!-- Admin Only Tabs -->
       <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
       <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 New Bill / GST Invoice</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 Record Collection</button>
       <button class="nav-tab admin-only-item" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
     </nav>
 
@@ -1130,6 +1159,65 @@
         </div>
       </section>
 
+      
+      <!-- ==================== STAFF TAB 5: CASH HANDOVER & BANK ==================== -->
+      <section id="tab-staff-cash" class="tab-panel">
+        <div class="open-notice-banner" style="background:#f0fdf4;border-color:#bbf7d0;">
+          <div>
+            <strong style="color:#166534;">🤝 Cash Handover &amp; Bank Clearance Pipeline</strong>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">
+              Salesmen handover market cash to Prashik Hajare (Manager), and Prashik deposits cash into Company Bank (IOB).
+            </div>
+          </div>
+          <span class="pill pill-green" id="cashTabRoleBadge">Staff View</span>
+        </div>
+
+        <!-- Dynamic Cash Summary Cards -->
+        <div class="kpi-grid" id="staffCashCardsGrid" style="margin-bottom:16px;"></div>
+
+        <!-- Action Card (Handover for Salesmen / Bank Deposit for Prashik / Overview for Owner) -->
+        <div class="card" id="staffCashActionCard" style="margin-bottom:16px;padding:18px;"></div>
+
+        <!-- History Tables: Handovers & Bank Deposits -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">📜 Salesmen Handover to Prashik History</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Salesperson</th>
+                    <th class="text-right">Amount</th>
+                    <th>Handed To</th>
+                    <th class="text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="cashHandoverTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏦 Bank Deposit (IOB Account) History</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Challan / Ref #</th>
+                    <th>Bank</th>
+                    <th class="text-right">Amount</th>
+                    <th>Deposited By</th>
+                  </tr>
+                </thead>
+                <tbody id="bankDepositTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ==================== ADMIN TAB 5: MASTERS & TEAM ==================== -->
       <section id="tab-admin-masters" class="tab-panel">
         <div class="grid-2">
@@ -1222,6 +1310,97 @@
 
   <datalist id="partyDatalist"></datalist>
   <datalist id="productDatalist"></datalist>
+
+  
+  <!-- ==================== SALES TEAM LOGIN MODAL ==================== -->
+  <div class="modal-backdrop" id="staffLoginModal">
+    <div class="modal" style="max-width:390px;text-align:center;">
+      <div style="font-size:2.4rem;margin-bottom:8px;">📱</div>
+      <h3 style="margin-bottom:4px;color:var(--primary);">Sales Team Login</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">Prashik Hajare (Manager), Gopal Ambagade &amp; Vikram Sing Thakur</p>
+      <form onsubmit="handleStaffLogin(event)" style="text-align:left;">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Mobile Number (Login ID)</label>
+          <input type="tel" id="staffMobileInput" class="form-control" placeholder="10-digit mobile number" required autofocus />
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Password</label>
+          <input type="password" id="staffPassInput" class="form-control" placeholder="Enter password" required />
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;" onclick="closeModal('staffLoginModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Login</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== ORDER SUCCESS & WHATSAPP MODAL ==================== -->
+  <div class="modal-backdrop" id="orderSuccessModal">
+    <div class="modal" style="max-width:440px;text-align:center;">
+      <div style="font-size:2.6rem;margin-bottom:8px;">🎉</div>
+      <h3 style="color:#0f766e;margin-bottom:4px;">Order Booked Successfully!</h3>
+      <p style="font-size:0.8rem;color:var(--muted);">Order No: <strong id="succOrdNo">#1050</strong></p>
+      <div id="succOrdDetails" style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.82rem;line-height:1.6;margin:14px 0;text-align:left;border:1px solid var(--border);"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;">
+          💬 Send Order Slip to Dealer on WhatsApp
+        </a>
+        <button type="button" class="btn btn-outline" style="justify-content:center;border-color:var(--border);" onclick="closeModal('orderSuccessModal')">
+          Done / Book Another Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== COLLECTION SUCCESS & WHATSAPP MODAL ==================== -->
+  <div class="modal-backdrop" id="colSuccessModal">
+    <div class="modal" style="max-width:440px;text-align:center;">
+      <div style="font-size:2.6rem;margin-bottom:8px;">💵</div>
+      <h3 style="color:#15803d;margin-bottom:4px;">Payment Receipt Saved!</h3>
+      <p style="font-size:0.8rem;color:var(--muted);">Receipt No: <strong id="succColNo">#REC-1050</strong></p>
+      <div id="succColDetails" style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.82rem;line-height:1.6;margin:14px 0;text-align:left;border:1px solid var(--border);"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;">
+          💬 Send Payment Receipt to Dealer on WhatsApp
+        </a>
+        <button type="button" class="btn btn-outline" style="justify-content:center;border-color:var(--border);" onclick="closeModal('colSuccessModal')">
+          Done / Record Another Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== BANK DEPOSIT MODAL ==================== -->
+  <div class="modal-backdrop" id="bankDepositModal">
+    <div class="modal" style="max-width:420px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:var(--primary);">🏦 Deposit Cash into Bank</h3>
+        <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('bankDepositModal')">✕ Close</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
+        Bank: <strong>Indian Overseas Bank (IOB Nagpur)</strong><br/>
+        A/c: 308202000000378 | IFSC: IOBA0003082
+      </p>
+      <form onsubmit="submitBankDeposit(event)">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Deposit Date</label>
+          <input type="date" id="bankDepDate" class="form-control" required />
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Deposit Amount (₹)</label>
+          <input type="number" id="bankDepAmt" class="form-control font-bold" min="1" step="0.01" required />
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Bank Challan / Slip No / UTR</label>
+          <input type="text" id="bankDepChallan" class="form-control" placeholder="e.g. Challan #1042 / Cash Slip" required />
+        </div>
+        <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;font-weight:700;padding:10px;">
+          ✓ Confirm Bank Deposit
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== OWNER LOGIN MODAL ==================== -->
   <div class="modal-backdrop" id="ownerLoginModal">
@@ -4487,10 +4666,43 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v7";
+    const STORAGE_KEY = "madhav_shivom_erp_v8";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
+    const STAFF_SESSION_KEY = "madhav_staff_session_v1";
+    let currentStaff = null;
+
+    const STAFF_CREDENTIALS = [
+      {
+        id: "SP01",
+        name: "PRASHIK HAJARE",
+        mobile: "7499477581",
+        role: "Manager",
+        area: "Field Sales & Recovery (Vidarbha)",
+        sha: "d365964c7f5aab5ffa822dba82431d1bee8502ae8338c9569adc992b1de46dcc",
+        simple: -1110792094
+      },
+      {
+        id: "SP02",
+        name: "GOPAL AMBAGADE",
+        mobile: "9075479839",
+        role: "Salesperson",
+        area: "Field Route",
+        sha: "99ed8cdd6414bf2746b44963bd3657890107b370f0aa2bde6e24b9734363df93",
+        simple: -2146150974
+      },
+      {
+        id: "SP03",
+        name: "VIKARAM SING THAKUR",
+        mobile: "7028287698",
+        role: "Salesperson",
+        area: "Field Route",
+        sha: "9882b7345c723cd08775ad0d857e73bfd45abf282a99060575501018148d540d",
+        simple: -684522678
+      }
+    ];
+
 
     // Secret Verification Hash for PIN
     const PIN_HASH = "ba258b5a7eb00f1bb2da1943f42c46d45ae030163ba9fdfad4eefad0d9cb2319";
@@ -4605,6 +4817,19 @@
         persistLocal();
       }
 
+      if (!state.cashHandovers) state.cashHandovers = [];
+      if (!state.bankDeposits) state.bankDeposits = [];
+
+      // Ensure full registered team is in state.salespersons
+      if (!state.salespersons || state.salespersons.length === 0 || !state.salespersons.find(s => s.mobile === "9075479839")) {
+        state.salespersons = [
+          { id: "SP01", name: "PRASHIK HAJARE", role: "Manager", mobile: "7499477581", area: "Nagpur & Vidarbha H.O." },
+          { id: "SP02", name: "GOPAL AMBAGADE", role: "Salesperson", mobile: "9075479839", area: "Field Route" },
+          { id: "SP03", name: "VIKARAM SING THAKUR", role: "Salesperson", mobile: "7028287698", area: "Field Route" }
+        ];
+        persistLocal();
+      }
+
       // Auto-migrate old category codes to clean English categories
       if (state.products && state.products.length > 0) {
         let changed = false;
@@ -4649,7 +4874,8 @@
     }
 
     function switchTab(tabId, btnEl) {
-      if (!isAdminLoggedIn && (tabId === "dashboard" || tabId.startsWith("admin-"))) {
+      const isStaffAllowed = currentStaff && (tabId === "admin-orders" || tabId === "admin-collection" || tabId === "staff-cash");
+      if (!isAdminLoggedIn && !isStaffAllowed && (tabId === "dashboard" || tabId.startsWith("admin-") || tabId === "staff-cash")) {
         tabId = "open-stock";
         btnEl = document.querySelector('[data-tab="open-stock"]');
       }
@@ -4662,6 +4888,7 @@
         const matchingTab = document.querySelector('[data-tab="' + tabId + '"]');
         if (matchingTab) matchingTab.classList.add("active");
       }
+      if (tabId === "staff-cash") renderStaffCashTab();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -4722,6 +4949,92 @@
       showToast("Logged out to Open Portal View.");
     }
 
+    
+    function openStaffLoginModal() {
+      openModal("staffLoginModal");
+      setTimeout(() => document.getElementById("staffMobileInput").focus(), 150);
+    }
+
+    async function handleStaffLogin(e) {
+      e.preventDefault();
+      const mobile = document.getElementById("staffMobileInput").value.trim();
+      const enteredPass = document.getElementById("staffPassInput").value.trim();
+
+      const member = STAFF_CREDENTIALS.find(u => u.mobile === mobile);
+      if (!member) {
+        alert("Mobile number not registered in Sales Team. Please enter a valid registered mobile number.");
+        return;
+      }
+
+      let isMatch = false;
+      if (window.crypto && crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(enteredPass));
+          const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+          if (hex === member.sha) isMatch = true;
+        } catch (err) {}
+      }
+      if (!isMatch && simpleHash(enteredPass) === member.simple) {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        currentStaff = member;
+        sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+        closeModal("staffLoginModal");
+        updateStaffUI();
+        switchTab("admin-orders", document.querySelector('[data-tab="admin-orders"]'));
+        showToast(`Welcome ${member.name} (${member.role})! Field Portal Unlocked.`);
+      } else {
+        alert("Incorrect password. Please enter your valid password.");
+        document.getElementById("staffPassInput").value = "";
+        document.getElementById("staffPassInput").focus();
+      }
+    }
+
+    function staffLogout() {
+      currentStaff = null;
+      sessionStorage.removeItem(STAFF_SESSION_KEY);
+      updateStaffUI();
+      switchTab("open-stock", document.querySelector('[data-tab="open-stock"]'));
+      showToast("Logged out of Sales Team Portal.");
+    }
+
+    function updateStaffUI() {
+      const isStaff = !!currentStaff;
+      const isAdmin = !!isAdminLoggedIn;
+
+      const staffBadgeWrap = document.getElementById("staffBadgeWrap");
+      const staffLoginBtn = document.getElementById("staffLoginBtnWrap");
+      const staffNameEl = document.getElementById("staffUserName");
+
+      if (isStaff) {
+        if (staffBadgeWrap) staffBadgeWrap.style.display = "inline-flex";
+        if (staffLoginBtn) staffLoginBtn.style.display = "none";
+        if (staffNameEl) staffNameEl.textContent = `👤 ${currentStaff.name} (${currentStaff.role})`;
+      } else {
+        if (staffBadgeWrap) staffBadgeWrap.style.display = "none";
+        if (staffLoginBtn) staffLoginBtn.style.display = isAdmin ? "none" : "inline-block";
+      }
+
+      document.querySelectorAll(".admin-or-staff-item").forEach(el => {
+        el.style.display = (isStaff || isAdmin) ? "inline-block" : "none";
+      });
+
+      document.querySelectorAll(".admin-only-item").forEach(el => {
+        el.style.display = isAdmin ? "inline-block" : "none";
+      });
+
+      if (isStaff) {
+        const ordSp = document.getElementById("ordSalesperson");
+        if (ordSp) ordSp.value = currentStaff.name;
+        const colSp = document.getElementById("colSalesperson");
+        if (colSp) colSp.value = currentStaff.name;
+      }
+
+      renderStaffCashTab();
+    }
+
     function updateAdminUI() {
       const adminItems = document.querySelectorAll(".admin-only-item");
       adminItems.forEach(el => {
@@ -4731,6 +5044,7 @@
       document.getElementById("adminBadgeWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
       document.getElementById("ownerLoginBtnWrap").style.display = isAdminLoggedIn ? "none" : "inline-block";
       document.getElementById("ownerLogoutBtnWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
+      updateStaffUI();
     }
 
     // ==================== FIREBASE CLOUD SYNC ====================
@@ -5348,6 +5662,7 @@
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
             <td class="text-center" style="white-space:nowrap;">
               ${pending > 0 ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
+              <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')">💬 WhatsApp</button>
               <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')">Bill PDF</button>
             </td>
           </tr>
@@ -5372,8 +5687,369 @@
           <td class="text-right font-bold">${fmtINR(c.amount)}</td>
           <td class="text-center"><span class="pill ${c.mode === 'Cash' ? 'pill-green' : 'pill-gray'}">${c.mode}</span></td>
           <td>${c.bankRef || "-"}</td>
+          <td class="text-center"><button class="btn btn-whatsapp btn-sm" onclick="sendCollectionWhatsApp('${c.id}')">💬 WhatsApp</button></td>
         </tr>
       `).join("");
+    }
+
+    
+    function getCashSummary() {
+      const spCash = {
+        "PRASHIK HAJARE": 0,
+        "GOPAL AMBAGADE": 0,
+        "VIKARAM SING THAKUR": 0
+      };
+
+      (state.collections || []).forEach(c => {
+        if (c.mode === "Cash") {
+          const spName = (c.salespersonName || "").trim().toUpperCase();
+          if (spName.includes("GOPAL")) spCash["GOPAL AMBAGADE"] += Number(c.amount || 0);
+          else if (spName.includes("VIKARAM") || spName.includes("VIKRAM")) spCash["VIKARAM SING THAKUR"] += Number(c.amount || 0);
+          else spCash["PRASHIK HAJARE"] += Number(c.amount || 0);
+        }
+      });
+
+      const handoversFrom = {
+        "GOPAL AMBAGADE": 0,
+        "VIKARAM SING THAKUR": 0
+      };
+      let totalHandedToPrashik = 0;
+      (state.cashHandovers || []).forEach(h => {
+        const amt = Number(h.amount || 0);
+        const from = (h.fromStaffName || "").trim().toUpperCase();
+        if (from.includes("GOPAL")) handoversFrom["GOPAL AMBAGADE"] += amt;
+        else if (from.includes("VIKARAM") || from.includes("VIKRAM")) handoversFrom["VIKARAM SING THAKUR"] += amt;
+        totalHandedToPrashik += amt;
+      });
+
+      const gopalInHand = Math.max(0, spCash["GOPAL AMBAGADE"] - handoversFrom["GOPAL AMBAGADE"]);
+      const vikramInHand = Math.max(0, spCash["VIKARAM SING THAKUR"] - handoversFrom["VIKARAM SING THAKUR"]);
+
+      const totalBankDeposits = (state.bankDeposits || []).reduce((s, b) => s + Number(b.amount || 0), 0);
+      const prashikTotalReceived = spCash["PRASHIK HAJARE"] + totalHandedToPrashik;
+      const prashikInHand = Math.max(0, prashikTotalReceived - totalBankDeposits);
+
+      return {
+        spCash,
+        handoversFrom,
+        gopalInHand,
+        vikramInHand,
+        prashikInHand,
+        totalBankDeposits,
+        totalMarketCash: spCash["PRASHIK HAJARE"] + spCash["GOPAL AMBAGADE"] + spCash["VIKARAM SING THAKUR"]
+      };
+    }
+
+    function renderStaffCashTab() {
+      const cs = getCashSummary();
+      const grid = document.getElementById("staffCashCardsGrid");
+      const actionCard = document.getElementById("staffCashActionCard");
+      const roleBadge = document.getElementById("cashTabRoleBadge");
+
+      if (!grid || !actionCard) return;
+
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      const isAdmin = !!isAdminLoggedIn;
+
+      if (isPrashik) {
+        if (roleBadge) roleBadge.textContent = "Manager View: PRASHIK HAJARE";
+        grid.innerHTML = `
+          <div class="kpi-card" style="border-top:4px solid #0f766e;">
+            <div class="kpi-label">Cash with Prashik (To Deposit)</div>
+            <div class="kpi-val" style="color:#0f766e;">${fmtINR(cs.prashikInHand)}</div>
+            <div class="kpi-sub">Ready for Bank Deposit (IOB)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Received from Gopal</div>
+            <div class="kpi-val">${fmtINR(cs.handoversFrom["GOPAL AMBAGADE"] || 0)}</div>
+            <div class="kpi-sub">Gopal Cash Handover Total</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Received from Vikram</div>
+            <div class="kpi-val">${fmtINR(cs.handoversFrom["VIKARAM SING THAKUR"] || 0)}</div>
+            <div class="kpi-sub">Vikram Cash Handover Total</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Deposited in IOB Bank</div>
+            <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.totalBankDeposits)}</div>
+            <div class="kpi-sub">Company Bank Balance Cleared</div>
+          </div>
+        `;
+
+        if (cs.prashikInHand > 0) {
+          actionCard.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h4 style="color:#0f766e;margin-bottom:4px;font-size:1rem;">🏦 Ready to Deposit into Company Bank</h4>
+                <p style="color:var(--muted);font-size:0.83rem;">
+                  You have <strong>${fmtINR(cs.prashikInHand)}</strong> market cash collected. Deposit this into <strong>Indian Overseas Bank (A/c: 308202000000378)</strong>.
+                </p>
+              </div>
+              <button class="btn btn-teal" onclick="openBankDepositModal(${cs.prashikInHand})" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
+                🏦 Record Bank Deposit Entry
+              </button>
+            </div>
+          `;
+        } else {
+          actionCard.innerHTML = `
+            <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
+              ✓ All market cash has been successfully deposited into the bank! Zero pending cash with Prashik.
+            </div>
+          `;
+        }
+      } else if (isSalesperson) {
+        const myName = currentStaff.name;
+        const myCash = myName.includes("GOPAL") ? cs.gopalInHand : cs.vikramInHand;
+        const myHanded = cs.handoversFrom[myName] || 0;
+
+        if (roleBadge) roleBadge.textContent = "Salesperson View: " + myName;
+        grid.innerHTML = `
+          <div class="kpi-card" style="border-top:4px solid #ea580c;">
+            <div class="kpi-label">My Cash in Hand</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(myCash)}</div>
+            <div class="kpi-sub">Cash currently in your pocket</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Handed Over to Prashik</div>
+            <div class="kpi-val" style="color:#15803d;">${fmtINR(myHanded)}</div>
+            <div class="kpi-sub">Transferred to Manager</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Cash Collected</div>
+            <div class="kpi-val">${fmtINR(myCash + myHanded)}</div>
+            <div class="kpi-sub">All-time collected by you</div>
+          </div>
+        `;
+
+        if (myCash > 0) {
+          actionCard.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h4 style="color:#ea580c;margin-bottom:4px;font-size:1rem;">🤝 Handover Cash to Prashik Hajare (Manager)</h4>
+                <p style="color:var(--muted);font-size:0.83rem;">
+                  You have collected <strong>${fmtINR(myCash)}</strong> cash from dealers. Give this cash to Prashik Hajare and record handover.
+                </p>
+              </div>
+              <button class="btn btn-primary" onclick="submitStaffHandover(${myCash})" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
+                🤝 Handover ${fmtINR(myCash)} to Prashik
+              </button>
+            </div>
+          `;
+        } else {
+          actionCard.innerHTML = `
+            <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
+              ✓ Your cash in hand is clear (₹0.00). All collected cash has been handed over to Prashik Hajare.
+            </div>
+          `;
+        }
+      } else {
+        if (roleBadge) roleBadge.textContent = "Owner Overview";
+        grid.innerHTML = `
+          <div class="kpi-card" style="border-top:4px solid #0f766e;">
+            <div class="kpi-label">Cash with Prashik (Manager)</div>
+            <div class="kpi-val" style="color:#0f766e;">${fmtINR(cs.prashikInHand)}</div>
+            <div class="kpi-sub">Ready for Bank Deposit</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Cash with Gopal</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalInHand)}</div>
+            <div class="kpi-sub">Pending handover to Prashik</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Cash with Vikram</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.vikramInHand)}</div>
+            <div class="kpi-sub">Pending handover to Prashik</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Deposited in IOB Bank</div>
+            <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.totalBankDeposits)}</div>
+            <div class="kpi-sub">Verified in Bank Account</div>
+          </div>
+        `;
+
+        actionCard.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h4 style="color:var(--primary);margin-bottom:4px;font-size:1rem;">👑 Owner Cash Pipeline Control</h4>
+              <p style="color:var(--muted);font-size:0.83rem;">
+                Total Market Cash: <strong>${fmtINR(cs.totalMarketCash)}</strong> | Total Deposited in Bank: <strong>${fmtINR(cs.totalBankDeposits)}</strong>
+              </p>
+            </div>
+            ${cs.prashikInHand > 0 ? `<button class="btn btn-teal" onclick="openBankDepositModal(${cs.prashikInHand})">🏦 Record Bank Deposit</button>` : ''}
+          </div>
+        `;
+      }
+
+      const hoTbody = document.getElementById("cashHandoverTableBody");
+      if (hoTbody) {
+        if (!state.cashHandovers || state.cashHandovers.length === 0) {
+          hoTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted);padding:14px;">No cash handovers recorded yet.</td></tr>';
+        } else {
+          hoTbody.innerHTML = state.cashHandovers.map(h => `
+            <tr>
+              <td>${fmtDate(h.date)} <span style="font-size:0.75rem;color:var(--muted);">${h.time || ''}</span></td>
+              <td class="font-bold">${h.fromStaffName}</td>
+              <td class="text-right font-bold" style="color:#15803d;">${fmtINR(h.amount)}</td>
+              <td>${h.toStaffName}</td>
+              <td class="text-center"><span class="pill pill-green">Received</span></td>
+            </tr>
+          `).join("");
+        }
+      }
+
+      const depTbody = document.getElementById("bankDepositTableBody");
+      if (depTbody) {
+        if (!state.bankDeposits || state.bankDeposits.length === 0) {
+          depTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted);padding:14px;">No bank deposits recorded yet.</td></tr>';
+        } else {
+          depTbody.innerHTML = state.bankDeposits.map(b => `
+            <tr>
+              <td>${fmtDate(b.date)}</td>
+              <td class="font-bold">#${b.challanNo}</td>
+              <td>${b.bankName}</td>
+              <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(b.amount)}</td>
+              <td>${b.depositedBy}</td>
+            </tr>
+          `).join("");
+        }
+      }
+    }
+
+    async function submitStaffHandover(amount) {
+      if (!currentStaff) { alert("Please login first."); return; }
+      if (!confirm(`Confirm cash handover of ${fmtINR(amount)} to PRASHIK HAJARE (Manager)?`)) return;
+
+      const record = {
+        id: "HO_" + Date.now(),
+        date: new Date().toISOString().split("T")[0],
+        time: new Date().toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
+        fromStaffName: currentStaff.name,
+        toStaffName: "PRASHIK HAJARE",
+        amount: Number(amount),
+        status: "Received"
+      };
+
+      if (!state.cashHandovers) state.cashHandovers = [];
+      state.cashHandovers.unshift(record);
+      persistLocal();
+      showToast(`Success: ${fmtINR(amount)} Handed over to Prashik Hajare!`);
+      renderStaffCashTab();
+    }
+
+    function openBankDepositModal(suggestedAmt) {
+      document.getElementById("bankDepDate").value = new Date().toISOString().split("T")[0];
+      document.getElementById("bankDepAmt").value = Number(suggestedAmt || 0);
+      document.getElementById("bankDepChallan").value = "";
+      openModal("bankDepositModal");
+    }
+
+    async function submitBankDeposit(e) {
+      e.preventDefault();
+      const amt = Number(document.getElementById("bankDepAmt").value);
+      const challan = document.getElementById("bankDepChallan").value.trim();
+      const date = document.getElementById("bankDepDate").value;
+
+      const record = {
+        id: "DEP_" + Date.now(),
+        date: date,
+        challanNo: challan,
+        bankName: "Indian Overseas Bank (IOB)",
+        amount: amt,
+        depositedBy: currentStaff ? currentStaff.name : "PRASHIK HAJARE"
+      };
+
+      if (!state.bankDeposits) state.bankDeposits = [];
+      state.bankDeposits.unshift(record);
+      persistLocal();
+      closeModal("bankDepositModal");
+      showToast(`Success: ${fmtINR(amt)} Bank Deposit Recorded (Challan #${challan})!`);
+      renderStaffCashTab();
+    }
+
+    function showOrderSuccessModal(newOrder, party) {
+      document.getElementById("succOrdNo").textContent = "#" + newOrder.orderNo;
+      document.getElementById("succOrdDetails").innerHTML = `
+        <div><strong>Dealer:</strong> ${newOrder.partyName} (${party ? party.area : "Nagpur"})</div>
+        <div><strong>Item:</strong> ${newOrder.productName}</div>
+        <div><strong>Qty:</strong> ${newOrder.orderQty} Units | <strong>Rate:</strong> ${fmtINR(newOrder.rate)}</div>
+        <div><strong>Total Value:</strong> <span style="font-size:1rem;color:#0f766e;font-weight:800;">${fmtINR(newOrder.totalAmt)}</span></div>
+        <div><strong>Booked By:</strong> ${newOrder.salespersonName}</div>
+      `;
+
+      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const msg = `*${coName}*
+📍 *Order Confirmation Slip*
+-----------------------------
+*Order No:* #${newOrder.orderNo}
+*Date:* ${fmtDate(newOrder.date)}
+*Dealer:* ${newOrder.partyName}
+*Booked By:* ${newOrder.salespersonName}
+-----------------------------
+*Item:* ${newOrder.productName}
+*Qty:* ${newOrder.orderQty} Units
+*Rate:* ${fmtINR(newOrder.rate)}
+*Total Order Value:* ${fmtINR(newOrder.totalAmt)}
+*Status:* Booked (लवकरच माल रवाना होईल)
+-----------------------------
+धन्यवाद!`;
+
+      const waBtn = document.getElementById("succOrdWhatsAppBtn");
+      waBtn.href = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+      openModal("orderSuccessModal");
+    }
+
+    function showCollectionSuccessModal(newCol, party) {
+      const computed = getComputedParties().find(p => p.id === newCol.partyId || p.name === newCol.partyName);
+      const remBal = computed ? computed.netBalance : 0;
+
+      document.getElementById("succColNo").textContent = "#" + newCol.receiptNo;
+      document.getElementById("succColDetails").innerHTML = `
+        <div><strong>Dealer:</strong> ${newCol.partyName}</div>
+        <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${newCol.mode})</div>
+        <div><strong>Collected By:</strong> ${newCol.salespersonName}</div>
+        <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
+      `;
+
+      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const msg = `*${coName}*
+🧾 *Payment Receipt*
+-----------------------------
+*Receipt No:* #${newCol.receiptNo}
+*Date:* ${fmtDate(newCol.date)}
+*Received From:* ${newCol.partyName}
+*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode})
+*Received By:* ${newCol.salespersonName}
+-----------------------------
+*Current Balance Due:* ${fmtINR(remBal)}
+-----------------------------
+धन्यवाद! आपले पेमेंट यशस्वीरित्या जमा झाले आहे.`;
+
+      const waBtn = document.getElementById("succColWhatsAppBtn");
+      waBtn.href = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+      openModal("colSuccessModal");
+    }
+
+    function sendOrderWhatsApp(orderId) {
+      const ord = state.orders.find(o => o.id === orderId || o.orderNo === String(orderId));
+      if (!ord) return;
+      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName);
+      showOrderSuccessModal(ord, party);
+    }
+
+    function sendCollectionWhatsApp(colId) {
+      const col = state.collections.find(c => c.id === colId || c.receiptNo === colId);
+      if (!col) return;
+      const party = state.parties.find(p => p.id === col.partyId || p.name === col.partyName);
+      showCollectionSuccessModal(col, party);
     }
 
     function renderMasterSalespersons() {
@@ -5480,6 +6156,7 @@
       document.getElementById("ordTotalPreview").value = "₹0.00";
       document.getElementById("ordAvailHint").textContent = "";
       showToast(`Invoice / Order #${newOrder.orderNo} saved!`);
+      showOrderSuccessModal(newOrder, party);
     }
 
     function openDispatchModal(orderId) {
@@ -5507,7 +6184,7 @@
 
     async function handleCreateCollection(e) {
       e.preventDefault();
-      if (!isAdminLoggedIn) { alert("Only Owner can record collections."); return; }
+      if (!isAdminLoggedIn && !currentStaff) { alert("Please login first."); return; }
       const party = findPartyByName(document.getElementById("colPartyInput").value);
       if (!party) {
         alert("Please select a valid Party from the dropdown list.");
