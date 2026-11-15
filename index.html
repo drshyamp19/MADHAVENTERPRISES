@@ -4666,7 +4666,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v8";
+    const STORAGE_KEY = "madhav_shivom_erp_v9";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5396,7 +5396,8 @@
         if (filterMode === "DUE_ONLY" && p.netBalance <= 0) return false;
         if (filterMode === "Red" && p.category !== "Red") return false;
         if (filterMode === "Yellow" && p.category !== "Yellow") return false;
-        if (filterMode === "Settled" && p.netBalance > 0) return false;
+        if (filterMode === "Green" && p.category !== "Green") return false;
+        if (filterMode === "Settled" && p.category !== "Settled") return false;
 
         if (q) {
           const matchText = p.name.toLowerCase().includes(q) || (p.area || "").toLowerCase().includes(q) || (p.mobile || "").includes(q);
