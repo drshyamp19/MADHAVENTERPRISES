@@ -765,10 +765,14 @@
             </div>
           </div>
 
-          <!-- Category Chips -->
-          <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">Filter by Category:</div>
-            <div class="chip-bar" id="openCategoryChips"></div>
+          <!-- Category Filter Dropdown -->
+          <div style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label for="openCategorySelect" style="font-size:0.8rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;">
+              📦 Select Category:
+            </label>
+            <select id="openCategorySelect" class="form-control" style="flex:1;min-width:220px;max-width:380px;font-weight:600;" onchange="setOpenCategoryDropdown(this.value)">
+              <option value="ALL">📦 All Categories</option>
+            </select>
           </div>
 
           <div style="padding:16px;">
@@ -805,10 +809,14 @@
             </div>
           </div>
 
-          <!-- Route / Area Chips -->
-          <div style="padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);">
-            <div style="font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;">Filter by Route / Area:</div>
-            <div class="chip-bar" id="openAreaChips"></div>
+          <!-- Route / Area Filter Dropdown -->
+          <div style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label for="openAreaSelect" style="font-size:0.8rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;">
+              📍 Select Route / Area:
+            </label>
+            <select id="openAreaSelect" class="form-control" style="flex:1;min-width:220px;max-width:380px;font-weight:600;" onchange="setOpenAreaDropdown(this.value)">
+              <option value="ALL">📍 All Areas / Routes</option>
+            </select>
           </div>
 
           <div style="padding:16px;">
@@ -4479,7 +4487,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v6";
+    const STORAGE_KEY = "madhav_shivom_erp_v7";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -4566,6 +4574,8 @@
         }
       }
 
+      activeCategory = "ALL";
+      activeArea = "ALL";
       loadCompanyState();
       refreshAll();
     }
@@ -4623,6 +4633,19 @@
 
     function fmtINR(n) {
       return "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtDate(isoStr) {
+      if (!isoStr) return "-";
+      const s = String(isoStr).trim();
+      const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (m) {
+        const y = m[1];
+        const mo = m[2].padStart(2, "0");
+        const d = m[3].padStart(2, "0");
+        return d + "/" + mo + "/" + y;
+      }
+      return s;
     }
 
     function switchTab(tabId, btnEl) {
@@ -4950,15 +4973,15 @@
         return a.localeCompare(b);
       });
 
-      const chipsHtml = [
-        `<button class="chip ${activeCategory === 'ALL' ? 'active' : ''}" onclick="setOpenCategory('ALL')">All Products (${stock.length})</button>`
-      ];
-      sortedCats.forEach(cat => {
-        chipsHtml.push(
-          `<button class="chip ${activeCategory === cat ? 'active' : ''}" onclick="setOpenCategory('${cat}')">${cat} (${catMap[cat]})</button>`
-        );
-      });
-      document.getElementById("openCategoryChips").innerHTML = chipsHtml.join("");
+      const catSelect = document.getElementById("openCategorySelect");
+      if (catSelect) {
+        let catOptions = `<option value="ALL" ${activeCategory === 'ALL' ? 'selected' : ''}>📦 All Categories (${stock.length} Items)</option>`;
+        sortedCats.forEach(cat => {
+          const isSel = activeCategory === cat ? 'selected' : '';
+          catOptions += `<option value="${cat}" ${isSel}>📦 ${cat} (${catMap[cat]})</option>`;
+        });
+        catSelect.innerHTML = catOptions;
+      }
 
       const filtered = stock.filter(p => {
         if (activeCategory !== "ALL" && (p.group || "").trim() !== activeCategory) return false;
@@ -5015,8 +5038,15 @@
       }).join("");
     }
 
+    function setOpenCategoryDropdown(cat) {
+      activeCategory = cat;
+      renderOpenStock();
+    }
+
     function setOpenCategory(cat) {
       activeCategory = cat;
+      const catSelect = document.getElementById("openCategorySelect");
+      if (catSelect) catSelect.value = cat;
       renderOpenStock();
     }
 
@@ -5037,15 +5067,15 @@
         areaMap[a] = (areaMap[a] || 0) + 1;
       });
 
-      const chipsHtml = [
-        `<button class="chip ${activeArea === 'ALL' ? 'active' : ''}" onclick="setOpenArea('ALL')">All Areas (${parties.length})</button>`
-      ];
-      Object.keys(areaMap).sort().forEach(area => {
-        chipsHtml.push(
-          `<button class="chip ${activeArea === area ? 'active' : ''}" onclick="setOpenArea('${area}')">${area} (${areaMap[area]})</button>`
-        );
-      });
-      document.getElementById("openAreaChips").innerHTML = chipsHtml.join("");
+      const areaSelect = document.getElementById("openAreaSelect");
+      if (areaSelect) {
+        let areaOptions = `<option value="ALL" ${activeArea === 'ALL' ? 'selected' : ''}>📍 All Areas (${parties.length} Dealers)</option>`;
+        Object.keys(areaMap).sort().forEach(area => {
+          const isSel = activeArea === area ? 'selected' : '';
+          areaOptions += `<option value="${area}" ${isSel}>📍 ${area} (${areaMap[area]})</option>`;
+        });
+        areaSelect.innerHTML = areaOptions;
+      }
 
       const filtered = parties.filter(p => {
         if (activeArea !== "ALL" && (p.area || "").trim() !== activeArea) return false;
@@ -5104,7 +5134,7 @@
               <div class="dealer-meta-row">
                 <div>Total Sales: <strong>${fmtINR(p.dispatchedSales)}</strong></div>
                 <div>Received: <strong>${fmtINR(p.totalPaid)}</strong></div>
-                <div>Last Txn: <strong>${p.lastDateStr || "-"}</strong></div>
+                <div>Last Txn: <strong>${fmtDate(p.lastDateStr)}</strong></div>
               </div>
             </div>
 
@@ -5126,8 +5156,15 @@
       }).join("");
     }
 
+    function setOpenAreaDropdown(area) {
+      activeArea = area;
+      renderOpenDealers();
+    }
+
     function setOpenArea(area) {
       activeArea = area;
+      const areaSelect = document.getElementById("openAreaSelect");
+      if (areaSelect) areaSelect.value = area;
       renderOpenDealers();
     }
 
@@ -5140,7 +5177,7 @@
         ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">No prior bills found.</div>'
         : computed.partyOrders.map(o => `
             <div class="ledger-row">
-              <div><strong>Bill #${o.orderNo}</strong> (${o.date})<br/><span style="color:var(--muted);">${o.productName} (${o.orderQty} Units)</span></div>
+              <div><strong>Bill #${o.orderNo}</strong> (${fmtDate(o.date)})<br/><span style="color:var(--muted);">${o.productName} (${o.orderQty} Units)</span></div>
               <div class="text-right font-bold" style="color:var(--primary);">+${fmtINR(o.totalAmt)}</div>
             </div>
           `).join("");
@@ -5149,7 +5186,7 @@
         ? '<div style="color:var(--muted);font-size:0.8rem;padding:6px 0;">No prior payment receipts found.</div>'
         : computed.partyCols.map(c => `
             <div class="ledger-row">
-              <div><strong>${c.receiptNo}</strong> (${c.date})<br/><span style="color:var(--muted);">${c.bankRef || c.mode} (${c.salespersonName})</span></div>
+              <div><strong>${c.receiptNo}</strong> (${fmtDate(c.date)})<br/><span style="color:var(--muted);">${c.bankRef || c.mode} (${c.salespersonName})</span></div>
               <div class="text-right font-bold" style="color:#15803d;">-${fmtINR(c.amount)}</div>
             </div>
           `).join("");
@@ -5242,7 +5279,7 @@
         return `
           <tr>
             <td class="font-bold">#${o.orderNo}</td>
-            <td>${o.date}</td>
+            <td>${fmtDate(o.date)}</td>
             <td>${o.partyName}</td>
             <td>${o.salespersonName}</td>
             <td>${o.productName}</td>
@@ -5300,7 +5337,7 @@
         return `
           <tr>
             <td class="font-bold">#${o.orderNo}</td>
-            <td>${o.date}</td>
+            <td>${fmtDate(o.date)}</td>
             <td>${o.partyName}</td>
             <td>${o.salespersonName}</td>
             <td>${o.productName}</td>
@@ -5329,7 +5366,7 @@
       document.getElementById("collectionTableBody").innerHTML = list.map(c => `
         <tr>
           <td class="font-bold">${c.receiptNo}</td>
-          <td>${c.date}</td>
+          <td>${fmtDate(c.date)}</td>
           <td>${c.partyName}</td>
           <td>${c.salespersonName}</td>
           <td class="text-right font-bold">${fmtINR(c.amount)}</td>
@@ -5597,7 +5634,7 @@
           <div class="inv-meta-box">
             <strong>Invoice Details:</strong><br/>
             Invoice No: <strong>#${ord.orderNo}</strong><br/>
-            Date: <strong>${ord.date}</strong><br/>
+            Date: <strong>${fmtDate(ord.date)}</strong><br/>
             Booked By: ${ord.salespersonName}<br/>
             Dispatch Status: ${ord.dispatchedQty}/${ord.orderQty} Units
           </div>
