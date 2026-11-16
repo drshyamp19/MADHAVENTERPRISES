@@ -1012,81 +1012,127 @@
         </div>
       </section>
 
-      <!-- ==================== ADMIN TAB 3: ORDER, DISPATCH & BILL ==================== -->
+      <!-- ==================== ADMIN TAB 3: ORDER BOOKING MEMO ==================== -->
       <section id="tab-admin-orders" class="tab-panel">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Book New Sales Order / Generate GST Bill</span></div>
-          <form class="form-grid" onsubmit="handleCreateOrder(event)">
-            <div class="form-group">
-              <label>Bill Date</label>
-              <input type="date" id="ordDate" class="form-control" required />
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📝 Book New Sales Order Memo</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Multi-item order memo for dealers. Rate is completely open as agreed by Salesman.</div>
             </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label>Party / Dealer Name</label>
-              <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." required />
+            <span class="pill pill-green">✓ Multi-Item Memo</span>
+          </div>
+
+          <!-- Dealer & Date Header -->
+          <div style="padding:16px;background:#f8fafc;border-bottom:1px solid var(--border);">
+            <div class="form-grid" style="padding:0;">
+              <div class="form-group">
+                <label>Memo Date</label>
+                <input type="date" id="ordDate" class="form-control" required />
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Select Party / Dealer</label>
+                <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." oninput="updatePartyDueAlert()" onchange="updatePartyDueAlert()" required />
+                <div id="ordPartyDueAlert" style="font-size:0.76rem;margin-top:4px;"></div>
+              </div>
+              <div class="form-group">
+                <label>Booked By (Salesperson)</label>
+                <select id="ordSalesperson" class="form-control" required></select>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Booked By</label>
-              <select id="ordSalesperson" class="form-control" required></select>
+          </div>
+
+          <!-- Add Product to Memo Row (Blank Rate - entered by Salesman) -->
+          <div style="padding:16px;background:#fff;border-bottom:1px solid var(--border);">
+            <div style="font-size:0.82rem;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <span>➕ Add Item to Memo</span>
+              <span style="font-size:0.72rem;color:#0f766e;font-weight:600;">(कोणताही डीलर रेट दिसणार नाही — सेल्समन स्वतःच्या मताने रेट टाकेल)</span>
             </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label>Select Product</label>
-              <input type="text" list="productDatalist" id="ordProductInput" class="form-control" placeholder="Type product name or code..." onchange="updateOrderRatePreview()" oninput="updateOrderRatePreview()" required />
+            <div class="form-grid" style="padding:0;align-items:end;">
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Select Product <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
+                <input type="text" list="productDatalist" id="ordProductInput" class="form-control" placeholder="Type product name or code..." onchange="handleProductSelected()" oninput="handleProductSelected()" />
+              </div>
+              <div class="form-group">
+                <label>Quantity (नग)</label>
+                <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" />
+              </div>
+              <div class="form-group">
+                <label style="color:#0f766e;font-weight:700;">Rate Per Unit (₹) *</label>
+                <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" />
+              </div>
+              <div class="form-group">
+                <button type="button" class="btn btn-teal" style="width:100%;justify-content:center;padding:10px;font-weight:700;" onclick="addItemToMemoCart()">
+                  ➕ Add Item
+                </button>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Order Qty <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
-              <input type="number" id="ordQty" class="form-control" min="1" value="1" oninput="updateOrderTotalPreview()" required />
+          </div>
+
+          <!-- Memo Items Cart Table -->
+          <div style="padding:16px;">
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:8px;">
+              🛒 Memo Items Cart (<span id="memoItemsCount">0</span> Items Added)
             </div>
-            <div class="form-group">
-              <label>Rate Incl. GST (₹)</label>
-              <input type="number" id="ordRate" class="form-control" min="0" step="0.01" oninput="updateOrderTotalPreview()" required />
+            <div class="table-wrap" style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;">
+              <table>
+                <thead>
+                  <tr style="background:#f8fafc;">
+                    <th style="width:45px;">#</th>
+                    <th>Product Description</th>
+                    <th class="text-right" style="width:100px;">Qty</th>
+                    <th class="text-right" style="width:130px;">Rate (₹)</th>
+                    <th class="text-right" style="width:140px;">Total (₹)</th>
+                    <th class="text-center" style="width:90px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="memoCartBody">
+                  <tr>
+                    <td colspan="6" class="text-center" style="padding:24px;color:var(--muted);">
+                      No items added yet. Select a product, enter quantity and rate, then click "➕ Add Item".
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style="background:#f1f5f9;font-weight:800;font-size:0.92rem;">
+                    <td colspan="2" class="text-right">Total Summary:</td>
+                    <td class="text-right font-bold" id="memoTotalQty">0 Units</td>
+                    <td></td>
+                    <td class="text-right font-bold" style="color:#0f766e;font-size:1.1rem;" id="memoTotalAmt">₹0.00</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
-            <div class="form-group">
-              <label>GST %</label>
-              <select id="ordGst" class="form-control" onchange="updateOrderTotalPreview()">
-                <option value="18">18% GST</option>
-                <option value="5">5% GST</option>
-                <option value="12">12% GST</option>
-                <option value="0">0% Exempt</option>
-              </select>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="clearMemoCart()">
+                🗑️ Clear Items
+              </button>
+              <button type="button" class="btn btn-primary" style="padding:12px 26px;font-size:0.95rem;font-weight:700;" onclick="submitOrderMemo()">
+                📝 Save &amp; Generate Order Booking Memo
+              </button>
             </div>
-            <div class="form-group">
-              <label>Immediate Dispatch?</label>
-              <select id="ordImmediateDispatch" class="form-control">
-                <option value="YES">Yes — Full Dispatch Now</option>
-                <option value="NO">No — Keep Pending</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Total Bill Amount (₹)</label>
-              <input type="text" id="ordTotalPreview" class="form-control font-bold" readonly value="₹0.00" />
-            </div>
-            <div class="form-group">
-              <label>&nbsp;</label>
-              <button type="submit" class="btn btn-primary" style="width:100%">Save Order &amp; Generate Bill</button>
-            </div>
-          </form>
+          </div>
         </div>
 
+        <!-- Order Booking Memos Register -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">Order &amp; Dispatch Register</span>
-            <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Bill No, Party or Item..." oninput="renderOrdersTable()" />
+            <span class="card-title">Order Booking Memos Register</span>
+            <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Memo No, Party..." oninput="renderOrdersTable()" />
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Bill No</th>
+                  <th>Memo No</th>
                   <th>Date</th>
                   <th>Party Name</th>
                   <th>Booked By</th>
-                  <th>Product</th>
-                  <th class="text-right">Ord Qty</th>
-                  <th class="text-right">Disp Qty</th>
-                  <th class="text-right">Pending</th>
-                  <th class="text-right">Total Amt</th>
-                  <th class="text-center">Status</th>
+                  <th>Items / Qty</th>
+                  <th class="text-right">Total Value</th>
+                  <th class="text-center">Dispatch Status</th>
                   <th class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -1335,21 +1381,35 @@
     </div>
   </div>
 
-  <!-- ==================== ORDER SUCCESS & WHATSAPP MODAL ==================== -->
+  <!-- ==================== ORDER BOOKING MEMO SUCCESS & WHATSAPP MODAL ==================== -->
   <div class="modal-backdrop" id="orderSuccessModal">
-    <div class="modal" style="max-width:440px;text-align:center;">
-      <div style="font-size:2.6rem;margin-bottom:8px;">🎉</div>
-      <h3 style="color:#0f766e;margin-bottom:4px;">Order Booked Successfully!</h3>
-      <p style="font-size:0.8rem;color:var(--muted);">Order No: <strong id="succOrdNo">#1050</strong></p>
-      <div id="succOrdDetails" style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.82rem;line-height:1.6;margin:14px 0;text-align:left;border:1px solid var(--border);"></div>
+    <div class="modal" style="max-width:480px;text-align:center;">
+      <div style="font-size:2.6rem;margin-bottom:8px;">📝</div>
+      <h3 style="color:#0f766e;margin-bottom:4px;">Order Booking Memo Generated!</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:8px;">Memo No: <strong id="succOrdNo" style="color:var(--primary);">#OB-1050</strong></p>
+      <div id="succOrdDetails" style="background:#f8fafc;padding:14px;border-radius:8px;font-size:0.82rem;line-height:1.6;margin:12px 0;text-align:left;border:1px solid var(--border);max-height:280px;overflow-y:auto;"></div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;">
-          💬 Send Order Slip to Dealer on WhatsApp
+        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:11px;font-size:0.9rem;">
+          💬 Send Order Booking Memo on WhatsApp
         </a>
         <button type="button" class="btn btn-outline" style="justify-content:center;border-color:var(--border);" onclick="closeModal('orderSuccessModal')">
-          Done / Book Another Order
+          Done / Book Another Memo
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== ORDER BOOKING MEMO VIEW/PRINT MODAL ==================== -->
+  <div class="modal-backdrop" id="orderMemoModal">
+    <div class="modal modal-lg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:var(--primary);">📝 Order Booking Memo</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Memo</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('orderMemoModal')">✕ Close</button>
+        </div>
+      </div>
+      <div id="orderMemoModalContent"></div>
     </div>
   </div>
 
@@ -4666,7 +4726,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v9";
+    const STORAGE_KEY = "madhav_shivom_erp_v10";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5638,6 +5698,428 @@
       }).join("");
     }
 
+    
+    // Active In-Memory Order Memo Cart
+    let memoCart = [];
+
+    function updatePartyDueAlert() {
+      const input = document.getElementById("ordPartyInput");
+      const alertEl = document.getElementById("ordPartyDueAlert");
+      if (!input || !alertEl) return;
+      const val = input.value.trim().toLowerCase();
+      if (!val) {
+        alertEl.innerHTML = "";
+        return;
+      }
+      const p = getComputedParties().find(party => party.name.toLowerCase() === val);
+      if (p) {
+        const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
+        alertEl.innerHTML = `<span class="pill ${badgeClass}" style="margin-right:6px;">${p.alertBadge}</span> <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Balance Due: <strong>${fmtINR(p.netBalance)}</strong></span>`;
+      } else {
+        alertEl.innerHTML = '<span style="color:var(--muted);">Party not found in registered list.</span>';
+      }
+    }
+
+    function handleProductSelected() {
+      const input = document.getElementById("ordProductInput");
+      const hint = document.getElementById("ordAvailHint");
+      const rateInput = document.getElementById("ordRate");
+      if (!input) return;
+
+      const prod = findProductByName(input.value);
+      if (prod) {
+        if (hint) hint.textContent = `(Available: ${prod.available} Units)`;
+        // USER DIRECTIVE: Rate must NOT be pre-filled with regular dealer rate!
+        // Leave rateInput completely blank so salesman enters agreed rate.
+        rateInput.value = "";
+        rateInput.placeholder = "Type Rate (₹)";
+        rateInput.focus();
+      } else {
+        if (hint) hint.textContent = "";
+      }
+    }
+
+    function addItemToMemoCart() {
+      const prodInput = document.getElementById("ordProductInput");
+      const qtyInput = document.getElementById("ordQty");
+      const rateInput = document.getElementById("ordRate");
+
+      const prod = findProductByName(prodInput.value);
+      if (!prod) {
+        alert("Please select a valid product from the dropdown list.");
+        prodInput.focus();
+        return;
+      }
+
+      const qty = Number(qtyInput.value);
+      if (!qty || qty <= 0) {
+        alert("Please enter a valid quantity (at least 1).");
+        qtyInput.focus();
+        return;
+      }
+
+      const rateVal = rateInput.value.trim();
+      if (!rateVal || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
+        alert("कृपया या प्रॉडक्टसाठी ठरलेला दर (Rate) टाका! दर रिकामा ठेवता येणार नाही.");
+        rateInput.focus();
+        return;
+      }
+      const rate = Number(rateVal);
+
+      // Check stock availability warning
+      if (qty > prod.available) {
+        if (!confirm(`Stock Alert: Only ${prod.available} units of "${prod.name}" are available in stock. Do you still want to add ${qty} units to memo?`)) {
+          return;
+        }
+      }
+
+      // Check if already in cart
+      const existingIdx = memoCart.findIndex(it => it.productId === prod.id);
+      if (existingIdx !== -1) {
+        memoCart[existingIdx].qty = qty;
+        memoCart[existingIdx].rate = rate;
+        memoCart[existingIdx].totalAmt = qty * rate;
+      } else {
+        memoCart.push({
+          productId: prod.id,
+          productName: prod.name,
+          code: prod.code,
+          hsn: prod.hsn || "85166000",
+          qty: qty,
+          rate: rate,
+          totalAmt: qty * rate
+        });
+      }
+
+      renderMemoCart();
+
+      // Reset item inputs
+      prodInput.value = "";
+      qtyInput.value = 1;
+      rateInput.value = "";
+      rateInput.placeholder = "Type Rate (₹)";
+      document.getElementById("ordAvailHint").textContent = "";
+      prodInput.focus();
+    }
+
+    function renderMemoCart() {
+      const tbody = document.getElementById("memoCartBody");
+      const countEl = document.getElementById("memoItemsCount");
+      const totalQtyEl = document.getElementById("memoTotalQty");
+      const totalAmtEl = document.getElementById("memoTotalAmt");
+
+      if (!tbody) return;
+
+      countEl.textContent = memoCart.length;
+
+      if (memoCart.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center" style="padding:24px;color:var(--muted);">
+              No items added yet. Select a product, enter quantity and rate, then click "➕ Add Item".
+            </td>
+          </tr>
+        `;
+        totalQtyEl.textContent = "0 Units";
+        totalAmtEl.textContent = "₹0.00";
+        return;
+      }
+
+      const totalQty = memoCart.reduce((s, it) => s + it.qty, 0);
+      const totalAmt = memoCart.reduce((s, it) => s + it.totalAmt, 0);
+
+      totalQtyEl.textContent = totalQty + " Units";
+      totalAmtEl.textContent = fmtINR(totalAmt);
+
+      tbody.innerHTML = memoCart.map((it, idx) => `
+        <tr>
+          <td class="font-bold text-center">${idx + 1}</td>
+          <td>
+            <strong>${it.productName}</strong>
+            <div style="font-size:0.73rem;color:var(--muted);">Code: ${it.code} | HSN: ${it.hsn}</div>
+          </td>
+          <td class="text-right font-bold">${it.qty}</td>
+          <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(it.rate)}</td>
+          <td class="text-right font-bold">${fmtINR(it.totalAmt)}</td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;padding:3px 8px;" onclick="removeMemoItem(${idx})">
+              ✕
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function removeMemoItem(idx) {
+      memoCart.splice(idx, 1);
+      renderMemoCart();
+    }
+
+    function clearMemoCart() {
+      if (memoCart.length === 0) return;
+      if (confirm("Are you sure you want to clear all items from this order memo?")) {
+        memoCart = [];
+        renderMemoCart();
+      }
+    }
+
+    async function submitOrderMemo() {
+      if (!isAdminLoggedIn && !currentStaff) {
+        alert("Please login first to book an order memo.");
+        return;
+      }
+
+      const partyInput = document.getElementById("ordPartyInput");
+      const party = findPartyByName(partyInput.value);
+      if (!party) {
+        alert("Please select a valid Party from the dropdown list.");
+        partyInput.focus();
+        return;
+      }
+
+      if (memoCart.length === 0) {
+        alert("Order memo is empty! Please add at least 1 product item before saving.");
+        document.getElementById("ordProductInput").focus();
+        return;
+      }
+
+      const ordDate = document.getElementById("ordDate").value;
+      if (!ordDate) {
+        alert("Please select order memo date.");
+        return;
+      }
+
+      const salespersonName = document.getElementById("ordSalesperson").value;
+      const nextNum = 200 + state.orders.length;
+      const memoNo = "OB-" + nextNum;
+
+      const totalQty = memoCart.reduce((s, it) => s + it.qty, 0);
+      const totalAmt = memoCart.reduce((s, it) => s + it.totalAmt, 0);
+
+      const newOrder = {
+        id: "ORD_" + Date.now(),
+        orderNo: String(nextNum),
+        memoNo: memoNo,
+        date: ordDate,
+        partyId: party.id,
+        partyName: party.name,
+        salespersonName: salespersonName,
+        items: memoCart.map(it => ({
+          productId: it.productId,
+          productName: it.productName,
+          code: it.code,
+          hsn: it.hsn || "85166000",
+          qty: it.qty,
+          rate: it.rate,
+          totalAmt: it.totalAmt,
+          dispatchedQty: 0
+        })),
+        // For backwards compatibility with older reports and single-item tables:
+        productId: memoCart[0].productId,
+        productName: memoCart.map(it => `${it.productName} (${it.qty})`).join(", "),
+        orderQty: totalQty,
+        dispatchedQty: 0,
+        rate: totalAmt / (totalQty || 1),
+        gst: 18,
+        totalAmt: totalAmt
+      };
+
+      await saveRecord("orders", newOrder);
+
+      // Clear form & cart
+      memoCart = [];
+      renderMemoCart();
+      partyInput.value = "";
+      document.getElementById("ordPartyDueAlert").innerHTML = "";
+
+      showToast(`Order Booking Memo #${newOrder.memoNo} Saved Successfully!`);
+      showOrderSuccessModal(newOrder, party);
+    }
+
+    function getOrderMemoWhatsAppText(ord, party) {
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const area = party ? party.area : "Nagpur";
+      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
+
+      let itemsList = "";
+      if (ord.items && ord.items.length > 0) {
+        itemsList = ord.items.map((it, idx) =>
+          `${idx + 1}. *${it.productName}* — ${it.qty} Nos @ ${fmtINR(it.rate)} = ${fmtINR(it.totalAmt)}`
+        ).join("\n");
+      } else {
+        itemsList = `1. *${ord.productName}* — ${ord.orderQty} Nos @ ${fmtINR(ord.rate)} = ${fmtINR(ord.totalAmt)}`;
+      }
+
+      const totalQty = ord.items && ord.items.length > 0
+        ? ord.items.reduce((s, it) => s + Number(it.qty || 0), 0)
+        : ord.orderQty;
+
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+
+      return `*${coName}*
+📝 *ORDER BOOKING MEMO*
+-----------------------------
+*Memo No:* #${memoDisplayNo}
+*Date:* ${fmtDate(ord.date)}
+*Dealer:* ${ord.partyName} (${area})
+*Booked By:* ${ord.salespersonName}
+-----------------------------
+*Items Booked:*
+${itemsList}
+-----------------------------
+*Total Items:* ${totalQty} Units
+*Total Estimated Value:* ${fmtINR(ord.totalAmt)}
+*Status:* Order Booked (Pending Dispatch)
+-----------------------------
+टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. अधिकृत टॅक्स बिल माल डिस्पॅच करताना दिले जाईल.
+धन्यवाद!`;
+    }
+
+    function showOrderSuccessModal(ord, party) {
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      document.getElementById("succOrdNo").textContent = "#" + memoDisplayNo;
+
+      let itemsHtml = "";
+      if (ord.items && ord.items.length > 0) {
+        itemsHtml = ord.items.map((it, idx) =>
+          `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e2e8f0;">
+            <div><strong>${idx + 1}. ${it.productName}</strong><br/><span style="color:var(--muted);font-size:0.75rem;">${it.qty} Nos @ ${fmtINR(it.rate)}</span></div>
+            <div class="font-bold">${fmtINR(it.totalAmt)}</div>
+          </div>`
+        ).join("");
+      } else {
+        itemsHtml = `<div style="display:flex;justify-content:space-between;padding:4px 0;">
+          <div><strong>${ord.productName}</strong> (${ord.orderQty} Units @ ${fmtINR(ord.rate)})</div>
+          <div class="font-bold">${fmtINR(ord.totalAmt)}</div>
+        </div>`;
+      }
+
+      const totalQty = ord.items && ord.items.length > 0
+        ? ord.items.reduce((s, it) => s + Number(it.qty || 0), 0)
+        : ord.orderQty;
+
+      document.getElementById("succOrdDetails").innerHTML = `
+        <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
+          <div><strong>Dealer:</strong> ${ord.partyName} (${party ? party.area : "Nagpur"})</div>
+          <div><strong>Booked By:</strong> ${ord.salespersonName}</div>
+          <div><strong>Memo Date:</strong> ${fmtDate(ord.date)}</div>
+        </div>
+        <div style="font-weight:700;color:var(--primary);margin-bottom:6px;">Items in Memo:</div>
+        ${itemsHtml}
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid var(--primary);font-size:0.95rem;">
+          <div><strong>Total: ${totalQty} Units</strong></div>
+          <div style="color:#0f766e;font-weight:800;font-size:1.05rem;">${fmtINR(ord.totalAmt)}</div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic;">
+          (टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. टॅक्स बिल डिस्पॅच करताना दिले जाईल.)
+        </div>
+      `;
+
+      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
+      const msg = getOrderMemoWhatsAppText(ord, party);
+
+      const waBtn = document.getElementById("succOrdWhatsAppBtn");
+      waBtn.href = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+      openModal("orderSuccessModal");
+    }
+
+    function openOrderMemoModal(orderId) {
+      const ord = state.orders.find(o => o.id === orderId || o.orderNo === String(orderId) || o.memoNo === orderId);
+      if (!ord) return;
+      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName);
+      const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+
+      let itemsRows = "";
+      if (ord.items && ord.items.length > 0) {
+        itemsRows = ord.items.map((it, idx) => `
+          <tr>
+            <td class="text-center">${idx + 1}</td>
+            <td><strong>${it.productName}</strong><br/><span style="font-size:11px;color:var(--muted);">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</span></td>
+            <td class="text-right font-bold">${it.qty}</td>
+            <td class="text-right">${fmtINR(it.rate)}</td>
+            <td class="text-right font-bold">${fmtINR(it.totalAmt)}</td>
+          </tr>
+        `).join("");
+      } else {
+        itemsRows = `
+          <tr>
+            <td class="text-center">1</td>
+            <td><strong>${ord.productName}</strong></td>
+            <td class="text-right font-bold">${ord.orderQty}</td>
+            <td class="text-right">${fmtINR(ord.rate)}</td>
+            <td class="text-right font-bold">${fmtINR(ord.totalAmt)}</td>
+          </tr>
+        `;
+      }
+
+      const totalQty = ord.items && ord.items.length > 0
+        ? ord.items.reduce((s, it) => s + Number(it.qty || 0), 0)
+        : ord.orderQty;
+
+      document.getElementById("orderMemoModalContent").innerHTML = `
+        <div style="padding:16px;background:#fff;border:1px solid var(--border);border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--primary);padding-bottom:12px;margin-bottom:14px;">
+            <div>
+              <h2 style="font-size:1.3rem;color:var(--primary);margin-bottom:2px;">${co.name}</h2>
+              <div style="font-size:0.78rem;color:var(--muted);">${co.sub}</div>
+            </div>
+            <div style="text-align:right;">
+              <span class="pill pill-green" style="font-size:0.85rem;padding:4px 10px;">📝 ORDER BOOKING MEMO</span>
+              <div style="font-weight:800;font-size:1rem;color:var(--primary);margin-top:4px;">#${memoDisplayNo}</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Date: <strong>${fmtDate(ord.date)}</strong></div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom:14px;background:#f8fafc;padding:12px;border-radius:8px;">
+            <div>
+              <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Dealer Details:</div>
+              <div style="font-size:1rem;font-weight:700;">${ord.partyName}</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Area: ${party ? party.area : "Nagpur"} | Mobile: ${party && party.mobile ? party.mobile : "-"}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Sales Executive:</div>
+              <div style="font-size:1rem;font-weight:700;">${ord.salespersonName}</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Status: <strong>Order Booked (Pending Dispatch)</strong></div>
+            </div>
+          </div>
+
+          <table class="inv-table" style="width:100%;margin-bottom:14px;">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th style="width:40px;" class="text-center">#</th>
+                <th>Item Description</th>
+                <th class="text-right" style="width:90px;">Qty</th>
+                <th class="text-right" style="width:120px;">Rate (₹)</th>
+                <th class="text-right" style="width:130px;">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+            <tfoot>
+              <tr style="background:#f8fafc;font-weight:800;font-size:0.95rem;">
+                <td colspan="2" class="text-right">Total Summary:</td>
+                <td class="text-right font-bold">${totalQty} Units</td>
+                <td></td>
+                <td class="text-right font-bold" style="color:#0f766e;font-size:1.15rem;">${fmtINR(ord.totalAmt)}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--muted);">
+            <div>* टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. अंतिम टॅक्स बिल गोदामातून माल पाठवताना दिले जाईल.</div>
+            <div>Booked by: <strong>${ord.salespersonName}</strong></div>
+          </div>
+        </div>
+      `;
+
+      openModal("orderMemoModal");
+    }
+
     function renderOrdersTable() {
       const q = (document.getElementById("orderSearch").value || "").toLowerCase();
       const list = state.orders.filter(o =>
@@ -6091,74 +6573,7 @@
       showToast(`Added +${qty} units to ${rawProd.name}`);
     }
 
-    function updateOrderRatePreview() {
-      const prod = findProductByName(document.getElementById("ordProductInput").value);
-      if (prod) {
-        document.getElementById("ordRate").value = prod.rate;
-        document.getElementById("ordGst").value = String(prod.gst || 18);
-        document.getElementById("ordAvailHint").textContent = `(Avail: ${prod.available})`;
-      } else {
-        document.getElementById("ordAvailHint").textContent = "";
-      }
-      updateOrderTotalPreview();
-    }
-
-    function updateOrderTotalPreview() {
-      const qty = Number(document.getElementById("ordQty").value || 0);
-      const rate = Number(document.getElementById("ordRate").value || 0);
-      document.getElementById("ordTotalPreview").value = fmtINR(qty * rate);
-    }
-
-    async function handleCreateOrder(e) {
-      e.preventDefault();
-      if (!isAdminLoggedIn) { alert("Only Owner can book orders."); return; }
-      const party = findPartyByName(document.getElementById("ordPartyInput").value);
-      if (!party) {
-        alert("Please select a valid Party from the dropdown list.");
-        return;
-      }
-      const prod = findProductByName(document.getElementById("ordProductInput").value);
-      if (!prod) {
-        alert("Please select a valid Product from the dropdown list.");
-        return;
-      }
-      const qty = Number(document.getElementById("ordQty").value);
-      if (qty > prod.available) {
-        if (!confirm(`Stock Alert: Only ${prod.available} units of "${prod.name}" are available in stock. Do you still want to book this order?`)) {
-          return;
-        }
-      }
-
-      const rate = Number(document.getElementById("ordRate").value);
-      const gst = Number(document.getElementById("ordGst").value);
-      const imm = document.getElementById("ordImmediateDispatch").value === "YES";
-      const nextNum = 200 + state.orders.length;
-
-      const newOrder = {
-        id: "ORD_" + Date.now(),
-        orderNo: String(nextNum),
-        date: document.getElementById("ordDate").value,
-        partyId: party.id,
-        partyName: party.name,
-        salespersonName: document.getElementById("ordSalesperson").value,
-        productId: prod.id,
-        productName: prod.name,
-        hsn: prod.hsn || "85166000",
-        orderQty: qty,
-        dispatchedQty: imm ? qty : 0,
-        rate: rate,
-        gst: gst,
-        totalAmt: qty * rate
-      };
-
-      await saveRecord("orders", newOrder);
-      document.getElementById("ordProductInput").value = "";
-      document.getElementById("ordQty").value = 1;
-      document.getElementById("ordTotalPreview").value = "₹0.00";
-      document.getElementById("ordAvailHint").textContent = "";
-      showToast(`Invoice / Order #${newOrder.orderNo} saved!`);
-      showOrderSuccessModal(newOrder, party);
-    }
+    
 
     function openDispatchModal(orderId) {
       const ord = state.orders.find(o => o.id === orderId);
