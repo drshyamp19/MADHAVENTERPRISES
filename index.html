@@ -1515,9 +1515,23 @@
 
         <!-- Order Booking Memos Register -->
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Order Booking Memos Register</span>
-            <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Memo No, Party..." oninput="renderOrdersTable()" />
+          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span class="card-title">Order Booking Memos Register</span>
+              <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Memo No, Party..." oninput="renderOrdersTable()" />
+            </div>
+            <!-- Smart Filter Tabs for Orders -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
+              <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;">
+                📁 सर्व ऑर्डर्स / All (<span id="countAllOrders">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                📦 चालू / Pending Dispatch (<span id="countPendingOrders">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                ✓ डिस्पॅच झालेल्या / Completed (<span id="countCompletedOrders">0</span>)
+              </button>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -1583,6 +1597,35 @@
                 <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
               </select>
             </div>
+            <div class="form-group" id="colChequeFieldsGroup" style="display:none;grid-column: span 2;background:#f8fafc;padding:12px;border-radius:10px;border:1.5px dashed #0284c7;">
+              <div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:0.88rem;">📝 धनादेश तपशील (Cheque Details)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="font-size:0.75rem;">Cheque No (६ अंकी चेक नंबर)</label>
+                  <input type="text" id="colChequeNo" class="form-control" placeholder="उदा. 045129" />
+                </div>
+                <div>
+                  <label style="font-size:0.75rem;">Party Bank Name (बँकेचे नाव)</label>
+                  <input type="text" id="colChequeBank" class="form-control" placeholder="उदा. SBI / HDFC / BOI" />
+                </div>
+                <div>
+                  <label style="font-size:0.75rem;">Cheque Date (चेकची तारीख)</label>
+                  <input type="date" id="colChequeDate" class="form-control" />
+                </div>
+                <div>
+                  <label style="font-size:0.75rem;">Deposit To Account (आपले खाते)</label>
+                  <select id="colChequeDepositAccount" class="form-control">
+                    <option value="IOB">🏢 IOB Bhadravati (MADHAV)</option>
+                    <option value="ROSHAN">👤 ROSHAN THAKRE (Personal)</option>
+                    <option value="PRASHIK">👤 PRASHIK HAJARE (Personal)</option>
+                    <option value="SAVITA">👤 SAVITA CHOUDHARI (Personal)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="font-size:0.75rem;color:#0369a1;margin-top:6px;font-weight:600;">
+                ℹ️ नियम: चेक बँकेत जमा होऊन पास (Cleared) झाल्यावरच पार्टीची उधारी कमी होईल. तोपर्यंत चेक 'In Hand' दिसेल.
+              </div>
+            </div>
             <div class="form-group" style="grid-column: span 2;">
               <label>Reference / Remark</label>
               <input type="text" id="colRef" class="form-control" placeholder="e.g. Cash to Roshan / Online to Prashik / Cheque No" />
@@ -1592,6 +1635,34 @@
               <button type="submit" class="btn btn-success" style="width:100%">+ Save Receipt</button>
             </div>
           </form>
+        </div>
+
+        <!-- Cheque Clearance Hub Card -->
+        <div class="card" id="chequeRegisterCard" style="display:none;background:#f8fafc;border:1.5px solid #cbd5e1;margin-bottom:20px;">
+          <div class="card-header" style="background:#f1f5f9;border-bottom:1px solid #e2e8f0;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.3rem;">📜</span>
+              <span class="card-title" style="color:var(--primary);">धनादेश व्यवस्थापन व क्लिअरिंग (Cheque Clearance Hub)</span>
+            </div>
+            <span class="pill pill-yellow" id="badgePendingChequesCount">0 Pending</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receipt / Chq No</th>
+                  <th>Chq Date</th>
+                  <th>Party Name</th>
+                  <th>Bank Name</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th>Target A/c</th>
+                  <th class="text-center">Clearing Status</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="chequeTableBody"></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="card">
@@ -5213,7 +5284,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v23";
+    const STORAGE_KEY = "madhav_shivom_erp_v24";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5455,6 +5526,9 @@
       // Auto-merge orders, parties, collections from any previous version storages
       try {
         const prevKeys = [
+          "madhav_shivom_erp_v23_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v22_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v21_" + activeCompany.toLowerCase(),
           "madhav_shivom_erp_v16_" + activeCompany.toLowerCase(),
           "madhav_shivom_erp_v15_" + activeCompany.toLowerCase(),
           "madhav_shivom_erp_v14_" + activeCompany.toLowerCase(),
@@ -5717,6 +5791,9 @@
 
       const ordSp = document.getElementById("ordSalesperson");
       const colSp = document.getElementById("colSalesperson");
+      const colModeEl = document.getElementById("colMode");
+      const isVikram = isStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM"));
+
       if (isStaff) {
         // Locked to logged in salesperson
         const staffOpt = `<option value="${currentStaff.name}" selected>👤 ${currentStaff.name} (${currentStaff.role})</option>`;
@@ -5748,8 +5825,22 @@
         }
       }
 
+      // Vikram Cash Prohibition in UI
+      if (colModeEl) {
+        const cashOpt = colModeEl.querySelector('option[value="Cash"]');
+        if (isVikram) {
+          if (cashOpt) cashOpt.disabled = true;
+          if (colModeEl.value === "Cash") colModeEl.value = "Bank";
+        } else {
+          if (cashOpt) cashOpt.disabled = false;
+        }
+      }
+
+      toggleColDepositAccount();
       renderStaffCashTab();
       renderOrdersTable();
+      renderCollectionTable();
+      renderChequeRegister();
     }
 
     function updateAdminUI() {
@@ -5905,7 +5996,8 @@
         const partyCols = state.collections.filter(c => c.partyId === party.id);
         const cashPaid = partyCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
         const bankPaid = partyCols.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
-        const totalPaid = cashPaid + bankPaid;
+        const chequeCleared = partyCols.filter(c => c.mode === "Cheque" && c.chequeStatus === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
+        const totalPaid = cashPaid + bankPaid + chequeCleared;
         const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid;
 
         let lastDateStr = party.lastPaymentDate || "";
@@ -6062,6 +6154,7 @@
       renderStockTable();
       renderOrdersTable();
       renderCollectionTable();
+      renderChequeRegister();
       renderMasterSalespersons();
     }
 
@@ -7151,18 +7244,76 @@ ${itemsList}
       openModal("orderMemoModal");
     }
 
+    let currentOrderRegisterTab = "All";
+    function setOrderRegisterTab(tab) {
+      currentOrderRegisterTab = tab;
+      const allBtn = document.getElementById("orderTabAll");
+      const penBtn = document.getElementById("orderTabPending");
+      const compBtn = document.getElementById("orderTabCompleted");
+      
+      [allBtn, penBtn, compBtn].forEach(b => {
+        if (b) {
+          b.classList.remove("active");
+          b.style.background = "#f1f5f9";
+          b.style.color = "#475569";
+          b.style.border = "1px solid #e2e8f0";
+        }
+      });
+      
+      const activeEl = tab === "Pending" ? penBtn : (tab === "Completed" ? compBtn : allBtn);
+      if (activeEl) {
+        activeEl.classList.add("active");
+        activeEl.style.background = "#e0f2fe";
+        activeEl.style.color = "#0369a1";
+        activeEl.style.border = "1px solid #7dd3fc";
+      }
+      renderOrdersTable();
+    }
+
     function renderOrdersTable() {
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       const q = (document.getElementById("orderSearch").value || "").toLowerCase();
-      const list = state.orders.filter(o =>
-        o.orderNo.toLowerCase().includes(q) ||
-        o.partyName.toLowerCase().includes(q) ||
-        o.productName.toLowerCase().includes(q) ||
-        o.salespersonName.toLowerCase().includes(q)
+
+      // Update Tab Counter Badges across all orders
+      const allOrders = state.orders || [];
+      const totalAll = allOrders.length;
+      const totalPending = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0).length;
+      const totalCompleted = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0).length;
+
+      const cAllEl = document.getElementById("countAllOrders");
+      const cPenEl = document.getElementById("countPendingOrders");
+      const cCompEl = document.getElementById("countCompletedOrders");
+      if (cAllEl) cAllEl.textContent = totalAll;
+      if (cPenEl) cPenEl.textContent = totalPending;
+      if (cCompEl) cCompEl.textContent = totalCompleted;
+
+      // Filter by active smart tab
+      let filteredOrders = allOrders;
+      if (currentOrderRegisterTab === "Pending") {
+        filteredOrders = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
+      } else if (currentOrderRegisterTab === "Completed") {
+        filteredOrders = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0);
+      }
+
+      // Filter by search query
+      const list = filteredOrders.filter(o =>
+        (o.orderNo || "").toLowerCase().includes(q) ||
+        (o.partyName || "").toLowerCase().includes(q) ||
+        (o.productName || "").toLowerCase().includes(q) ||
+        (o.salespersonName || "").toLowerCase().includes(q)
       );
-      document.getElementById("ordersTableBody").innerHTML = list.map(o => {
-        const pending = o.orderQty - o.dispatchedQty;
-        const st = o.dispatchedQty === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
+
+      const tbody = document.getElementById("ordersTableBody");
+      if (!tbody) return;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:20px;color:var(--muted);">कोणतीही ऑर्डर सापडली नाही (No orders found in '${currentOrderRegisterTab}' tab).</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(o => {
+        const pending = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
+        const st = Number(o.dispatchedQty || 0) === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
         const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
         const isDispatched = Number(o.dispatchedQty || 0) > 0;
         const canEditOrder = !isSalesperson || !isDispatched;
@@ -7606,30 +7757,73 @@ ${itemsList}
 
     function renderCollectionTable() {
       const q = (document.getElementById("colSearch").value || "").toLowerCase();
-      const list = state.collections.filter(c =>
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      const isAdmin = !!isAdminLoggedIn || (currentStaff && currentStaff.role === "Owner");
+
+      let list = state.collections || [];
+
+      // Salespersons only see their own collections
+      if (isSalesperson) {
+        const myName = currentStaff.name.toUpperCase();
+        list = list.filter(c => (c.salespersonName || "").toUpperCase().includes(myName.includes("GOPAL") ? "GOPAL" : "VIK"));
+      }
+
+      // Filter by search query
+      list = list.filter(c =>
         (c.receiptNo || "").toLowerCase().includes(q) ||
         (c.partyName || "").toLowerCase().includes(q) ||
         (c.salespersonName || "").toLowerCase().includes(q) ||
         (c.mode || "").toLowerCase().includes(q) ||
         (c.bankRef || "").toLowerCase().includes(q)
       );
-      document.getElementById("collectionTableBody").innerHTML = list.map(c => `
-        <tr>
-          <td class="font-bold">${c.receiptNo}</td>
-          <td>${fmtDate(c.date)}</td>
-          <td>${c.partyName}</td>
-          <td>${c.salespersonName}</td>
-          <td class="text-right font-bold">${fmtINR(c.amount)}</td>
-          <td class="text-center"><span class="pill ${c.mode === 'Cash' ? 'pill-green' : 'pill-blue'}">${c.mode === 'Cash' ? 'Cash' : 'Bank (' + getAccShortName(c.depositAccount) + ')'}</span></td>
-          <td>${c.bankRef || "-"}</td>
-          <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
-            <button class="btn btn-whatsapp btn-sm" onclick="sendCollectionWhatsApp('${c.id}')" title="Send WhatsApp">💬 WhatsApp</button>
-            <button class="btn btn-primary btn-sm" onclick="openPaymentReceipt('${c.id}')" title="Print/View Official Receipt">📄 Receipt</button>
-            <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditCollectionModal('${c.id}')" title="दुरुस्त करा (Edit Receipt)">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCollectionRecord('${c.id}')" title="रद्द करा (Delete Receipt)">🗑️</button>
-          </td>
-        </tr>
-      `).join("");
+
+      const tbody = document.getElementById("collectionTableBody");
+      if (!tbody) return;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:16px;color:var(--muted);">${isSalesperson ? 'तुमच्या नावावर कोणतीही पावती सापडली नाही.' : 'कोणतीही पावती सापडली नाही.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(c => {
+        let modePill = "";
+        if (c.mode === "Cash") {
+          modePill = `<span class="pill pill-green">Cash</span>`;
+        } else if (c.mode === "Bank") {
+          modePill = `<span class="pill pill-blue">Bank (${getAccShortName(c.depositAccount)})</span>`;
+        } else if (c.mode === "Cheque") {
+          const chqSt = c.chequeStatus || "Pending";
+          if (chqSt === "Cleared") {
+            modePill = `<span class="pill pill-green">✓ Cheque (Cleared)</span>`;
+          } else if (chqSt === "Bounced") {
+            modePill = `<span class="pill pill-red">✕ Cheque (Bounced)</span>`;
+          } else {
+            modePill = `<span class="pill pill-yellow">🟡 Cheque (In Hand)</span>`;
+          }
+        } else {
+          modePill = `<span class="pill pill-blue">${c.mode}</span>`;
+        }
+
+        return `
+          <tr>
+            <td class="font-bold">${c.receiptNo}</td>
+            <td>${fmtDate(c.date)}</td>
+            <td>${c.partyName}</td>
+            <td>${c.salespersonName}</td>
+            <td class="text-right font-bold">${fmtINR(c.amount)}</td>
+            <td class="text-center">${modePill}</td>
+            <td>${c.bankRef || "-"}</td>
+            <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
+              <button class="btn btn-whatsapp btn-sm" onclick="sendCollectionWhatsApp('${c.id}')" title="Send WhatsApp">💬 WhatsApp</button>
+              <button class="btn btn-primary btn-sm" onclick="openPaymentReceipt('${c.id}')" title="Print/View Official Receipt">📄 Receipt</button>
+              ${isAdmin ? `
+                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditCollectionModal('${c.id}')" title="दुरुस्त करा (Edit Receipt)">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCollectionRecord('${c.id}')" title="रद्द करा (Delete Receipt)">🗑️</button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join("");
     }
 
     
@@ -8228,10 +8422,10 @@ ${itemsList}
             <div class="kpi-sub">Pending handover to Prashik</div>
             ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 थेट जमा घ्या (Receive)</button>` : ''}
           </div>
-          <div class="kpi-card">
+          <div class="kpi-card" style="border-top:4px solid #ef4444;">
             <div class="kpi-label">Cash with Vikram (In Pocket)</div>
-            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.vikramPocket)}</div>
-            <div class="kpi-sub">Pending handover to Prashik</div>
+            <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.vikramPocket)}</div>
+            <div class="kpi-sub" style="color:#b91c1c;font-weight:700;">🚫 रोख रक्कम बंदी (Cash Prohibited)</div>
           </div>
           <div class="kpi-card teal">
             <div class="kpi-label">Total Deposited in Banks</div>
@@ -8639,26 +8833,63 @@ ${itemsList}
         alert("कृपया यादीतून वैध पार्टी निवडा किंवा नवीन पार्टी जोडा.");
         return;
       }
-            const colModeVal = document.getElementById("colMode").value;
-      const depositAccountVal = (colModeVal === "Bank") ? (document.getElementById("colDepositAccount").value || "IOB") : null;
+      
+      const colModeVal = document.getElementById("colMode").value;
+      const spVal = document.getElementById("colSalesperson").value;
+
+      // Vikram Cash Prohibition Check
+      const isVikram = (spVal || "").toUpperCase().includes("VIKARAM") || (spVal || "").toUpperCase().includes("VIKRAM") || (currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM")));
+      if (isVikram && colModeVal === "Cash") {
+        alert("विक्रम सिंग ठाकूर यांना रोख रक्कम (Cash) स्वीकारण्यास बंदी आहे. सोबत गोपाळ किंवा प्रशिक असणे आवश्यक.");
+        return;
+      }
+
+      let depositAccountVal = null;
+      let chequeNo = null;
+      let chequeBank = null;
+      let chequeDate = null;
+      let chequeStatus = null;
+      let bankRef = document.getElementById("colRef").value.trim();
+
+      if (colModeVal === "Bank") {
+        depositAccountVal = document.getElementById("colDepositAccount").value || "IOB";
+      } else if (colModeVal === "Cheque") {
+        chequeNo = (document.getElementById("colChequeNo") ? document.getElementById("colChequeNo").value.trim() : "") || "CHQ-" + Date.now().toString().slice(-6);
+        chequeBank = (document.getElementById("colChequeBank") ? document.getElementById("colChequeBank").value.trim() : "") || "Bank";
+        chequeDate = (document.getElementById("colChequeDate") ? document.getElementById("colChequeDate").value : "") || document.getElementById("colDate").value;
+        depositAccountVal = (document.getElementById("colChequeDepositAccount") ? document.getElementById("colChequeDepositAccount").value : "IOB") || "IOB";
+        chequeStatus = "Pending";
+        bankRef = `Chq #${chequeNo} (${chequeBank}) - In Hand / Pending Clearing`;
+      }
+
       const newCol = {
         id: "COL_" + Date.now(),
         receiptNo: "RCP-" + String(100 + state.collections.length),
         date: document.getElementById("colDate").value,
         partyId: party.id,
         partyName: party.name,
-        salespersonName: document.getElementById("colSalesperson").value,
+        salespersonName: spVal,
         amount: Number(document.getElementById("colAmount").value),
         mode: colModeVal,
         depositAccount: depositAccountVal,
-        bankRef: document.getElementById("colRef").value
+        chequeNo: chequeNo,
+        chequeBank: chequeBank,
+        chequeDate: chequeDate,
+        chequeStatus: chequeStatus,
+        bankRef: bankRef
       };
+      
       await saveRecord("collections", newCol);
       document.getElementById("colAmount").value = "";
       document.getElementById("colRef").value = "";
       document.getElementById("colPartyInput").value = "";
+      if (document.getElementById("colChequeNo")) document.getElementById("colChequeNo").value = "";
+      if (document.getElementById("colChequeBank")) document.getElementById("colChequeBank").value = "";
+
       const colDepGrp = document.getElementById("colDepositAccountGroup");
       if (colDepGrp) colDepGrp.style.display = "none";
+      const colChqGrp = document.getElementById("colChequeFieldsGroup");
+      if (colChqGrp) colChqGrp.style.display = "none";
       const alertEl = document.getElementById("colPartyDueAlert");
       if (alertEl) alertEl.innerHTML = "";
       
