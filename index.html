@@ -1809,6 +1809,42 @@
     </div>
   </div>
 
+  <!-- ==================== EDIT ORDER MEMO MODAL ==================== -->
+  <div class="modal-backdrop" id="editOrderModal">
+    <div class="modal" style="max-width:540px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+        <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
+          <span>✏️</span> ऑर्डर बुकिंग मेमो दुरुस्त करा (<span id="editMemoDisplayNo"></span>)
+        </h3>
+        <button type="button" class="modal-close" onclick="closeModal('editOrderModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      </div>
+
+      <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:14px;border:1px solid #e2e8f0;font-size:0.85rem;">
+        <div><strong>पार्टीचे नाव:</strong> <span id="editPartyName"></span></div>
+        <div><strong>बुक केलेला सेल्समन:</strong> <span id="editSalespersonName"></span></div>
+        <div><strong>तारीख:</strong> <span id="editMemoDate"></span></div>
+      </div>
+
+      <div style="font-weight:700;color:#334155;margin-bottom:8px;font-size:0.85rem;">
+        📦 मेमोमधील प्रॉडक्ट्स (नग व दर दुरुस्त करा):
+      </div>
+
+      <div id="editOrderItemsList" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+        <!-- Items rendered dynamically -->
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:16px;">
+        <div><strong>एकूण नग:</strong> <span id="editMemoTotalUnits" style="font-weight:700;">0 Units</span></div>
+        <div><strong>नवीन एकूण रक्कम:</strong> <span id="editMemoTotalAmt" style="font-size:1.1rem;font-weight:800;color:#15803d;">₹0.00</span></div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('editOrderModal')">रद्द करा</button>
+        <button type="button" class="btn btn-success" style="flex:1.5;justify-content:center;font-weight:700;" onclick="saveEditedOrderMemo()">💾 बदल सेव्ह करा (Update Memo)</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== ORDER BOOKING MEMO SUCCESS & WHATSAPP MODAL ==================== -->
   <div class="modal-backdrop" id="orderSuccessModal">
     <div class="modal" style="max-width:480px;text-align:center;">
@@ -5463,14 +5499,177 @@ ${itemsList}
             <td class="text-right font-bold">${pending}</td>
             <td class="text-right font-bold">${fmtINR(o.orderQty * o.rate)}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
-            <td class="text-center" style="white-space:nowrap;">
+            <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
               ${pending > 0 ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
-              <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')">💬 WhatsApp</button>
-              <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')">Bill PDF</button>
+              <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
+              <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Bill PDF">Bill PDF</button>
+              <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="दुरुस्त करा (Edit Rate/Qty)">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="रद्द करा (Delete Memo)">🗑️</button>
             </td>
           </tr>
         `;
       }).join("");
+    }
+
+    let currentEditingOrderId = null;
+
+    function openEditOrderModal(orderId) {
+      if (!isAdminLoggedIn && !currentStaff) {
+        alert("कृपया दुरुस्ती करण्यासाठी आधी लॉगिन करा.");
+        return;
+      }
+
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) {
+        alert("ऑर्डर सापडला नाही.");
+        return;
+      }
+
+      currentEditingOrderId = orderId;
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      document.getElementById("editMemoDisplayNo").textContent = "#" + memoDisplayNo;
+      document.getElementById("editPartyName").textContent = ord.partyName;
+      document.getElementById("editSalespersonName").textContent = ord.salespersonName;
+      document.getElementById("editMemoDate").textContent = fmtDate(ord.date);
+
+      // Normalize items array
+      let items = ord.items;
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        items = [{
+          productId: ord.productId,
+          productName: ord.productName,
+          qty: Number(ord.orderQty || 1),
+          rate: Number(ord.rate || 0),
+          totalAmt: Number(ord.totalAmt || (ord.orderQty * ord.rate) || 0)
+        }];
+      }
+
+      const container = document.getElementById("editOrderItemsList");
+      container.innerHTML = items.map((it, idx) => `
+        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:6px;">
+            ${idx + 1}. ${it.productName}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="flex:1;">
+              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
+              <input type="number" id="editQty_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="1" value="${it.qty}" oninput="recalcEditTotal()" />
+            </div>
+            <div style="flex:1.5;">
+              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">दर (Rate ₹):</label>
+              <input type="number" id="editRate_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="0" step="any" value="${it.rate}" oninput="recalcEditTotal()" />
+            </div>
+            <div style="flex:1.2;text-align:right;">
+              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
+              <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">${fmtINR(it.qty * it.rate)}</span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      recalcEditTotal();
+      openModal("editOrderModal");
+    }
+
+    function recalcEditTotal() {
+      const ord = state.orders.find(o => o.id === currentEditingOrderId);
+      if (!ord) return;
+
+      let items = ord.items;
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        items = [{ productName: ord.productName, qty: ord.orderQty, rate: ord.rate }];
+      }
+
+      let totalUnits = 0;
+      let totalAmount = 0;
+
+      items.forEach((it, idx) => {
+        const qtyEl = document.getElementById(`editQty_${idx}`);
+        const rateEl = document.getElementById(`editRate_${idx}`);
+        const totalEl = document.getElementById(`editItemTotal_${idx}`);
+        const q = Math.max(1, Number(qtyEl ? qtyEl.value : it.qty) || 1);
+        const r = Math.max(0, Number(rateEl ? rateEl.value : it.rate) || 0);
+        const lineTotal = q * r;
+        totalUnits += q;
+        totalAmount += lineTotal;
+        if (totalEl) totalEl.textContent = fmtINR(lineTotal);
+      });
+
+      const unitsEl = document.getElementById("editMemoTotalUnits");
+      if (unitsEl) unitsEl.textContent = totalUnits + " Units";
+      const amtEl = document.getElementById("editMemoTotalAmt");
+      if (amtEl) amtEl.textContent = fmtINR(totalAmount);
+    }
+
+    async function saveEditedOrderMemo() {
+      const ord = state.orders.find(o => o.id === currentEditingOrderId);
+      if (!ord) return;
+
+      let items = ord.items;
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        items = [{
+          productId: ord.productId,
+          productName: ord.productName,
+          qty: Number(ord.orderQty || 1),
+          rate: Number(ord.rate || 0),
+          totalAmt: Number(ord.totalAmt || 0)
+        }];
+      }
+
+      let totalUnits = 0;
+      let totalAmount = 0;
+
+      items.forEach((it, idx) => {
+        const qtyEl = document.getElementById(`editQty_${idx}`);
+        const rateEl = document.getElementById(`editRate_${idx}`);
+        const q = Math.max(1, Number(qtyEl ? qtyEl.value : it.qty) || 1);
+        const r = Math.max(0, Number(rateEl ? rateEl.value : it.rate) || 0);
+        it.qty = q;
+        it.rate = r;
+        it.totalAmt = q * r;
+        totalUnits += q;
+        totalAmount += it.totalAmt;
+      });
+
+      ord.items = items;
+      ord.orderQty = totalUnits;
+      ord.totalAmt = totalAmount;
+      ord.rate = totalUnits > 0 ? totalAmount / totalUnits : 0;
+      ord.productName = items.map(it => `${it.productName} (${it.qty})`).join(", ");
+
+      persistLocal();
+      refreshAll();
+
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "orders").doc(ord.id).set(ord).catch(e => console.warn("Firebase edit order error:", e));
+      }
+
+      closeModal("editOrderModal");
+      showToast(`✅ ऑर्डर मेमो #${ord.memoNo || ord.orderNo} चे दर व नग यशस्वीरीत्या दुरुस्त झाले!`);
+    }
+
+    async function deleteOrderMemo(orderId) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      if (!confirm(`तुम्हाला खात्री आहे का की ऑर्डर मेमो #${memoDisplayNo} (${ord.partyName} - ${fmtINR(ord.totalAmt)}) कायमचा रद्द / डिलीट करायचा आहे?`)) {
+        return;
+      }
+
+      // Remove from state
+      state.orders = state.orders.filter(o => o.id !== orderId);
+      persistLocal();
+      refreshAll();
+
+      // Delete from Firestore
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "orders").doc(orderId).delete().catch(e => console.warn("Firebase delete order error:", e));
+      }
+
+      showToast(`🗑️ ऑर्डर मेमो #${memoDisplayNo} रद्द करण्यात आला.`);
     }
 
     function renderCollectionTable() {
