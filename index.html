@@ -3926,6 +3926,62 @@
       if (!state.cashHandovers) state.cashHandovers = [];
       if (!state.bankDeposits) state.bankDeposits = [];
 
+      // Auto-merge orders, parties, collections from any previous version storages
+      try {
+        const prevKeys = [
+          "madhav_shivom_erp_v16_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v15_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v14_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v13_" + activeCompany.toLowerCase(),
+          "madhav_shivom_erp_v12_" + activeCompany.toLowerCase()
+        ];
+        let mergedAny = false;
+        if (!state.orders) state.orders = [];
+        if (!state.parties) state.parties = [];
+        if (!state.collections) state.collections = [];
+
+        prevKeys.forEach(pk => {
+          if (pk === key) return;
+          const raw = localStorage.getItem(pk);
+          if (raw) {
+            try {
+              const oldState = JSON.parse(raw);
+              if (oldState.orders && Array.isArray(oldState.orders)) {
+                oldState.orders.forEach(oldOrd => {
+                  if (!state.orders.some(o => o.id === oldOrd.id || (o.memoNo && o.memoNo === oldOrd.memoNo) || (o.orderNo && o.orderNo === oldOrd.orderNo && o.date === oldOrd.date))) {
+                    state.orders.push(oldOrd);
+                    mergedAny = true;
+                  }
+                });
+              }
+              if (oldState.parties && Array.isArray(oldState.parties)) {
+                oldState.parties.forEach(oldParty => {
+                  if (!state.parties.some(p => p.id === oldParty.id || p.name === oldParty.name)) {
+                    state.parties.push(oldParty);
+                    mergedAny = true;
+                  }
+                });
+              }
+              if (oldState.collections && Array.isArray(oldState.collections)) {
+                oldState.collections.forEach(oldCol => {
+                  if (!state.collections.some(c => c.id === oldCol.id)) {
+                    state.collections.push(oldCol);
+                    mergedAny = true;
+                  }
+                });
+              }
+            } catch (err) {}
+          }
+        });
+
+        if (mergedAny) {
+          state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
+          persistLocal();
+        }
+      } catch (e) {
+        console.warn("Storage auto-merge exception:", e);
+      }
+
       // Ensure full registered team is in state.salespersons
       if (!state.salespersons || state.salespersons.length === 0 || !state.salespersons.find(s => s.mobile === "9075479839")) {
         state.salespersons = [
@@ -4235,7 +4291,30 @@
       ["products", "parties", "salespersons", "orders", "collections"].forEach(col => {
         db.collection(prefix + col).onSnapshot(snap => {
           if (!snap.empty) {
-            state[col] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (col === "orders" || col === "collections" || col === "parties") {
+              const localList = state[col] || [];
+              remoteItems.forEach(r => {
+                const idx = localList.findIndex(x => x.id === r.id);
+                if (idx >= 0) {
+                  localList[idx] = r;
+                } else {
+                  localList.push(r);
+                }
+              });
+              // Upload any local items not yet in Firestore
+              localList.forEach(loc => {
+                if (!remoteItems.some(r => r.id === loc.id)) {
+                  db.collection(prefix + col).doc(loc.id).set(loc).catch(e => console.warn(e));
+                }
+              });
+              state[col] = localList;
+              if (col === "orders") {
+                state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
+              }
+            } else {
+              state[col] = remoteItems;
+            }
             persistLocal();
             refreshAll();
           } else if (state[col] && state[col].length > 0) {
