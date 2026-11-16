@@ -857,7 +857,13 @@
       .card-title {
         font-size: 0.88rem !important;
       }
-      /* Ensure cart table does not push page width on mobile */
+      @media (min-width: 769px) {
+      .memo-mobile-summary-card, #memoMobileSummaryCard {
+        display: none !important;
+      }
+    }
+
+    /* Ensure cart table does not push page width on mobile */
       #memoCartTable, #memoCartTable tbody, #memoCartTable tr, #memoCartTable td {
         display: block !important;
         width: 100% !important;
@@ -3713,7 +3719,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v14";
+    const STORAGE_KEY = "madhav_shivom_erp_v15";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -3795,6 +3801,17 @@
       // Check Admin Session
       isAdminLoggedIn = sessionStorage.getItem(AUTH_SESSION_KEY) === "true";
       updateAdminUI();
+
+      // Check Staff Session
+      const savedStaff = sessionStorage.getItem(STAFF_SESSION_KEY) || localStorage.getItem(STAFF_SESSION_KEY);
+      if (savedStaff) {
+        try {
+          currentStaff = JSON.parse(savedStaff);
+        } catch(e) {
+          currentStaff = null;
+        }
+      }
+      updateStaffUI();
 
       const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
       selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "SHIVOM");
@@ -4028,6 +4045,7 @@
       if (isMatch) {
         currentStaff = member;
         sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+        localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
         closeModal("staffLoginModal");
         updateStaffUI();
         switchTab("admin-orders", document.querySelector('[data-tab="admin-orders"]'));
@@ -4042,6 +4060,7 @@
     function staffLogout() {
       currentStaff = null;
       sessionStorage.removeItem(STAFF_SESSION_KEY);
+      localStorage.removeItem(STAFF_SESSION_KEY);
       updateStaffUI();
       switchTab("open-stock", document.querySelector('[data-tab="open-stock"]'));
       showToast("Logged out of Sales Team Portal.");
@@ -4306,21 +4325,45 @@
 
     function populateDropdowns() {
       const partyDl = document.getElementById("partyDatalist");
-      partyDl.innerHTML = state.parties.map(p =>
-        `<option value="${p.name}">${p.area ? p.area : ""} ${p.mobile ? "| " + p.mobile : ""}</option>`
-      ).join("");
+      if (partyDl) {
+        partyDl.innerHTML = state.parties.map(p =>
+          `<option value="${p.name}">${p.area ? p.area : ""} ${p.mobile ? "| " + p.mobile : ""}</option>`
+        ).join("");
+      }
 
       const prodDl = document.getElementById("productDatalist");
-      const stockList = getComputedStock();
-      prodDl.innerHTML = stockList.map(p =>
-        `<option value="${p.name}">Code: ${p.code} | Rate: ₹${p.rate} | Avail: ${p.available}</option>`
-      ).join("");
+      if (prodDl) {
+        const stockList = getComputedStock();
+        prodDl.innerHTML = stockList.map(p =>
+          `<option value="${p.name}">Code: ${p.code} | Rate: ₹${p.rate} | Avail: ${p.available}</option>`
+        ).join("");
+      }
 
-      const spHtml = state.salespersons.map(s =>
-        `<option value="${s.name}">${s.name} (${s.role})</option>`
-      ).join("");
-      document.getElementById("ordSalesperson").innerHTML = spHtml;
-      document.getElementById("colSalesperson").innerHTML = spHtml;
+      const ordSp = document.getElementById("ordSalesperson");
+      const colSp = document.getElementById("colSalesperson");
+      if (currentStaff) {
+        const staffOpt = `<option value="${currentStaff.name}" selected>👤 ${currentStaff.name} (${currentStaff.role})</option>`;
+        if (ordSp) {
+          ordSp.innerHTML = staffOpt;
+          ordSp.disabled = true;
+        }
+        if (colSp) {
+          colSp.innerHTML = staffOpt;
+          colSp.disabled = true;
+        }
+      } else {
+        const spHtml = state.salespersons.map(s =>
+          `<option value="${s.name}">${s.name} (${s.role})</option>`
+        ).join("");
+        if (ordSp) {
+          ordSp.innerHTML = spHtml;
+          ordSp.disabled = false;
+        }
+        if (colSp) {
+          colSp.innerHTML = spHtml;
+          colSp.disabled = false;
+        }
+      }
     }
 
     // ==================== OPEN PORTAL: LIVE STOCK ====================
@@ -4973,13 +5016,29 @@
         totalAmt: totalAmt
       };
 
-      await saveRecord("orders", newOrder);
-
-      // Clear form & cart
+      // 1. Instantly clear memo cart and reset order form inputs
       memoCart = [];
       renderMemoCart();
-      partyInput.value = "";
-      document.getElementById("ordPartyDueAlert").innerHTML = "";
+      if (partyInput) partyInput.value = "";
+      const pInp = document.getElementById("ordProductInput");
+      if (pInp) pInp.value = "";
+      const rInp = document.getElementById("ordRate");
+      if (rInp) rInp.value = "";
+      const qInp = document.getElementById("ordQty");
+      if (qInp) qInp.value = "1";
+      const dueAlert = document.getElementById("ordPartyDueAlert");
+      if (dueAlert) dueAlert.innerHTML = "";
+
+      // 2. Save order locally and refresh tables immediately
+      state.orders.unshift(newOrder);
+      persistLocal();
+      refreshAll();
+
+      // 3. Background Firebase sync (non-blocking)
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "orders").doc(newOrder.id).set(newOrder).catch(e => console.warn("Firebase sync error:", e));
+      }
 
       showToast(`Order Booking Memo #${newOrder.memoNo} Saved Successfully!`);
       showOrderSuccessModal(newOrder, party);
@@ -5499,41 +5558,7 @@ ${itemsList}
       renderStaffCashTab();
     }
 
-    function showOrderSuccessModal(newOrder, party) {
-      document.getElementById("succOrdNo").textContent = "#" + newOrder.orderNo;
-      document.getElementById("succOrdDetails").innerHTML = `
-        <div><strong>Dealer:</strong> ${newOrder.partyName} (${party ? party.area : "Nagpur"})</div>
-        <div><strong>Item:</strong> ${newOrder.productName}</div>
-        <div><strong>Qty:</strong> ${newOrder.orderQty} Units | <strong>Rate:</strong> ${fmtINR(newOrder.rate)}</div>
-        <div><strong>Total Value:</strong> <span style="font-size:1rem;color:#0f766e;font-weight:800;">${fmtINR(newOrder.totalAmt)}</span></div>
-        <div><strong>Booked By:</strong> ${newOrder.salespersonName}</div>
-      `;
-
-      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
-      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
-      const msg = `*${coName}*
-📍 *Order Confirmation Slip*
------------------------------
-*Order No:* #${newOrder.orderNo}
-*Date:* ${fmtDate(newOrder.date)}
-*Dealer:* ${newOrder.partyName}
-*Booked By:* ${newOrder.salespersonName}
------------------------------
-*Item:* ${newOrder.productName}
-*Qty:* ${newOrder.orderQty} Units
-*Rate:* ${fmtINR(newOrder.rate)}
-*Total Order Value:* ${fmtINR(newOrder.totalAmt)}
-*Status:* Booked (लवकरच माल रवाना होईल)
------------------------------
-धन्यवाद!`;
-
-      const waBtn = document.getElementById("succOrdWhatsAppBtn");
-      waBtn.href = cleanPhone.length >= 10
-        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-
-      openModal("orderSuccessModal");
-    }
+    // Legacy single-item showOrderSuccessModal removed; handled by multi-item modal above
 
     function showCollectionSuccessModal(newCol, party) {
       const computed = getComputedParties().find(p => p.id === newCol.partyId || p.name === newCol.partyName);
