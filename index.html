@@ -3911,7 +3911,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v16";
+    const STORAGE_KEY = "madhav_shivom_erp_v17";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -4373,6 +4373,7 @@
       }
 
       renderStaffCashTab();
+      renderOrdersTable();
     }
 
     function updateAdminUI() {
@@ -5681,6 +5682,7 @@ ${itemsList}
     }
 
     function renderOrdersTable() {
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       const q = (document.getElementById("orderSearch").value || "").toLowerCase();
       const list = state.orders.filter(o =>
         o.orderNo.toLowerCase().includes(q) ||
@@ -5704,7 +5706,7 @@ ${itemsList}
             <td class="text-right font-bold">${fmtINR(o.orderQty * o.rate)}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
             <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
-              ${pending > 0 ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
+              ${(canDispatch && pending > 0) ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
               <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
               <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Bill PDF">Bill PDF</button>
               <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="दुरुस्त करा (Edit Rate/Qty)">✏️ Edit</button>
@@ -6760,6 +6762,11 @@ ${itemsList}
     
 
     function openDispatchModal(orderId) {
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canDispatch) {
+        alert("माल डिस्पॅच करण्याचा अधिकार फक्त मालक आणि मॅनेजर (प्रशिक हजारे) यांनाच आहे.");
+        return;
+      }
       const ord = state.orders.find(o => o.id === orderId);
       const pending = ord.orderQty - ord.dispatchedQty;
       document.getElementById("dispatchOrderId").value = orderId;
@@ -6772,7 +6779,11 @@ ${itemsList}
 
     async function submitDispatch(e) {
       e.preventDefault();
-      if (!isAdminLoggedIn) { alert("Only Owner can dispatch orders."); return; }
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canDispatch) {
+        alert("माल डिस्पॅच करण्याचा अधिकार फक्त मालक आणि मॅनेजर (प्रशिक हजारे) यांनाच आहे.");
+        return;
+      }
       const orderId = document.getElementById("dispatchOrderId").value;
       const qty = Number(document.getElementById("dispatchQtyInput").value);
       const ord = state.orders.find(o => o.id === orderId);
