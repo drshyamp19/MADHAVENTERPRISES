@@ -675,6 +675,99 @@
       z-index: 200;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
+  
+    /* Mobile-Friendly Order Booking Cart & Inputs */
+    @media (max-width: 768px) {
+      .form-control, input, select {
+        font-size: 16px !important;
+      }
+      .order-add-item-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+      }
+      .order-add-item-grid .item-col-full {
+        grid-column: span 2 !important;
+      }
+      .order-add-item-grid .item-col-half {
+        grid-column: span 1 !important;
+      }
+      .order-add-item-grid .add-item-btn {
+        width: 100% !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+      }
+      /* Mobile Cart Items as Touch Cards */
+      #memoCartTable thead {
+        display: none !important;
+      }
+      #memoCartTable, #memoCartTable tbody, #memoCartTable tr, #memoCartTable td {
+        display: block !important;
+        width: 100% !important;
+      }
+      #memoCartTable tr {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        position: relative;
+      }
+      #memoCartTable td {
+        padding: 2px 0 !important;
+        text-align: left !important;
+        border: none !important;
+      }
+      #memoCartTable td:last-child {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: auto !important;
+      }
+      #memoCartTable td:last-child button {
+        padding: 4px 10px !important;
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+      }
+      .memo-footer-actions {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+      }
+      .memo-footer-actions button {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 12px !important;
+        font-size: 1rem !important;
+      }
+      .memo-total-badge {
+        width: 100%;
+        text-align: center;
+        background: #f0fdf4;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #bbf7d0;
+      }
+    }
+
+  
+    @media (max-width: 768px) {
+      .memo-col-num, .memo-col-qty, .memo-col-rate, .memo-col-total {
+        display: none !important;
+      }
+      .memo-mobile-breakdown {
+        display: block !important;
+        margin-top: 4px;
+      }
+    }
+    @media (min-width: 769px) {
+      .memo-mobile-breakdown {
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1046,23 +1139,23 @@
           <div style="padding:16px;background:#fff;border-bottom:1px solid var(--border);">
             <div style="font-size:0.82rem;font-weight:700;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
               <span>➕ Add Item to Memo</span>
-              <span style="font-size:0.72rem;color:#0f766e;font-weight:600;">(कोणताही डीलर रेट दिसणार नाही — सेल्समन स्वतःच्या मताने रेट टाकेल)</span>
+              
             </div>
-            <div class="form-grid" style="padding:0;align-items:end;">
-              <div class="form-group" style="grid-column: span 2;">
+            <div class="form-grid order-add-item-grid" style="padding:0;align-items:end;">
+              <div class="form-group item-col-full" style="grid-column: span 2;">
                 <label>Select Product <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
                 <input type="text" list="productDatalist" id="ordProductInput" class="form-control" placeholder="Type product name or code..." onchange="handleProductSelected()" oninput="handleProductSelected()" />
               </div>
-              <div class="form-group">
+              <div class="form-group item-col-half">
                 <label>Quantity (नग)</label>
-                <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" />
+                <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" inputmode="numeric" />
               </div>
-              <div class="form-group">
+              <div class="form-group item-col-half">
                 <label style="color:#0f766e;font-weight:700;">Rate Per Unit (₹) *</label>
-                <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" />
+                <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" inputmode="decimal" />
               </div>
-              <div class="form-group">
-                <button type="button" class="btn btn-teal" style="width:100%;justify-content:center;padding:10px;font-weight:700;" onclick="addItemToMemoCart()">
+              <div class="form-group item-col-full">
+                <button type="button" class="btn btn-teal add-item-btn" style="width:100%;justify-content:center;padding:10px;font-weight:700;" onclick="addItemToMemoCart()">
                   ➕ Add Item
                 </button>
               </div>
@@ -1988,7 +2081,7 @@
         "area": "MAJARI",
         "mobile": "9588406934",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 39000,
         "lastPaymentDate": "2026-11-12"
       },
       {
@@ -1997,7 +2090,7 @@
         "area": "GADCHIROLI",
         "mobile": "9421731390",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 12000,
         "lastPaymentDate": "2026-08-25"
       },
       {
@@ -2006,7 +2099,7 @@
         "area": "LANJI",
         "mobile": "9425832186",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 12720,
         "lastPaymentDate": "2026-07-31"
       },
       {
@@ -2015,7 +2108,7 @@
         "area": "KHARABI",
         "mobile": "9552048570",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 32780,
         "lastPaymentDate": "2026-09-18"
       },
       {
@@ -2024,7 +2117,7 @@
         "area": "YASHODARA NAGAR",
         "mobile": "9371892857",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 19510,
         "lastPaymentDate": "2026-10-28"
       },
       {
@@ -2033,7 +2126,7 @@
         "area": "HINGNA",
         "mobile": "9049132874",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 10450,
         "lastPaymentDate": "2026-08-14"
       },
       {
@@ -2042,7 +2135,7 @@
         "area": "GODNI",
         "mobile": "8329152735",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 13500,
         "lastPaymentDate": "2026-10-15"
       },
       {
@@ -2051,7 +2144,7 @@
         "area": "GODNI",
         "mobile": "9021037979",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 3350,
         "lastPaymentDate": "2026-10-26"
       },
       {
@@ -2060,7 +2153,7 @@
         "area": "GODNI",
         "mobile": "9373568273",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 11330,
         "lastPaymentDate": "2026-10-26"
       },
       {
@@ -2069,7 +2162,7 @@
         "area": "GODNI",
         "mobile": "9373568273",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7175,
         "lastPaymentDate": "2026-10-12"
       },
       {
@@ -2078,7 +2171,7 @@
         "area": "GADDIGODAM",
         "mobile": "9371532122",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 15310,
         "lastPaymentDate": "2026-11-06"
       },
       {
@@ -2087,7 +2180,7 @@
         "area": "PATANKAR CHAUK",
         "mobile": "9960434528",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 10980,
         "lastPaymentDate": "2026-11-02"
       },
       {
@@ -2096,7 +2189,7 @@
         "area": "SAMTA NAGAR",
         "mobile": "9595276672",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1900,
         "lastPaymentDate": "2026-10-12"
       },
       {
@@ -2105,7 +2198,7 @@
         "area": "KATOL ROAD",
         "mobile": "8983411835",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 11940,
         "lastPaymentDate": "2026-11-13"
       },
       {
@@ -2114,7 +2207,7 @@
         "area": "KORADI NAKA",
         "mobile": "",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1000,
         "lastPaymentDate": "2026-09-19"
       },
       {
@@ -2123,7 +2216,7 @@
         "area": "BELTARODI ROAD",
         "mobile": "8600540037",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6360,
         "lastPaymentDate": "2026-10-31"
       },
       {
@@ -2132,7 +2225,7 @@
         "area": "khaperkheda",
         "mobile": "8412922429",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6300,
         "lastPaymentDate": "2026-11-05"
       },
       {
@@ -2141,7 +2234,7 @@
         "area": "awalebabu road",
         "mobile": "9370983183",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4590,
         "lastPaymentDate": "2026-10-14"
       },
       {
@@ -2150,7 +2243,7 @@
         "area": "KAMAL CHOWK",
         "mobile": "9565052719",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2880,
         "lastPaymentDate": "2026-08-01"
       },
       {
@@ -2159,7 +2252,7 @@
         "area": "PREM NAGAR NARAYAN PETH",
         "mobile": "8208761931",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 12550,
         "lastPaymentDate": "2026-11-03"
       },
       {
@@ -2168,7 +2261,7 @@
         "area": "OLD KAMPTEE ROAD KALAMNA",
         "mobile": "9595536455",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 8340,
         "lastPaymentDate": "2026-09-26"
       },
       {
@@ -2177,7 +2270,7 @@
         "area": "KALAMNA BASTI KAMPTEE ROAD",
         "mobile": "9145092050",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1000,
         "lastPaymentDate": "2026-10-26"
       },
       {
@@ -2186,7 +2279,7 @@
         "area": "WANADONGARI",
         "mobile": "9657407302",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 11100,
         "lastPaymentDate": "2026-10-01"
       },
       {
@@ -2195,7 +2288,7 @@
         "area": "KHADGAO ROAD",
         "mobile": "7020128809",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 10880,
         "lastPaymentDate": "2026-11-06"
       },
       {
@@ -2204,7 +2297,7 @@
         "area": "DIGHORI",
         "mobile": "9552294997",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4200,
         "lastPaymentDate": "2026-10-02"
       },
       {
@@ -2213,7 +2306,7 @@
         "area": "SAONER",
         "mobile": "7719846837",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7250,
         "lastPaymentDate": "2026-10-02"
       },
       {
@@ -2222,7 +2315,7 @@
         "area": "KAMPTEE",
         "mobile": "9423629296",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4500,
         "lastPaymentDate": "2026-11-13"
       },
       {
@@ -2231,7 +2324,7 @@
         "area": "NAKA NO.2 KHASADA",
         "mobile": "9823738024",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7250,
         "lastPaymentDate": "2026-11-13"
       },
       {
@@ -2240,7 +2333,7 @@
         "area": "burdi",
         "mobile": "9326080399",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2375,
         "lastPaymentDate": "2026-10-05"
       },
       {
@@ -2249,7 +2342,7 @@
         "area": "KORADI NAKA",
         "mobile": "9284343215",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1140,
         "lastPaymentDate": "2026-11-02"
       },
       {
@@ -2258,7 +2351,7 @@
         "area": "GODHNI",
         "mobile": "8329428806",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6300,
         "lastPaymentDate": "2026-10-07"
       },
       {
@@ -2267,7 +2360,7 @@
         "area": "MANSAR",
         "mobile": "9156625001",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2250,
         "lastPaymentDate": "2026-10-09"
       },
       {
@@ -2276,7 +2369,7 @@
         "area": "SAONER",
         "mobile": "9370269793",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 8650,
         "lastPaymentDate": "2026-11-05"
       },
       {
@@ -2285,7 +2378,7 @@
         "area": "KUHI",
         "mobile": "9049146694",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4800,
         "lastPaymentDate": "2026-10-26"
       },
       {
@@ -2294,7 +2387,7 @@
         "area": "UMRED",
         "mobile": "9890682136",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 11440,
         "lastPaymentDate": "2026-11-10"
       },
       {
@@ -2303,7 +2396,7 @@
         "area": "KATOL",
         "mobile": "97650330231",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6300,
         "lastPaymentDate": "2026-10-09"
       },
       {
@@ -2312,7 +2405,7 @@
         "area": "BADRAWATI",
         "mobile": "9011770463",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 14850,
         "lastPaymentDate": "2026-10-01"
       },
       {
@@ -2321,7 +2414,7 @@
         "area": "GOLIBAR CHOWK",
         "mobile": "8600786499",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 20000,
         "lastPaymentDate": "2026-11-12"
       },
       {
@@ -2330,7 +2423,7 @@
         "area": "SAONER",
         "mobile": "9881011068",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4800,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2339,7 +2432,7 @@
         "area": "KAMAL CHOWK",
         "mobile": "9284202172",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 8280,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2348,7 +2441,7 @@
         "area": "HUDKESHWAR",
         "mobile": "9922090492",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2400,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2357,7 +2450,7 @@
         "area": "HUDKESHWAR",
         "mobile": "9370330299",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1800,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2375,7 +2468,7 @@
         "area": "HUDKESHWAR",
         "mobile": "7350029969",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1080,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2384,7 +2477,7 @@
         "area": "GODHNI",
         "mobile": "8378084986",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2375,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2393,7 +2486,7 @@
         "area": "SHANTINAGAR",
         "mobile": "9764114279",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7080,
         "lastPaymentDate": "2026-10-16"
       },
       {
@@ -2402,7 +2495,7 @@
         "area": "GITTIKHADAN",
         "mobile": "7020670070",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4700,
         "lastPaymentDate": "2026-11-12"
       },
       {
@@ -2411,7 +2504,7 @@
         "area": "KHADGAO ROAD",
         "mobile": "7397887570",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 2880,
         "lastPaymentDate": "2026-10-22"
       },
       {
@@ -2420,7 +2513,7 @@
         "area": "HINGNA",
         "mobile": "9822725392",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 11400,
         "lastPaymentDate": "2026-11-12"
       },
       {
@@ -2429,7 +2522,7 @@
         "area": "BHARATWADA",
         "mobile": "9921625415",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6300,
         "lastPaymentDate": "2026-10-23"
       },
       {
@@ -2438,7 +2531,7 @@
         "area": "PARDI",
         "mobile": "9823376819",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6300,
         "lastPaymentDate": "2026-10-23"
       },
       {
@@ -2447,7 +2540,7 @@
         "area": "KAMPTEE",
         "mobile": "7620928509",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 4800,
         "lastPaymentDate": "2026-10-24"
       },
       {
@@ -2456,7 +2549,7 @@
         "area": "KAMPTEE",
         "mobile": "9371233891",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 8290,
         "lastPaymentDate": "2026-10-24"
       },
       {
@@ -2465,7 +2558,7 @@
         "area": "JARIPATKA",
         "mobile": "",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 5925,
         "lastPaymentDate": "2026-11-04"
       },
       {
@@ -2474,7 +2567,7 @@
         "area": "SAKKARDARA",
         "mobile": "9373103192",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6680,
         "lastPaymentDate": "2026-11-14"
       },
       {
@@ -2483,7 +2576,7 @@
         "area": "YAVATMAL",
         "mobile": "8669101255",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 9675,
         "lastPaymentDate": "2026-11-04"
       },
       {
@@ -2492,7 +2585,7 @@
         "area": "RAMNA MAROTI",
         "mobile": "9860142406",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 1880,
         "lastPaymentDate": "2026-11-04"
       },
       {
@@ -2501,7 +2594,7 @@
         "area": "VATHODA",
         "mobile": "8767982454",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 3760,
         "lastPaymentDate": "2026-10-04"
       },
       {
@@ -2510,7 +2603,7 @@
         "area": "HINGNA",
         "mobile": "9422178260",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 3760,
         "lastPaymentDate": "2026-11-06"
       },
       {
@@ -2519,7 +2612,7 @@
         "area": "KUHI",
         "mobile": "9158447475",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7520,
         "lastPaymentDate": "2026-11-11"
       },
       {
@@ -2528,7 +2621,7 @@
         "area": "KUHI",
         "mobile": "9890610707",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 9640,
         "lastPaymentDate": "2026-11-11"
       },
       {
@@ -2537,7 +2630,7 @@
         "area": "KUHI",
         "mobile": "9370521862",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 7520,
         "lastPaymentDate": "2026-11-11"
       },
       {
@@ -2546,7 +2639,7 @@
         "area": "CHANDRAMANI NAGAR",
         "mobile": "9764327757",
         "gstin": "",
-        "openingBalance": 0,
+        "openingBalance": 6160,
         "lastPaymentDate": "2026-11-14"
       }
     ],
@@ -2695,1400 +2788,7 @@
         "inwardStock": 0
       }
     ],
-    "orders": [
-      {
-        "id": "ORD_P001_1",
-        "orderNo": "103",
-        "date": "2026-07-31",
-        "partyId": "P001",
-        "partyName": "SHREE SAI ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 39000,
-        "gst": 18,
-        "totalAmt": 39000
-      },
-      {
-        "id": "ORD_P002_1",
-        "orderNo": "104",
-        "date": "2026-07-31",
-        "partyId": "P002",
-        "partyName": "SHREE GANESH ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 12000,
-        "gst": 18,
-        "totalAmt": 12000
-      },
-      {
-        "id": "ORD_P003_1",
-        "orderNo": "105",
-        "date": "2026-07-31",
-        "partyId": "P003",
-        "partyName": "ROZI BURTAN",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 12720,
-        "gst": 18,
-        "totalAmt": 12720
-      },
-      {
-        "id": "ORD_P004_1",
-        "orderNo": "106",
-        "date": "2026-08-11",
-        "partyId": "P004",
-        "partyName": "TAJ GAS REPAING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6840,
-        "gst": 18,
-        "totalAmt": 6840
-      },
-      {
-        "id": "ORD_P004_2",
-        "orderNo": "102",
-        "date": "2026-07-25",
-        "partyId": "P004",
-        "partyName": "TAJ GAS REPAING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8420,
-        "gst": 18,
-        "totalAmt": 8420
-      },
-      {
-        "id": "ORD_P004_3",
-        "orderNo": "115",
-        "date": "2026-09-18",
-        "partyId": "P004",
-        "partyName": "TAJ GAS REPAING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6840,
-        "gst": 18,
-        "totalAmt": 6840
-      },
-      {
-        "id": "ORD_P004_4",
-        "orderNo": "169",
-        "date": "2026-10-24",
-        "partyId": "P004",
-        "partyName": "TAJ GAS REPAING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P004_5",
-        "orderNo": "171",
-        "date": "2026-10-28",
-        "partyId": "P004",
-        "partyName": "TAJ GAS REPAING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5880,
-        "gst": 18,
-        "totalAmt": 5880
-      },
-      {
-        "id": "ORD_P005_1",
-        "orderNo": "101",
-        "date": "2026-07-24",
-        "partyId": "P005",
-        "partyName": "SURAJ STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3000,
-        "gst": 18,
-        "totalAmt": 3000
-      },
-      {
-        "id": "ORD_P005_2",
-        "orderNo": "110",
-        "date": "2026-08-21",
-        "partyId": "P005",
-        "partyName": "SURAJ STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 12750,
-        "gst": 18,
-        "totalAmt": 12750
-      },
-      {
-        "id": "ORD_P005_3",
-        "orderNo": "177",
-        "date": "2026-11-05",
-        "partyId": "P005",
-        "partyName": "SURAJ STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3760,
-        "gst": 18,
-        "totalAmt": 3760
-      },
-      {
-        "id": "ORD_P006_1",
-        "orderNo": "108",
-        "date": "2026-08-14",
-        "partyId": "P006",
-        "partyName": "TIDKE STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4750,
-        "gst": 18,
-        "totalAmt": 4750
-      },
-      {
-        "id": "ORD_P006_2",
-        "orderNo": "171",
-        "date": "2026-11-06",
-        "partyId": "P006",
-        "partyName": "TIDKE STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3760,
-        "gst": 18,
-        "totalAmt": 3760
-      },
-      {
-        "id": "ORD_P006_3",
-        "orderNo": "187",
-        "date": "2026-11-12",
-        "partyId": "P006",
-        "partyName": "TIDKE STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1940,
-        "gst": 18,
-        "totalAmt": 1940
-      },
-      {
-        "id": "ORD_P007_1",
-        "orderNo": "111",
-        "date": "2026-08-25",
-        "partyId": "P007",
-        "partyName": "THAKRE ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4500,
-        "gst": 18,
-        "totalAmt": 4500
-      },
-      {
-        "id": "ORD_P007_2",
-        "orderNo": "123",
-        "date": "2026-09-19",
-        "partyId": "P007",
-        "partyName": "THAKRE ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 9000,
-        "gst": 18,
-        "totalAmt": 9000
-      },
-      {
-        "id": "ORD_P008_1",
-        "orderNo": "122",
-        "date": "2026-09-19",
-        "partyId": "P008",
-        "partyName": "GAYATRI ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 950,
-        "gst": 18,
-        "totalAmt": 950
-      },
-      {
-        "id": "ORD_P008_2",
-        "orderNo": "170",
-        "date": "2026-10-26",
-        "partyId": "P008",
-        "partyName": "GAYATRI ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2400,
-        "gst": 18,
-        "totalAmt": 2400
-      },
-      {
-        "id": "ORD_P009_1",
-        "orderNo": "120",
-        "date": "2026-09-19",
-        "partyId": "P009",
-        "partyName": "SANTKRUPA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 11330,
-        "gst": 18,
-        "totalAmt": 11330
-      },
-      {
-        "id": "ORD_P010_1",
-        "orderNo": "121",
-        "date": "2026-09-19",
-        "partyId": "P010",
-        "partyName": "MATA FURNITURE",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2375,
-        "gst": 18,
-        "totalAmt": 2375
-      },
-      {
-        "id": "ORD_P010_2",
-        "orderNo": "128",
-        "date": "2026-09-25",
-        "partyId": "P010",
-        "partyName": "MATA FURNITURE",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P011_1",
-        "orderNo": "118",
-        "date": "2026-09-19",
-        "partyId": "P011",
-        "partyName": "GUPTA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P011_2",
-        "orderNo": "178",
-        "date": "2026-11-06",
-        "partyId": "P011",
-        "partyName": "GUPTA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 9010,
-        "gst": 18,
-        "totalAmt": 9010
-      },
-      {
-        "id": "ORD_P012_1",
-        "orderNo": "116",
-        "date": "2026-09-19",
-        "partyId": "P012",
-        "partyName": "JAI SHITALA ELECTRIC MARKET",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6180,
-        "gst": 18,
-        "totalAmt": 6180
-      },
-      {
-        "id": "ORD_P012_2",
-        "orderNo": "149",
-        "date": "2026-10-14",
-        "partyId": "P012",
-        "partyName": "JAI SHITALA ELECTRIC MARKET",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P013_1",
-        "orderNo": "117",
-        "date": "2026-09-19",
-        "partyId": "P013",
-        "partyName": "SAHU MEGA MART",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1900,
-        "gst": 18,
-        "totalAmt": 1900
-      },
-      {
-        "id": "ORD_P014_1",
-        "orderNo": "119",
-        "date": "2026-09-19",
-        "partyId": "P014",
-        "partyName": "N R TRADING CO",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P014_2",
-        "orderNo": "188",
-        "date": "2026-11-13",
-        "partyId": "P014",
-        "partyName": "N R TRADING CO",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5640,
-        "gst": 18,
-        "totalAmt": 5640
-      },
-      {
-        "id": "ORD_P015_1",
-        "orderNo": "100",
-        "date": "2026-09-19",
-        "partyId": "P015",
-        "partyName": "D R ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1000,
-        "gst": 18,
-        "totalAmt": 1000
-      },
-      {
-        "id": "ORD_P016_1",
-        "orderNo": "112",
-        "date": "2026-08-28",
-        "partyId": "P016",
-        "partyName": "RAKSHIT METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2120,
-        "gst": 18,
-        "totalAmt": 2120
-      },
-      {
-        "id": "ORD_P016_2",
-        "orderNo": "114",
-        "date": "2026-09-04",
-        "partyId": "P016",
-        "partyName": "RAKSHIT METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4240,
-        "gst": 18,
-        "totalAmt": 4240
-      },
-      {
-        "id": "ORD_P017_1",
-        "orderNo": "127",
-        "date": "2026-09-25",
-        "partyId": "P017",
-        "partyName": "shree gurudev electrical",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P018_1",
-        "orderNo": "129",
-        "date": "2026-09-25",
-        "partyId": "P018",
-        "partyName": "national electrical",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1440,
-        "gst": 18,
-        "totalAmt": 1440
-      },
-      {
-        "id": "ORD_P018_2",
-        "orderNo": "150",
-        "date": "2026-10-14",
-        "partyId": "P018",
-        "partyName": "national electrical",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3150,
-        "gst": 18,
-        "totalAmt": 3150
-      },
-      {
-        "id": "ORD_P019_1",
-        "orderNo": "130",
-        "date": "2026-08-01",
-        "partyId": "P019",
-        "partyName": "BABA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2880,
-        "gst": 18,
-        "totalAmt": 2880
-      },
-      {
-        "id": "ORD_P020_1",
-        "orderNo": "131",
-        "date": "2026-09-26",
-        "partyId": "P020",
-        "partyName": "SHREE KRUSHNA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7300,
-        "gst": 18,
-        "totalAmt": 7300
-      },
-      {
-        "id": "ORD_P020_2",
-        "orderNo": "163",
-        "date": "2026-10-23",
-        "partyId": "P020",
-        "partyName": "SHREE KRUSHNA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5250,
-        "gst": 18,
-        "totalAmt": 5250
-      },
-      {
-        "id": "ORD_P021_1",
-        "orderNo": "132",
-        "date": "2026-09-26",
-        "partyId": "P021",
-        "partyName": "AMIT ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8340,
-        "gst": 18,
-        "totalAmt": 8340
-      },
-      {
-        "id": "ORD_P022_1",
-        "orderNo": "133",
-        "date": "2026-09-26",
-        "partyId": "P022",
-        "partyName": "MAA BHAVANI ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1000,
-        "gst": 18,
-        "totalAmt": 1000
-      },
-      {
-        "id": "ORD_P023_1",
-        "orderNo": "134",
-        "date": "2026-10-01",
-        "partyId": "P023",
-        "partyName": "SHREE SADGURU TREDARS",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 11100,
-        "gst": 18,
-        "totalAmt": 11100
-      },
-      {
-        "id": "ORD_P024_1",
-        "orderNo": "135",
-        "date": "2026-10-01",
-        "partyId": "P024",
-        "partyName": "JAI SHRIRAM MOBILE ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P024_2",
-        "orderNo": "179",
-        "date": "2026-11-06",
-        "partyId": "P024",
-        "partyName": "JAI SHRIRAM MOBILE ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6080,
-        "gst": 18,
-        "totalAmt": 6080
-      },
-      {
-        "id": "ORD_P025_1",
-        "orderNo": "136",
-        "date": "2026-10-02",
-        "partyId": "P025",
-        "partyName": "SAMRUDHI METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4200,
-        "gst": 18,
-        "totalAmt": 4200
-      },
-      {
-        "id": "ORD_P026_1",
-        "orderNo": "137",
-        "date": "2026-10-02",
-        "partyId": "P026",
-        "partyName": "ANUP ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7250,
-        "gst": 18,
-        "totalAmt": 7250
-      },
-      {
-        "id": "ORD_P027_1",
-        "orderNo": "138",
-        "date": "2026-10-03",
-        "partyId": "P027",
-        "partyName": "LAXMI ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4500,
-        "gst": 18,
-        "totalAmt": 4500
-      },
-      {
-        "id": "ORD_P028_1",
-        "orderNo": "139",
-        "date": "2026-10-03",
-        "partyId": "P028",
-        "partyName": "SACHIN ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7250,
-        "gst": 18,
-        "totalAmt": 7250
-      },
-      {
-        "id": "ORD_P029_1",
-        "orderNo": "140",
-        "date": "2026-10-05",
-        "partyId": "P029",
-        "partyName": "m s pandey and sons",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2375,
-        "gst": 18,
-        "totalAmt": 2375
-      },
-      {
-        "id": "ORD_P030_1",
-        "orderNo": "141",
-        "date": "2026-10-07",
-        "partyId": "P030",
-        "partyName": "CHITADE TRADERS",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1140,
-        "gst": 18,
-        "totalAmt": 1140
-      },
-      {
-        "id": "ORD_P031_1",
-        "orderNo": "142",
-        "date": "2026-10-07",
-        "partyId": "P031",
-        "partyName": "RAUT ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P032_1",
-        "orderNo": "143",
-        "date": "2026-10-09",
-        "partyId": "P032",
-        "partyName": "BABA AJMERI METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2250,
-        "gst": 18,
-        "totalAmt": 2250
-      },
-      {
-        "id": "ORD_P033_1",
-        "orderNo": "144",
-        "date": "2026-10-09",
-        "partyId": "P033",
-        "partyName": "HARI OM TREDARS",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2890,
-        "gst": 18,
-        "totalAmt": 2890
-      },
-      {
-        "id": "ORD_P033_2",
-        "orderNo": "177",
-        "date": "2026-11-06",
-        "partyId": "P033",
-        "partyName": "HARI OM TREDARS",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5760,
-        "gst": 18,
-        "totalAmt": 5760
-      },
-      {
-        "id": "ORD_P034_1",
-        "orderNo": "145",
-        "date": "2026-10-09",
-        "partyId": "P034",
-        "partyName": "KARTIK ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P035_1",
-        "orderNo": "146",
-        "date": "2026-10-09",
-        "partyId": "P035",
-        "partyName": "SHALINI METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6240,
-        "gst": 18,
-        "totalAmt": 6240
-      },
-      {
-        "id": "ORD_P035_2",
-        "orderNo": "184",
-        "date": "2026-11-11",
-        "partyId": "P035",
-        "partyName": "SHALINI METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5200,
-        "gst": 18,
-        "totalAmt": 5200
-      },
-      {
-        "id": "ORD_P036_1",
-        "orderNo": "147",
-        "date": "2026-10-09",
-        "partyId": "P036",
-        "partyName": "LAXMI ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P037_1",
-        "orderNo": "100",
-        "date": "2026-10-01",
-        "partyId": "P037",
-        "partyName": "ARUNODAY ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 14850,
-        "gst": 18,
-        "totalAmt": 14850
-      },
-      {
-        "id": "ORD_P038_1",
-        "orderNo": "148",
-        "date": "2026-10-13",
-        "partyId": "P038",
-        "partyName": "RUDRA ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8000,
-        "gst": 18,
-        "totalAmt": 8000
-      },
-      {
-        "id": "ORD_P038_2",
-        "orderNo": "165",
-        "date": "2026-10-23",
-        "partyId": "P038",
-        "partyName": "RUDRA ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4000,
-        "gst": 18,
-        "totalAmt": 4000
-      },
-      {
-        "id": "ORD_P038_3",
-        "orderNo": "189",
-        "date": "2026-11-14",
-        "partyId": "P038",
-        "partyName": "RUDRA ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8000,
-        "gst": 18,
-        "totalAmt": 8000
-      },
-      {
-        "id": "ORD_P039_1",
-        "orderNo": "151",
-        "date": "2026-10-16",
-        "partyId": "P039",
-        "partyName": "RAJESH STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P040_1",
-        "orderNo": "152",
-        "date": "2026-10-16",
-        "partyId": "P040",
-        "partyName": "NIKHIL ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8280,
-        "gst": 18,
-        "totalAmt": 8280
-      },
-      {
-        "id": "ORD_P041_1",
-        "orderNo": "153",
-        "date": "2026-10-16",
-        "partyId": "P041",
-        "partyName": "BADEWALE SALES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2400,
-        "gst": 18,
-        "totalAmt": 2400
-      },
-      {
-        "id": "ORD_P042_1",
-        "orderNo": "155",
-        "date": "2026-10-16",
-        "partyId": "P042",
-        "partyName": "BADEWALE ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1800,
-        "gst": 18,
-        "totalAmt": 1800
-      },
-      {
-        "id": "ORD_P044_1",
-        "orderNo": "154",
-        "date": "2026-10-16",
-        "partyId": "P044",
-        "partyName": "SARANG STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1080,
-        "gst": 18,
-        "totalAmt": 1080
-      },
-      {
-        "id": "ORD_P045_1",
-        "orderNo": "157",
-        "date": "2026-10-16",
-        "partyId": "P045",
-        "partyName": "RIYA ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2375,
-        "gst": 18,
-        "totalAmt": 2375
-      },
-      {
-        "id": "ORD_P046_1",
-        "orderNo": "158",
-        "date": "2026-10-16",
-        "partyId": "P046",
-        "partyName": "ANJALI ELECTRIC",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7080,
-        "gst": 18,
-        "totalAmt": 7080
-      },
-      {
-        "id": "ORD_P047_1",
-        "orderNo": "160",
-        "date": "2026-10-22",
-        "partyId": "P047",
-        "partyName": "TAWAKKAL STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2400,
-        "gst": 18,
-        "totalAmt": 2400
-      },
-      {
-        "id": "ORD_P047_2",
-        "orderNo": "185",
-        "date": "2026-11-12",
-        "partyId": "P047",
-        "partyName": "TAWAKKAL STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2300,
-        "gst": 18,
-        "totalAmt": 2300
-      },
-      {
-        "id": "ORD_P048_1",
-        "orderNo": "161",
-        "date": "2026-10-22",
-        "partyId": "P048",
-        "partyName": "HARIOM STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 2880,
-        "gst": 18,
-        "totalAmt": 2880
-      },
-      {
-        "id": "ORD_P049_1",
-        "orderNo": "162",
-        "date": "2026-10-22",
-        "partyId": "P049",
-        "partyName": "POPULAR AGANCY",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5700,
-        "gst": 18,
-        "totalAmt": 5700
-      },
-      {
-        "id": "ORD_P049_2",
-        "orderNo": "186",
-        "date": "2026-11-12",
-        "partyId": "P049",
-        "partyName": "POPULAR AGANCY",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5700,
-        "gst": 18,
-        "totalAmt": 5700
-      },
-      {
-        "id": "ORD_P050_1",
-        "orderNo": "164",
-        "date": "2026-10-23",
-        "partyId": "P050",
-        "partyName": "OM ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P051_1",
-        "orderNo": "164",
-        "date": "2026-10-23",
-        "partyId": "P051",
-        "partyName": "T K ENTERPRISES",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6300,
-        "gst": 18,
-        "totalAmt": 6300
-      },
-      {
-        "id": "ORD_P052_1",
-        "orderNo": "166",
-        "date": "2026-10-24",
-        "partyId": "P052",
-        "partyName": "SAI METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P053_1",
-        "orderNo": "167",
-        "date": "2026-10-24",
-        "partyId": "P053",
-        "partyName": "S A ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 8290,
-        "gst": 18,
-        "totalAmt": 8290
-      },
-      {
-        "id": "ORD_P054_1",
-        "orderNo": "173",
-        "date": "2026-11-04",
-        "partyId": "P054",
-        "partyName": "MOHAN CROKARY",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 5925,
-        "gst": 18,
-        "totalAmt": 5925
-      },
-      {
-        "id": "ORD_P055_1",
-        "orderNo": "174",
-        "date": "2026-10-04",
-        "partyId": "P055",
-        "partyName": "MANOJ METAL POOJA",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1880,
-        "gst": 18,
-        "totalAmt": 1880
-      },
-      {
-        "id": "ORD_P055_2",
-        "orderNo": "190",
-        "date": "2026-11-14",
-        "partyId": "P055",
-        "partyName": "MANOJ METAL POOJA",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 4800,
-        "gst": 18,
-        "totalAmt": 4800
-      },
-      {
-        "id": "ORD_P056_1",
-        "orderNo": "172",
-        "date": "2026-11-04",
-        "partyId": "P056",
-        "partyName": "AVREST TRADING",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 9675,
-        "gst": 18,
-        "totalAmt": 9675
-      },
-      {
-        "id": "ORD_P057_1",
-        "orderNo": "175",
-        "date": "2026-11-04",
-        "partyId": "P057",
-        "partyName": "ADISHA STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 1880,
-        "gst": 18,
-        "totalAmt": 1880
-      },
-      {
-        "id": "ORD_P058_1",
-        "orderNo": "176",
-        "date": "2026-10-04",
-        "partyId": "P058",
-        "partyName": "DHANLAKSMI KICHANWEAR",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3760,
-        "gst": 18,
-        "totalAmt": 3760
-      },
-      {
-        "id": "ORD_P059_1",
-        "orderNo": "170",
-        "date": "2026-11-06",
-        "partyId": "P059",
-        "partyName": "ABHI ELECTRICAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 3760,
-        "gst": 18,
-        "totalAmt": 3760
-      },
-      {
-        "id": "ORD_P060_1",
-        "orderNo": "181",
-        "date": "2026-11-11",
-        "partyId": "P060",
-        "partyName": "OM GIFT",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7520,
-        "gst": 18,
-        "totalAmt": 7520
-      },
-      {
-        "id": "ORD_P061_1",
-        "orderNo": "182",
-        "date": "2026-11-11",
-        "partyId": "P061",
-        "partyName": "ANJALI STEEL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 9640,
-        "gst": 18,
-        "totalAmt": 9640
-      },
-      {
-        "id": "ORD_P062_1",
-        "orderNo": "183",
-        "date": "2026-11-11",
-        "partyId": "P062",
-        "partyName": "PRAKASH TREDARS",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 7520,
-        "gst": 18,
-        "totalAmt": 7520
-      },
-      {
-        "id": "ORD_P063_1",
-        "orderNo": "191",
-        "date": "2026-11-14",
-        "partyId": "P063",
-        "partyName": "KAMBLE METAL",
-        "salespersonName": "Prashik Hajare",
-        "productId": "PR_GEN",
-        "productName": "Greenchef Cookware & Appliances",
-        "hsn": "85166000",
-        "orderQty": 1,
-        "dispatchedQty": 1,
-        "rate": 6160,
-        "gst": 18,
-        "totalAmt": 6160
-      }
-    ],
+    "orders": [],
     "collections": [
       {
         "id": "COL_P001_1",
@@ -4726,7 +3426,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v10";
+    const STORAGE_KEY = "madhav_shivom_erp_v11";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5833,16 +4533,19 @@
 
       tbody.innerHTML = memoCart.map((it, idx) => `
         <tr>
-          <td class="font-bold text-center">${idx + 1}</td>
-          <td>
-            <strong>${it.productName}</strong>
-            <div style="font-size:0.73rem;color:var(--muted);">Code: ${it.code} | HSN: ${it.hsn}</div>
+          <td class="memo-col-num font-bold text-center">#${idx + 1}</td>
+          <td class="memo-col-desc">
+            <strong style="font-size:0.92rem;color:var(--dark);">${it.productName}</strong>
+            <div style="font-size:0.73rem;color:var(--muted);margin-bottom:4px;">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
+            <div class="memo-mobile-breakdown" style="display:inline-block;background:#f0fdf4;padding:4px 8px;border-radius:4px;font-size:0.82rem;color:#0f766e;font-weight:700;border:1px solid #bbf7d0;">
+              ${it.qty} नग × ${fmtINR(it.rate)} = ${fmtINR(it.totalAmt)}
+            </div>
           </td>
-          <td class="text-right font-bold">${it.qty}</td>
-          <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(it.rate)}</td>
-          <td class="text-right font-bold">${fmtINR(it.totalAmt)}</td>
-          <td class="text-center">
-            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;padding:3px 8px;" onclick="removeMemoItem(${idx})">
+          <td class="memo-col-qty text-right font-bold">${it.qty}</td>
+          <td class="memo-col-rate text-right font-bold" style="color:#0f766e;">${fmtINR(it.rate)}</td>
+          <td class="memo-col-total text-right font-bold">${fmtINR(it.totalAmt)}</td>
+          <td class="memo-col-action text-center">
+            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;padding:5px 10px;font-weight:700;" onclick="removeMemoItem(${idx})" title="Remove">
               ✕
             </button>
           </td>
