@@ -1397,7 +1397,12 @@
                 <input type="date" id="ordDate" class="form-control" required />
               </div>
               <div class="form-group order-party-col">
-                <label>Select Party / Dealer</label>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <label style="margin:0;font-weight:600;">Select Party / Dealer</label>
+                  <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal()" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+                    ➕ नवीन पार्टी जोडा
+                  </button>
+                </div>
                 <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." oninput="updatePartyDueAlert()" onchange="updatePartyDueAlert()" required />
                 <div id="ordPartyDueAlert" style="font-size:0.76rem;margin-top:4px;"></div>
               </div>
@@ -1762,6 +1767,43 @@
         <div style="display:flex;gap:8px;">
           <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;" onclick="closeModal('staffLoginModal')">Cancel</button>
           <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Login</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== QUICK ADD PARTY MODAL (FIELD SALES) ==================== -->
+  <div class="modal-backdrop" id="quickAddPartyModal">
+    <div class="modal" style="max-width:420px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+        <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
+          <span>🏪</span> नवीन पार्टी / डीलर जोडा
+        </h3>
+        <button type="button" class="modal-close" onclick="closeModal('quickAddPartyModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
+        नवीन दुकानाची नोंद करून लगेच त्याच्या नावाने ऑर्डर बुक करा.
+      </p>
+      <form onsubmit="handleQuickAddParty(event)">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">दुकान / पार्टीचे नाव (Store Name) *</label>
+          <input type="text" id="quickPartyName" class="form-control" placeholder="उदा. विजय इलेक्ट्रिकल्स" required />
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">मोबाईल नंबर (Mobile Number) *</label>
+          <input type="tel" id="quickPartyMobile" class="form-control" placeholder="१० अंकी मोबाईल नंबर" pattern="[0-9]{10}" maxlength="10" required />
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">एरिया / मार्केट (Area / Market) *</label>
+          <input type="text" id="quickPartyArea" class="form-control" placeholder="उदा. इतवारी, महाल, गोधनी" required />
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">सुरुवातीची जुनी बाकी (Opening Due Balance - असल्यास)</label>
+          <input type="number" id="quickPartyOpen" class="form-control" placeholder="0" min="0" value="0" />
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('quickAddPartyModal')">रद्द करा</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;font-weight:700;">💾 पार्टी सेव्ह करा</button>
         </div>
       </form>
     </div>
@@ -3719,7 +3761,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v15";
+    const STORAGE_KEY = "madhav_shivom_erp_v16";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -4757,6 +4799,97 @@
     
     // Active In-Memory Order Memo Cart
     let memoCart = [];
+
+    function openQuickAddPartyModal() {
+      if (!isAdminLoggedIn && !currentStaff) {
+        alert("कृपया नवीन पार्टी जोडण्यासाठी आधी लॉगिन करा.");
+        return;
+      }
+      const existingTyped = document.getElementById("ordPartyInput") ? document.getElementById("ordPartyInput").value.trim() : "";
+      const nameInp = document.getElementById("quickPartyName");
+      if (nameInp) nameInp.value = existingTyped;
+      const mobInp = document.getElementById("quickPartyMobile");
+      if (mobInp) mobInp.value = "";
+      const areaInp = document.getElementById("quickPartyArea");
+      if (areaInp) areaInp.value = "";
+      const openInp = document.getElementById("quickPartyOpen");
+      if (openInp) openInp.value = "0";
+      
+      openModal("quickAddPartyModal");
+      setTimeout(() => {
+        if (nameInp && !nameInp.value) nameInp.focus();
+        else if (mobInp) mobInp.focus();
+      }, 150);
+    }
+
+    async function handleQuickAddParty(e) {
+      e.preventDefault();
+      if (!isAdminLoggedIn && !currentStaff) {
+        alert("कृपया आधी लॉगिन करा.");
+        return;
+      }
+
+      const name = (document.getElementById("quickPartyName").value || "").trim().toUpperCase();
+      const mobile = (document.getElementById("quickPartyMobile").value || "").trim();
+      const area = (document.getElementById("quickPartyArea").value || "").trim().toUpperCase();
+      const openBal = Number(document.getElementById("quickPartyOpen").value || 0);
+
+      if (!name) {
+        alert("कृपया पार्टीचे नाव टाका.");
+        return;
+      }
+      if (mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
+        alert("कृपया १० अंकी वैध मोबाईल नंबर टाका.");
+        return;
+      }
+
+      // Check if party name already exists
+      const existing = state.parties.find(p => p.name.toUpperCase() === name);
+      if (existing) {
+        alert(`पार्टी "${name}" आधीपासूनच सिस्टीममध्ये अस्तित्वात आहे! ती आपोआप निवडली आहे.`);
+        closeModal("quickAddPartyModal");
+        const ordPartyInp = document.getElementById("ordPartyInput");
+        if (ordPartyInp) {
+          ordPartyInp.value = existing.name;
+          updatePartyDueAlert();
+        }
+        return;
+      }
+
+      const newParty = {
+        id: "P" + Date.now(),
+        name: name,
+        mobile: mobile,
+        area: area,
+        gstin: "",
+        openingBalance: openBal
+      };
+
+      // 1. Add to state parties and save locally
+      state.parties.push(newParty);
+      persistLocal();
+      refreshAll();
+
+      // 2. Background sync to Firestore
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "parties").doc(newParty.id).set(newParty).catch(err => console.warn("Firebase sync party error:", err));
+      }
+
+      // 3. Close modal & auto-select newly added party into the Order Booking form
+      closeModal("quickAddPartyModal");
+      const ordPartyInp = document.getElementById("ordPartyInput");
+      if (ordPartyInp) {
+        ordPartyInp.value = newParty.name;
+        updatePartyDueAlert();
+      }
+
+      showToast(`✅ नवीन पार्टी "${newParty.name}" यशस्वीरीत्या जोडली गेली!`);
+
+      // 4. Focus on product input for instant order booking workflow
+      const prodInp = document.getElementById("ordProductInput");
+      if (prodInp) prodInp.focus();
+    }
 
     function updatePartyDueAlert() {
       const input = document.getElementById("ordPartyInput");
