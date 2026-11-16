@@ -1568,9 +1568,18 @@
             </div>
             <div class="form-group">
               <label>Mode</label>
-              <select id="colMode" class="form-control" required>
+              <select id="colMode" class="form-control" required onchange="toggleColDepositAccount()">
                 <option value="Cash">Cash</option>
                 <option value="Bank">Bank / UPI / Cheque</option>
+              </select>
+            </div>
+            <div class="form-group" id="colDepositAccountGroup" style="display:none;">
+              <label>Deposit To Account (खाते)</label>
+              <select id="colDepositAccount" class="form-control">
+                <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
+                <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
+                <option value="PRASHIK">👤 PRASHIK HAJARE (Personal A/c / PhonePe)</option>
+                <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
               </select>
             </div>
             <div class="form-group" style="grid-column: span 2;">
@@ -1616,7 +1625,7 @@
           <div>
             <strong style="color:#166534;">🤝 Cash Handover &amp; Bank Clearance Pipeline</strong>
             <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">
-              Salesmen handover market cash to Prashik Hajare (Manager), and Prashik deposits cash into Company Bank (IOB).
+              Salesmen handover market cash to Prashik Hajare (Manager), and Prashik deposits cash into Company Bank/Accounts.
             </div>
           </div>
           <span class="pill pill-green" id="cashTabRoleBadge">Staff View</span>
@@ -1625,8 +1634,23 @@
         <!-- Dynamic Cash Summary Cards -->
         <div class="kpi-grid" id="staffCashCardsGrid" style="margin-bottom:16px;"></div>
 
+        <!-- Pending Approval Container (Alert for Prashik/Owner or Status for Salesperson) -->
+        <div id="staffCashPendingApprovalsContainer" style="margin-bottom:16px;"></div>
+
         <!-- Action Card (Handover for Salesmen / Bank Deposit for Prashik / Overview for Owner) -->
         <div class="card" id="staffCashActionCard" style="margin-bottom:16px;padding:18px;"></div>
+
+        <!-- 4 Official Bank/Deposit Accounts Ledger Summary -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 16px;">
+            <span class="card-title" style="font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:6px;">
+              🏦 4 बँक खात्यांनुसार जमा रक्कम (Account-wise Direct UPI &amp; Cash Deposits)
+            </span>
+          </div>
+          <div style="padding:16px;">
+            <div class="kpi-grid" id="bankAccountsSummaryGrid"></div>
+          </div>
+        </div>
 
         <!-- History Tables: Handovers & Bank Deposits -->
         <div class="grid-2">
@@ -1641,6 +1665,7 @@
                     <th class="text-right">Amount</th>
                     <th>Handed To</th>
                     <th class="text-center">Status</th>
+                    <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="cashHandoverTableBody"></tbody>
@@ -1649,14 +1674,14 @@
           </div>
 
           <div class="card">
-            <div class="card-header"><span class="card-title">🏦 Bank Deposit (IOB Account) History</span></div>
+            <div class="card-header"><span class="card-title">🏦 Bank / Account Deposit History</span></div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Date</th>
                     <th>Challan / Ref #</th>
-                    <th>Bank</th>
+                    <th>Deposited Account</th>
                     <th class="text-right">Amount</th>
                     <th>Deposited By</th>
                   </tr>
@@ -1849,9 +1874,19 @@
 
         <div class="form-group" style="margin-bottom:10px;">
           <label style="font-size:0.8rem;font-weight:600;">पेमेंट मोड (Mode):</label>
-          <select id="editColMode" class="form-control" required>
+          <select id="editColMode" class="form-control" required onchange="toggleEditColDepositAccount()">
             <option value="Cash">Cash</option>
             <option value="Bank">Bank / UPI / Cheque</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="editColDepositAccountGroup" style="display:none;margin-bottom:10px;">
+          <label style="font-size:0.8rem;font-weight:600;">जमा खाते (Deposit Account):</label>
+          <select id="editColDepositAccount" class="form-control">
+            <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
+            <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
+            <option value="PRASHIK">👤 PRASHIK HAJARE (Personal A/c / PhonePe)</option>
+            <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
           </select>
         </div>
 
@@ -2011,16 +2046,27 @@
 
   <!-- ==================== BANK DEPOSIT MODAL ==================== -->
   <div class="modal-backdrop" id="bankDepositModal">
-    <div class="modal" style="max-width:420px;">
+    <div class="modal" style="max-width:450px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="margin:0;color:var(--primary);">🏦 Deposit Cash into Bank</h3>
+        <h3 style="margin:0;color:var(--primary);font-size:1.15rem;">🏦 Deposit Cash into Bank / Account</h3>
         <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('bankDepositModal')">✕ Close</button>
       </div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
-        Bank: <strong>Indian Overseas Bank (IOB Nagpur)</strong><br/>
-        A/c: 308202000000378 | IFSC: IOBA0003082
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">
+        मॅनेजरकडे जमा झालेली कॅश खालीलपैकी अधिकृत बँक किंवा खात्यामध्ये भरा.
       </p>
       <form onsubmit="submitBankDeposit(event)">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;font-weight:700;color:var(--muted);">Deposit Into Account (जमा करण्याचे खाते)</label>
+          <select id="bankDepAccount" class="form-control font-bold" required onchange="updateBankDepAccountHint()">
+            <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
+            <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
+            <option value="PRASHIK">👤 PRASHIK HAJARE (Personal A/c / PhonePe)</option>
+            <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
+          </select>
+          <div id="bankDepAccountHint" style="font-size:0.75rem;color:#0f766e;margin-top:4px;font-weight:600;">
+            A/c: 308202000000378 | IFSC: IOBA0003082
+          </div>
+        </div>
         <div class="form-group" style="margin-bottom:10px;">
           <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Deposit Date</label>
           <input type="date" id="bankDepDate" class="form-control" required />
@@ -2030,8 +2076,8 @@
           <input type="number" id="bankDepAmt" class="form-control font-bold" min="1" step="0.01" required />
         </div>
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Bank Challan / Slip No / UTR</label>
-          <input type="text" id="bankDepChallan" class="form-control" placeholder="e.g. Challan #1042 / Cash Slip" required />
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Bank Challan / Slip No / UTR / Reference</label>
+          <input type="text" id="bankDepChallan" class="form-control" placeholder="e.g. Challan #1042 / Cash Slip / UTR" required />
         </div>
         <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;font-weight:700;padding:10px;">
           ✓ Confirm Bank Deposit
@@ -3911,7 +3957,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v18";
+    const STORAGE_KEY = "madhav_shivom_erp_v19";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -3982,6 +4028,71 @@
         hasLogo: false
       }
     };
+
+    const COMPANY_BANK_ACCOUNTS = [
+      {
+        id: "IOB",
+        name: "Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES",
+        shortName: "IOB (Madhav Ent.)",
+        holder: "MADHAV ENTERPRISES",
+        type: "Current A/c",
+        details: "A/c: 308202000000378 | IFSC: IOBA0003082"
+      },
+      {
+        id: "ROSHAN",
+        name: "ROSHAN THAKRE (Personal A/c / QR)",
+        shortName: "Roshan Thakre A/c",
+        holder: "ROSHAN THAKRE",
+        type: "Personal / QR",
+        details: "UPI Scanner / GPay / PhonePe"
+      },
+      {
+        id: "PRASHIK",
+        name: "PRASHIK HAJARE (Personal A/c / PhonePe)",
+        shortName: "Prashik Hajare A/c",
+        holder: "PRASHIK HAJARE",
+        type: "Personal / PhonePe",
+        details: "PhonePe: 7499477581 / UPI"
+      },
+      {
+        id: "SAVITA",
+        name: "SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)",
+        shortName: "Savita Choudhari A/c",
+        holder: "SAVITA CHOUDHARI / THAKRE",
+        type: "Personal / UPI",
+        details: "UPI / Scanner / Personal Account"
+      }
+    ];
+
+    function getAccShortName(accId) {
+      const found = COMPANY_BANK_ACCOUNTS.find(a => a.id === accId);
+      return found ? found.shortName : (accId || "IOB");
+    }
+
+    function toggleColDepositAccount() {
+      const modeEl = document.getElementById("colMode");
+      const grp = document.getElementById("colDepositAccountGroup");
+      if (grp && modeEl) {
+        grp.style.display = (modeEl.value === "Bank") ? "block" : "none";
+      }
+    }
+
+    function toggleEditColDepositAccount() {
+      const modeEl = document.getElementById("editColMode");
+      const grp = document.getElementById("editColDepositAccountGroup");
+      if (grp && modeEl) {
+        grp.style.display = (modeEl.value === "Bank") ? "block" : "none";
+      }
+    }
+
+    function updateBankDepAccountHint() {
+      const sel = document.getElementById("bankDepAccount");
+      const hint = document.getElementById("bankDepAccountHint");
+      if (!sel || !hint) return;
+      const acc = COMPANY_BANK_ACCOUNTS.find(a => a.id === sel.value);
+      if (acc) hint.textContent = acc.holder + " | " + acc.details;
+    }
+
 
     function initApp() {
       document.getElementById("gatewayLogo1").src = SHOP_LOGO;
@@ -4439,11 +4550,11 @@
       document.getElementById("syncText").textContent = "Live Sync";
 
       const prefix = activeCompany.toLowerCase() + "_";
-      ["products", "parties", "salespersons", "orders", "collections"].forEach(col => {
+      ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits"].forEach(col => {
         db.collection(prefix + col).onSnapshot(snap => {
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (col === "orders" || col === "collections" || col === "parties") {
+            if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits") {
               const localList = state[col] || [];
               remoteItems.forEach(r => {
                 const idx = localList.findIndex(x => x.id === r.id);
@@ -6150,7 +6261,7 @@ ${itemsList}
           <td>${c.partyName}</td>
           <td>${c.salespersonName}</td>
           <td class="text-right font-bold">${fmtINR(c.amount)}</td>
-          <td class="text-center"><span class="pill ${c.mode === 'Cash' ? 'pill-green' : 'pill-gray'}">${c.mode}</span></td>
+          <td class="text-center"><span class="pill ${c.mode === 'Cash' ? 'pill-green' : 'pill-blue'}">${c.mode === 'Cash' ? 'Cash' : 'Bank (' + getAccShortName(c.depositAccount) + ')'}</span></td>
           <td>${c.bankRef || "-"}</td>
           <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
             <button class="btn btn-whatsapp btn-sm" onclick="sendCollectionWhatsApp('${c.id}')" title="Send WhatsApp">💬 WhatsApp</button>
@@ -6228,6 +6339,17 @@ ${itemsList}
       document.getElementById("editColAmount").value = col.amount;
       document.getElementById("editColMode").value = col.mode || "Cash";
       document.getElementById("editColRef").value = col.bankRef || "";
+      const editDepGrp = document.getElementById("editColDepositAccountGroup");
+      const editDepSel = document.getElementById("editColDepositAccount");
+      if (editDepGrp && editDepSel) {
+        if (col.mode === "Bank") {
+          editDepGrp.style.display = "block";
+          editDepSel.value = col.depositAccount || "IOB";
+        } else {
+          editDepGrp.style.display = "none";
+          editDepSel.value = "IOB";
+        }
+      }
 
       const spSelect = document.getElementById("editColSalesperson");
       if (spSelect) {
@@ -6253,6 +6375,7 @@ ${itemsList}
       col.date = document.getElementById("editColDate").value;
       col.amount = Number(document.getElementById("editColAmount").value);
       col.mode = document.getElementById("editColMode").value;
+      col.depositAccount = (col.mode === "Bank") ? (document.getElementById("editColDepositAccount").value || "IOB") : null;
       col.salespersonName = document.getElementById("editColSalesperson").value;
       col.bankRef = document.getElementById("editColRef").value;
 
@@ -6364,7 +6487,7 @@ ${itemsList}
             </div>
             <div style="border-left:1px solid #cbd5e1;padding-left:14px;">
               <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:700;">Payment Information:</div>
-              <div style="font-size:0.84rem;color:#0f172a;margin-top:4px;">Payment Mode: <strong style="color:#0f766e;">${col.mode}</strong></div>
+              <div style="font-size:0.84rem;color:#0f172a;margin-top:4px;">Payment Mode: <strong style="color:#0f766e;">${col.mode === 'Bank' ? 'Bank / UPI (' + getAccShortName(col.depositAccount) + ')' : 'Cash'}</strong></div>
               <div style="font-size:0.84rem;color:#0f172a;">Collected By: <strong>${col.salespersonName}</strong></div>
               <div style="font-size:0.84rem;color:#475569;">Ref / Remark: <strong>${col.bankRef || "N/A"}</strong></div>
             </div>
@@ -6399,7 +6522,7 @@ ${itemsList}
       openModal("paymentReceiptModal");
     }
 
-    function getCashSummary() {
+        function getCashSummary() {
       const spCash = {
         "PRASHIK HAJARE": 0,
         "GOPAL AMBAGADE": 0,
@@ -6415,41 +6538,122 @@ ${itemsList}
         }
       });
 
-      const handoversFrom = {
+      const handoversAccepted = {
         "GOPAL AMBAGADE": 0,
         "VIKARAM SING THAKUR": 0
       };
-      let totalHandedToPrashik = 0;
+      const handoversPending = {
+        "GOPAL AMBAGADE": 0,
+        "VIKARAM SING THAKUR": 0
+      };
+
+      let totalHandedToPrashikAccepted = 0;
+      let totalPendingHandover = 0;
+
       (state.cashHandovers || []).forEach(h => {
         const amt = Number(h.amount || 0);
         const from = (h.fromStaffName || "").trim().toUpperCase();
-        if (from.includes("GOPAL")) handoversFrom["GOPAL AMBAGADE"] += amt;
-        else if (from.includes("VIKARAM") || from.includes("VIKRAM")) handoversFrom["VIKARAM SING THAKUR"] += amt;
-        totalHandedToPrashik += amt;
+        const isAccepted = h.status === "Accepted" || h.status === "Received";
+        const isPending = h.status === "Pending";
+
+        if (from.includes("GOPAL")) {
+          if (isAccepted) handoversAccepted["GOPAL AMBAGADE"] += amt;
+          else if (isPending) handoversPending["GOPAL AMBAGADE"] += amt;
+        } else if (from.includes("VIKARAM") || from.includes("VIKRAM")) {
+          if (isAccepted) handoversAccepted["VIKARAM SING THAKUR"] += amt;
+          else if (isPending) handoversPending["VIKARAM SING THAKUR"] += amt;
+        }
+
+        if (isAccepted) totalHandedToPrashikAccepted += amt;
+        else if (isPending) totalPendingHandover += amt;
       });
 
-      const gopalInHand = Math.max(0, spCash["GOPAL AMBAGADE"] - handoversFrom["GOPAL AMBAGADE"]);
-      const vikramInHand = Math.max(0, spCash["VIKARAM SING THAKUR"] - handoversFrom["VIKARAM SING THAKUR"]);
+      const gopalPocket = Math.max(0, spCash["GOPAL AMBAGADE"] - handoversAccepted["GOPAL AMBAGADE"] - handoversPending["GOPAL AMBAGADE"]);
+      const vikramPocket = Math.max(0, spCash["VIKARAM SING THAKUR"] - handoversAccepted["VIKARAM SING THAKUR"] - handoversPending["VIKARAM SING THAKUR"]);
 
       const totalBankDeposits = (state.bankDeposits || []).reduce((s, b) => s + Number(b.amount || 0), 0);
-      const prashikTotalReceived = spCash["PRASHIK HAJARE"] + totalHandedToPrashik;
+      const prashikTotalReceived = spCash["PRASHIK HAJARE"] + totalHandedToPrashikAccepted;
       const prashikInHand = Math.max(0, prashikTotalReceived - totalBankDeposits);
 
       return {
         spCash,
-        handoversFrom,
-        gopalInHand,
-        vikramInHand,
+        handoversAccepted,
+        handoversPending,
+        totalPendingHandover,
+        totalHandedToPrashikAccepted,
+        gopalPocket,
+        vikramPocket,
         prashikInHand,
         totalBankDeposits,
         totalMarketCash: spCash["PRASHIK HAJARE"] + spCash["GOPAL AMBAGADE"] + spCash["VIKARAM SING THAKUR"]
       };
     }
 
+    function renderBankAccountsSummary() {
+      const container = document.getElementById("bankAccountsSummaryGrid");
+      if (!container) return;
+
+      const accTotals = {};
+      COMPANY_BANK_ACCOUNTS.forEach(a => {
+        accTotals[a.id] = { directBank: 0, cashDeposited: 0, total: 0 };
+      });
+
+      (state.collections || []).forEach(c => {
+        if (c.mode === "Bank") {
+          const aid = c.depositAccount || "IOB";
+          if (accTotals[aid]) {
+            accTotals[aid].directBank += Number(c.amount || 0);
+            accTotals[aid].total += Number(c.amount || 0);
+          }
+        }
+      });
+
+      (state.bankDeposits || []).forEach(b => {
+        const aid = b.depositAccount || "IOB";
+        if (accTotals[aid]) {
+          accTotals[aid].cashDeposited += Number(b.amount || 0);
+          accTotals[aid].total += Number(b.amount || 0);
+        }
+      });
+
+      const grandTotal = Object.values(accTotals).reduce((sum, v) => sum + v.total, 0);
+
+      const colors = {
+        IOB: "#0f766e",
+        ROSHAN: "#2563eb",
+        PRASHIK: "#7c3aed",
+        SAVITA: "#c026d3"
+      };
+
+      container.innerHTML = COMPANY_BANK_ACCOUNTS.map(a => {
+        const t = accTotals[a.id] || { directBank: 0, cashDeposited: 0, total: 0 };
+        const col = colors[a.id] || "#0f766e";
+        return `
+          <div class="kpi-card" style="border-top:4px solid ${col};">
+            <div style="font-size:0.72rem;font-weight:700;color:${col};text-transform:uppercase;margin-bottom:4px;">${a.type}</div>
+            <div class="kpi-label" style="font-weight:700;color:var(--text);font-size:0.83rem;line-height:1.3;" title="${a.name}">${a.shortName}</div>
+            <div class="kpi-val" style="color:${col};font-size:1.3rem;margin:6px 0;">${fmtINR(t.total)}</div>
+            <div style="font-size:0.75rem;color:var(--muted);border-top:1px dashed #e2e8f0;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+              <span>UPI/Direct: <strong>${fmtINR(t.directBank)}</strong></span>
+              <span>Cash Dep: <strong>${fmtINR(t.cashDeposited)}</strong></span>
+            </div>
+          </div>
+        `;
+      }).join("") + `
+        <div class="kpi-card teal" style="background:#f0fdf4;border-top:4px solid #16a34a;">
+          <div style="font-size:0.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:4px;">Grand Total (सर्व 4 खाती)</div>
+          <div class="kpi-label" style="font-weight:700;color:var(--text);font-size:0.83rem;">एकूण जमा (All Accounts)</div>
+          <div class="kpi-val" style="color:#16a34a;font-size:1.3rem;margin:6px 0;">${fmtINR(grandTotal)}</div>
+          <div class="kpi-sub" style="color:#15803d;">Total Direct Online + Cash Deposits</div>
+        </div>
+      `;
+    }
+
     function renderStaffCashTab() {
       const cs = getCashSummary();
       const grid = document.getElementById("staffCashCardsGrid");
       const actionCard = document.getElementById("staffCashActionCard");
+      const pendingContainer = document.getElementById("staffCashPendingApprovalsContainer");
       const roleBadge = document.getElementById("cashTabRoleBadge");
 
       if (!grid || !actionCard) return;
@@ -6458,28 +6662,102 @@ ${itemsList}
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       const isAdmin = !!isAdminLoggedIn;
 
+      // 1. Pending Approvals Container
+      if (pendingContainer) {
+        if (isPrashik || isAdmin) {
+          const pendingHandovers = (state.cashHandovers || []).filter(h => h.status === "Pending");
+          if (pendingHandovers.length > 0) {
+            pendingContainer.innerHTML = `
+              <div class="card" style="background:#fffbeb;border:2px solid #f59e0b;padding:16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <span style="font-size:1.6rem;">🔔</span>
+                  <div>
+                    <h4 style="margin:0;color:#b45309;font-size:1.05rem;">कॅश मंजुरीसाठी प्रलंबित विनंत्या (${pendingHandovers.length} Pending)</h4>
+                    <div style="font-size:0.8rem;color:#78350f;">
+                      सेल्समनकडून आलेली कॅश प्रत्यक्षात मोजून तपासा. खात्री झाल्यावर 'स्वीकारा' दाबा म्हणजे ती तुमच्या कॅश बॉक्समध्ये जमा होईल.
+                    </div>
+                  </div>
+                </div>
+                <div style="display:grid;gap:10px;">
+                  ${pendingHandovers.map(h => `
+                    <div style="background:#ffffff;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                      <div>
+                        <div style="font-size:0.95rem;font-weight:800;color:#1e293b;">${h.fromStaffName}</div>
+                        <div style="font-size:0.78rem;color:#64748b;">${fmtDate(h.date)} ${h.time || ''} | प्रलंबित रक्कम</div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:14px;">
+                        <span style="font-size:1.25rem;font-weight:900;color:#ea580c;">${fmtINR(h.amount)}</span>
+                        <div style="display:flex;gap:6px;">
+                          <button class="btn btn-sm btn-success" onclick="acceptCashHandover('${h.id}')" style="font-weight:700;padding:6px 14px;">
+                            ✓ स्वीकारा (Accept Cash)
+                          </button>
+                          <button class="btn btn-sm btn-danger" onclick="rejectCashHandover('${h.id}')" style="font-weight:700;padding:6px 12px;">
+                            ✕ नाकारा (Reject)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            `;
+          } else {
+            pendingContainer.innerHTML = "";
+          }
+        } else if (isSalesperson) {
+          const myName = currentStaff.name.toUpperCase();
+          const myPendingHandovers = (state.cashHandovers || []).filter(h => h.status === "Pending" && (h.fromStaffName || "").toUpperCase().includes(myName.includes("GOPAL") ? "GOPAL" : "VIK"));
+          if (myPendingHandovers.length > 0) {
+            const pendingTotal = myPendingHandovers.reduce((s, h) => s + Number(h.amount || 0), 0);
+            pendingContainer.innerHTML = `
+              <div class="card" style="background:#fffbeb;border:1.5px solid #f59e0b;padding:14px 16px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:1.4rem;">⏳</span>
+                  <div>
+                    <strong style="color:#b45309;font-size:0.95rem;">तुमची ${fmtINR(pendingTotal)} ची कॅश हॅन्डओव्हर विनंती मॅनेजर प्रशिक यांच्या मंजुरीसाठी प्रलंबित आहे</strong>
+                    <div style="font-size:0.8rem;color:#78350f;margin-top:2px;">
+                      प्रशिक हजारे यांनी ही कॅश स्वीकारल्यानंतर तुमच्या खात्यातील शिल्लक रक्कम शून्य (₹0.00) होईल आणि अधिकृत मंजुरी दिसेल.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            pendingContainer.innerHTML = "";
+          }
+        } else {
+          pendingContainer.innerHTML = "";
+        }
+      }
+
+      // 2. Role Specific KPI Cards & Action Cards
       if (isPrashik) {
         if (roleBadge) roleBadge.textContent = "Manager View: PRASHIK HAJARE";
         grid.innerHTML = `
           <div class="kpi-card" style="border-top:4px solid #0f766e;">
             <div class="kpi-label">Cash with Prashik (To Deposit)</div>
             <div class="kpi-val" style="color:#0f766e;">${fmtINR(cs.prashikInHand)}</div>
-            <div class="kpi-sub">Ready for Bank Deposit (IOB)</div>
+            <div class="kpi-sub">Ready for Bank/Account Deposit</div>
+          </div>
+          <div class="kpi-card" style="border-top:4px solid #f59e0b;">
+            <div class="kpi-label">Pending Handover Approvals</div>
+            <div class="kpi-val" style="color:#d97706;">${fmtINR(cs.totalPendingHandover)}</div>
+            <div class="kpi-sub">Awaiting your acceptance above</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Received from Gopal</div>
-            <div class="kpi-val">${fmtINR(cs.handoversFrom["GOPAL AMBAGADE"] || 0)}</div>
-            <div class="kpi-sub">Gopal Cash Handover Total</div>
+            <div class="kpi-label">Accepted from Gopal</div>
+            <div class="kpi-val">${fmtINR(cs.handoversAccepted["GOPAL AMBAGADE"] || 0)}</div>
+            <div class="kpi-sub">Gopal Cleared Handover Total</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Received from Vikram</div>
-            <div class="kpi-val">${fmtINR(cs.handoversFrom["VIKARAM SING THAKUR"] || 0)}</div>
-            <div class="kpi-sub">Vikram Cash Handover Total</div>
+            <div class="kpi-label">Accepted from Vikram</div>
+            <div class="kpi-val">${fmtINR(cs.handoversAccepted["VIKARAM SING THAKUR"] || 0)}</div>
+            <div class="kpi-sub">Vikram Cleared Handover Total</div>
           </div>
           <div class="kpi-card teal">
-            <div class="kpi-label">Deposited in IOB Bank</div>
+            <div class="kpi-label">Total Deposited in Banks</div>
             <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.totalBankDeposits)}</div>
-            <div class="kpi-sub">Company Bank Balance Cleared</div>
+            <div class="kpi-sub">Deposited across 4 Accounts</div>
           </div>
         `;
 
@@ -6487,9 +6765,9 @@ ${itemsList}
           actionCard.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
               <div>
-                <h4 style="color:#0f766e;margin-bottom:4px;font-size:1rem;">🏦 Ready to Deposit into Company Bank</h4>
+                <h4 style="color:#0f766e;margin-bottom:4px;font-size:1.05rem;">🏦 Ready to Deposit into Bank / Accounts</h4>
                 <p style="color:var(--muted);font-size:0.83rem;">
-                  You have <strong>${fmtINR(cs.prashikInHand)}</strong> market cash collected. Deposit this into <strong>Indian Overseas Bank (A/c: 308202000000378)</strong>.
+                  तुमच्याकडे <strong>${fmtINR(cs.prashikInHand)}</strong> कॅश उपलब्ध आहे. 4 अधिकृत खात्यांपैकी एका खात्यामध्ये भरणा नोंदवा.
                 </p>
               </div>
               <button class="btn btn-teal" onclick="openBankDepositModal(${cs.prashikInHand})" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
@@ -6500,86 +6778,108 @@ ${itemsList}
         } else {
           actionCard.innerHTML = `
             <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
-              ✓ All market cash has been successfully deposited into the bank! Zero pending cash with Prashik.
+              ✓ सर्व कॅश अधिकृत बँक / खात्यांमध्ये जमा झाली आहे! प्रशिककडे सध्या शिल्लक कॅश ₹0.00 आहे.
             </div>
           `;
         }
       } else if (isSalesperson) {
-        const myName = currentStaff.name;
-        const myCash = myName.includes("GOPAL") ? cs.gopalInHand : cs.vikramInHand;
-        const myHanded = cs.handoversFrom[myName] || 0;
+        const myName = currentStaff.name.toUpperCase();
+        const isGopal = myName.includes("GOPAL");
+        const myKey = isGopal ? "GOPAL AMBAGADE" : "VIKARAM SING THAKUR";
+        const myPocket = isGopal ? cs.gopalPocket : cs.vikramPocket;
+        const myPending = cs.handoversPending[myKey] || 0;
+        const myAccepted = cs.handoversAccepted[myKey] || 0;
+        const totalCollected = cs.spCash[myKey] || 0;
 
-        if (roleBadge) roleBadge.textContent = "Salesperson View: " + myName;
+        if (roleBadge) roleBadge.textContent = "Salesperson View: " + currentStaff.name;
         grid.innerHTML = `
           <div class="kpi-card" style="border-top:4px solid #ea580c;">
-            <div class="kpi-label">My Cash in Hand</div>
-            <div class="kpi-val" style="color:#ea580c;">${fmtINR(myCash)}</div>
-            <div class="kpi-sub">Cash currently in your pocket</div>
+            <div class="kpi-label">माझ्याकडील कॅश (In Pocket)</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(myPocket)}</div>
+            <div class="kpi-sub">हॅन्डओव्हर न केलेली प्रत्यक्ष कॅश</div>
+          </div>
+          <div class="kpi-card" style="border-top:4px solid #f59e0b;">
+            <div class="kpi-label">प्रशिककडे मंजुरी बाकी (Pending)</div>
+            <div class="kpi-val" style="color:#d97706;">${fmtINR(myPending)}</div>
+            <div class="kpi-sub">🟡 Awaiting Prashik's Acceptance</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Handed Over to Prashik</div>
-            <div class="kpi-val" style="color:#15803d;">${fmtINR(myHanded)}</div>
-            <div class="kpi-sub">Transferred to Manager</div>
+            <div class="kpi-label">प्रशिकने स्वीकारलेली (Accepted)</div>
+            <div class="kpi-val" style="color:#15803d;">${fmtINR(myAccepted)}</div>
+            <div class="kpi-sub">🟢 Approved &amp; Cleared</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Total Cash Collected</div>
-            <div class="kpi-val">${fmtINR(myCash + myHanded)}</div>
-            <div class="kpi-sub">All-time collected by you</div>
+            <div class="kpi-label">एकूण जमा कॅश (Total Collected)</div>
+            <div class="kpi-val">${fmtINR(totalCollected)}</div>
+            <div class="kpi-sub">मार्केटमधून जमा केलेली सर्व कॅश</div>
           </div>
         `;
 
-        if (myCash > 0) {
+        if (myPocket > 0) {
           actionCard.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
               <div>
-                <h4 style="color:#ea580c;margin-bottom:4px;font-size:1rem;">🤝 Handover Cash to Prashik Hajare (Manager)</h4>
+                <h4 style="color:#ea580c;margin-bottom:4px;font-size:1.02rem;">🤝 Handover Cash to Prashik Hajare (Manager)</h4>
                 <p style="color:var(--muted);font-size:0.83rem;">
-                  You have collected <strong>${fmtINR(myCash)}</strong> cash from dealers. Give this cash to Prashik Hajare and record handover.
+                  तुमच्या खिशात <strong>${fmtINR(myPocket)}</strong> कॅश आहे. ही कॅश प्रशिक यांच्या स्वाधीन करा आणि खाली नोंद करा.
                 </p>
               </div>
-              <button class="btn btn-primary" onclick="submitStaffHandover(${myCash})" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
-                🤝 Handover ${fmtINR(myCash)} to Prashik
-              </button>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <label style="font-weight:600;font-size:0.82rem;">रक्कम (₹):</label>
+                  <input type="number" id="customHandoverAmt" class="form-control font-bold" value="${myPocket}" max="${myPocket}" min="1" step="0.01" style="width:130px;font-size:1rem;color:#ea580c;" />
+                </div>
+                <button class="btn btn-primary" onclick="handleCustomStaffHandover()" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
+                  🤝 Handover to Prashik
+                </button>
+              </div>
             </div>
           `;
         } else {
           actionCard.innerHTML = `
             <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
-              ✓ Your cash in hand is clear (₹0.00). All collected cash has been handed over to Prashik Hajare.
+              ${myPending > 0
+                ? "⏳ तुमची कॅश हॅन्डओव्हर विनंती मॅनेजर प्रशिक यांच्या मंजुरीसाठी प्रलंबित आहे. प्रशिकने स्वीकारेपर्यंत प्रतीक्षा करा."
+                : "✓ तुमच्याकडील सर्व कॅश क्लिअर आहे (₹0.00). सर्व रक्कम मॅनेजर प्रशिक हजारे यांच्या स्वाधीन करण्यात आली आहे."}
             </div>
           `;
         }
       } else {
-        if (roleBadge) roleBadge.textContent = "Owner Overview";
+        if (roleBadge) roleBadge.textContent = "Owner Overview (All Accounts & Cash)";
         grid.innerHTML = `
           <div class="kpi-card" style="border-top:4px solid #0f766e;">
             <div class="kpi-label">Cash with Prashik (Manager)</div>
             <div class="kpi-val" style="color:#0f766e;">${fmtINR(cs.prashikInHand)}</div>
             <div class="kpi-sub">Ready for Bank Deposit</div>
           </div>
+          <div class="kpi-card" style="border-top:4px solid #f59e0b;">
+            <div class="kpi-label">Pending Handover Approvals</div>
+            <div class="kpi-val" style="color:#d97706;">${fmtINR(cs.totalPendingHandover)}</div>
+            <div class="kpi-sub">Awaiting Prashik Acceptance</div>
+          </div>
           <div class="kpi-card">
-            <div class="kpi-label">Cash with Gopal</div>
-            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalInHand)}</div>
+            <div class="kpi-label">Cash with Gopal (In Pocket)</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalPocket)}</div>
             <div class="kpi-sub">Pending handover to Prashik</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Cash with Vikram</div>
-            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.vikramInHand)}</div>
+            <div class="kpi-label">Cash with Vikram (In Pocket)</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.vikramPocket)}</div>
             <div class="kpi-sub">Pending handover to Prashik</div>
           </div>
           <div class="kpi-card teal">
-            <div class="kpi-label">Deposited in IOB Bank</div>
+            <div class="kpi-label">Total Deposited in Banks</div>
             <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.totalBankDeposits)}</div>
-            <div class="kpi-sub">Verified in Bank Account</div>
+            <div class="kpi-sub">Deposited across 4 Accounts</div>
           </div>
         `;
 
         actionCard.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
-              <h4 style="color:var(--primary);margin-bottom:4px;font-size:1rem;">👑 Owner Cash Pipeline Control</h4>
+              <h4 style="color:var(--primary);margin-bottom:4px;font-size:1.05rem;">👑 Owner Cash Pipeline Control</h4>
               <p style="color:var(--muted);font-size:0.83rem;">
-                Total Market Cash: <strong>${fmtINR(cs.totalMarketCash)}</strong> | Total Deposited in Bank: <strong>${fmtINR(cs.totalBankDeposits)}</strong>
+                Total Market Cash: <strong>${fmtINR(cs.totalMarketCash)}</strong> | Total Deposited in Accounts: <strong>${fmtINR(cs.totalBankDeposits)}</strong>
               </p>
             </div>
             ${cs.prashikInHand > 0 ? `<button class="btn btn-teal" onclick="openBankDepositModal(${cs.prashikInHand})">🏦 Record Bank Deposit</button>` : ''}
@@ -6587,44 +6887,100 @@ ${itemsList}
         `;
       }
 
+      // 3. Render Handover Table Body
       const hoTbody = document.getElementById("cashHandoverTableBody");
       if (hoTbody) {
         if (!state.cashHandovers || state.cashHandovers.length === 0) {
-          hoTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted);padding:14px;">No cash handovers recorded yet.</td></tr>';
+          hoTbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--muted);padding:14px;">No cash handovers recorded yet.</td></tr>';
         } else {
-          hoTbody.innerHTML = state.cashHandovers.map(h => `
-            <tr>
-              <td>${fmtDate(h.date)} <span style="font-size:0.75rem;color:var(--muted);">${h.time || ''}</span></td>
-              <td class="font-bold">${h.fromStaffName}</td>
-              <td class="text-right font-bold" style="color:#15803d;">${fmtINR(h.amount)}</td>
-              <td>${h.toStaffName}</td>
-              <td class="text-center"><span class="pill pill-green">Received</span></td>
-            </tr>
-          `).join("");
+          hoTbody.innerHTML = state.cashHandovers.map(h => {
+            const isPending = h.status === "Pending";
+            const isAccepted = h.status === "Accepted" || h.status === "Received";
+            const statusBadge = isPending
+              ? '<span class="pill pill-yellow">🟡 Pending</span>'
+              : (isAccepted
+                ? '<span class="pill pill-green">🟢 Accepted</span>'
+                : '<span class="pill pill-red">🔴 Rejected</span>');
+
+            let actionHtml = '';
+            if (isPending) {
+              if (isPrashik || isAdmin) {
+                actionHtml = `
+                  <div style="display:flex;gap:4px;justify-content:center;">
+                    <button class="btn btn-sm btn-success" onclick="acceptCashHandover('${h.id}')" style="padding:4px 8px;font-size:0.75rem;font-weight:700;">✓ Accept</button>
+                    <button class="btn btn-sm btn-danger" onclick="rejectCashHandover('${h.id}')" style="padding:4px 8px;font-size:0.75rem;font-weight:700;">✕ Reject</button>
+                  </div>
+                `;
+              } else {
+                actionHtml = '<span style="font-size:0.75rem;color:#b45309;font-weight:600;">⏳ प्रशिक मंजुरी बाकी</span>';
+              }
+            } else if (isAccepted) {
+              actionHtml = `<span style="font-size:0.75rem;color:#15803d;font-weight:600;">✓ Cleared ${h.acceptedBy ? '(' + h.acceptedBy + ')' : ''}</span>`;
+            } else {
+              actionHtml = `<span style="font-size:0.72rem;color:#dc2626;" title="${h.rejectReason || ''}">${h.rejectReason || 'Rejected'}</span>`;
+            }
+
+            return `
+              <tr>
+                <td>${fmtDate(h.date)} <span style="font-size:0.75rem;color:var(--muted);">${h.time || ''}</span></td>
+                <td class="font-bold">${h.fromStaffName}</td>
+                <td class="text-right font-bold" style="color:#15803d;">${fmtINR(h.amount)}</td>
+                <td>${h.toStaffName || "PRASHIK HAJARE"}</td>
+                <td class="text-center">${statusBadge}</td>
+                <td class="text-center">${actionHtml}</td>
+              </tr>
+            `;
+          }).join("");
         }
       }
 
+      // 4. Render Bank Deposit Table Body
       const depTbody = document.getElementById("bankDepositTableBody");
       if (depTbody) {
         if (!state.bankDeposits || state.bankDeposits.length === 0) {
           depTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted);padding:14px;">No bank deposits recorded yet.</td></tr>';
         } else {
-          depTbody.innerHTML = state.bankDeposits.map(b => `
-            <tr>
-              <td>${fmtDate(b.date)}</td>
-              <td class="font-bold">#${b.challanNo}</td>
-              <td>${b.bankName}</td>
-              <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(b.amount)}</td>
-              <td>${b.depositedBy}</td>
-            </tr>
-          `).join("");
+          depTbody.innerHTML = state.bankDeposits.map(b => {
+            const accName = b.bankName || getAccShortName(b.depositAccount);
+            return `
+              <tr>
+                <td>${fmtDate(b.date)}</td>
+                <td class="font-bold">#${b.challanNo}</td>
+                <td><strong>${accName}</strong></td>
+                <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(b.amount)}</td>
+                <td>${b.depositedBy}</td>
+              </tr>
+            `;
+          }).join("");
         }
       }
+
+      // 5. Render 4 Bank Accounts Summary Grid
+      renderBankAccountsSummary();
     }
 
-    async function submitStaffHandover(amount) {
+    async function handleCustomStaffHandover() {
       if (!currentStaff) { alert("Please login first."); return; }
-      if (!confirm(`Confirm cash handover of ${fmtINR(amount)} to PRASHIK HAJARE (Manager)?`)) return;
+      const amtInput = document.getElementById("customHandoverAmt");
+      const amt = Number(amtInput ? amtInput.value : 0);
+      if (isNaN(amt) || amt <= 0) {
+        alert("कृपया वैध रक्कम प्रविष्ट करा.");
+        return;
+      }
+
+      const cs = getCashSummary();
+      const myName = currentStaff.name.toUpperCase();
+      const isGopal = myName.includes("GOPAL");
+      const myPocket = isGopal ? cs.gopalPocket : cs.vikramPocket;
+
+      if (amt > myPocket) {
+        alert("रक्कम तुमच्या शिल्लक कॅशपेक्षा (" + fmtINR(myPocket) + ") जास्त असू शकत नाही.");
+        return;
+      }
+
+      if (!confirm(`Confirm cash handover request of ${fmtINR(amt)} to PRASHIK HAJARE (Manager)?\n\nही रक्कम मॅनेजर प्रशिक यांनी स्वीकारेपर्यंत 'प्रलंबित (Pending)' राहील.`)) {
+        return;
+      }
 
       const record = {
         id: "HO_" + Date.now(),
@@ -6632,14 +6988,107 @@ ${itemsList}
         time: new Date().toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
         fromStaffName: currentStaff.name,
         toStaffName: "PRASHIK HAJARE",
-        amount: Number(amount),
-        status: "Received"
+        amount: Number(amt),
+        status: "Pending",
+        acceptedAt: null,
+        acceptedBy: null
       };
 
       if (!state.cashHandovers) state.cashHandovers = [];
-      state.cashHandovers.unshift(record);
-      persistLocal();
-      showToast(`Success: ${fmtINR(amount)} Handed over to Prashik Hajare!`);
+      await saveRecord("cashHandovers", record);
+      showToast(`🤝 हॅन्डओव्हर विनंती पाठवली: ${fmtINR(amt)} प्रशिक हजारे यांच्या मंजुरीची प्रतीक्षा!`);
+      renderStaffCashTab();
+    }
+
+    async function acceptCashHandover(id) {
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isAdmin = !!isAdminLoggedIn;
+      if (!isPrashik && !isAdmin) {
+        alert("फक्त मॅनेजर (प्रशिक हजारे) किंवा ओनर कॅश स्वीकारू शकतात.");
+        return;
+      }
+      const h = (state.cashHandovers || []).find(x => x.id === id);
+      if (!h) return;
+      if (h.status !== "Pending") {
+        alert("हे हॅन्डओव्हर आधीच " + h.status + " झाले आहे.");
+        return;
+      }
+      if (!confirm(`Confirm receiving ${fmtINR(h.amount)} cash from ${h.fromStaffName}?\n\nस्वीकारल्यानंतर ही रक्कम तुमच्या मॅनेजर कॅश बॉक्समध्ये जमा होईल.`)) {
+        return;
+      }
+
+      h.status = "Accepted";
+      h.acceptedAt = new Date().toISOString();
+      h.acceptedBy = currentStaff ? currentStaff.name : "OWNER";
+
+      await saveRecord("cashHandovers", h);
+      showToast(`✅ स्वीकारले: ${h.fromStaffName} कडून ${fmtINR(h.amount)} कॅश स्वीकारली!`);
+      renderStaffCashTab();
+    }
+
+    async function rejectCashHandover(id) {
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isAdmin = !!isAdminLoggedIn;
+      if (!isPrashik && !isAdmin) {
+        alert("फक्त मॅनेजर (प्रशिक हजारे) किंवा ओनर कॅश नाकारू शकतात.");
+        return;
+      }
+      const h = (state.cashHandovers || []).find(x => x.id === id);
+      if (!h) return;
+      if (h.status !== "Pending") {
+        alert("हे हॅन्डओव्हर आधीच " + h.status + " झाले आहे.");
+        return;
+      }
+      const reason = prompt(`कृपया ${h.fromStaffName} चे हॅन्डओव्हर नाकारण्याचे कारण प्रविष्ट करा:`, "कॅश मोजणीत फरक / चुकीची नोंद");
+      if (reason === null) return;
+
+      h.status = "Rejected";
+      h.rejectReason = reason.trim() || "नाकारले";
+      h.rejectedAt = new Date().toISOString();
+      h.rejectedBy = currentStaff ? currentStaff.name : "OWNER";
+
+      await saveRecord("cashHandovers", h);
+      showToast(`हॅन्डओव्हर विनंती नाकारली (${h.fromStaffName} - ${fmtINR(h.amount)}).`);
+      renderStaffCashTab();
+    }
+
+    function openBankDepositModal(suggestedAmt) {
+      document.getElementById("bankDepDate").value = new Date().toISOString().split("T")[0];
+      document.getElementById("bankDepAmt").value = Number(suggestedAmt || 0);
+      document.getElementById("bankDepChallan").value = "";
+      updateBankDepAccountHint();
+      openModal("bankDepositModal");
+    }
+
+    async function submitBankDeposit(e) {
+      e.preventDefault();
+      const amt = Number(document.getElementById("bankDepAmt").value);
+      const challan = document.getElementById("bankDepChallan").value.trim();
+      const date = document.getElementById("bankDepDate").value;
+      const accId = document.getElementById("bankDepAccount").value;
+      const accObj = COMPANY_BANK_ACCOUNTS.find(a => a.id === accId) || COMPANY_BANK_ACCOUNTS[0];
+
+      const cs = getCashSummary();
+      if (amt > cs.prashikInHand) {
+        if (!confirm(`सूचना: डिपॉझिट रक्कम (${fmtINR(amt)}) तुमच्याकडील शिल्लक कॅशपेक्षा (${fmtINR(cs.prashikInHand)}) जास्त आहे. तरीही पुढे जायचे का?`)) {
+          return;
+        }
+      }
+
+      const record = {
+        id: "DEP_" + Date.now(),
+        date: date,
+        challanNo: challan,
+        depositAccount: accObj.id,
+        bankName: accObj.shortName,
+        amount: amt,
+        depositedBy: currentStaff ? currentStaff.name : (isAdminLoggedIn ? "OWNER" : "PRASHIK HAJARE")
+      };
+
+      if (!state.bankDeposits) state.bankDeposits = [];
+      await saveRecord("bankDeposits", record);
+      closeModal("bankDepositModal");
+      showToast(`✅ यश: ${fmtINR(amt)} रक्कम ${accObj.shortName} मध्ये जमा केली (Challan #${challan})!`);
       renderStaffCashTab();
     }
 
@@ -6692,7 +7141,7 @@ ${itemsList}
       document.getElementById("succColNo").textContent = "#" + newCol.receiptNo;
       document.getElementById("succColDetails").innerHTML = `
         <div><strong>Dealer:</strong> ${newCol.partyName}</div>
-        <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${newCol.mode})</div>
+        <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})</div>
         <div><strong>Collected By:</strong> ${newCol.salespersonName}</div>
         <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
       `;
@@ -6705,7 +7154,7 @@ ${itemsList}
 *Receipt No:* #${newCol.receiptNo}
 *Date:* ${fmtDate(newCol.date)}
 *Received From:* ${newCol.partyName}
-*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode})
+*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})
 *Received By:* ${newCol.salespersonName}
 -----------------------------
 *Current Balance Due:* ${fmtINR(remBal)}
@@ -6824,6 +7273,8 @@ ${itemsList}
         alert("कृपया यादीतून वैध पार्टी निवडा किंवा नवीन पार्टी जोडा.");
         return;
       }
+            const colModeVal = document.getElementById("colMode").value;
+      const depositAccountVal = (colModeVal === "Bank") ? (document.getElementById("colDepositAccount").value || "IOB") : null;
       const newCol = {
         id: "COL_" + Date.now(),
         receiptNo: "RCP-" + String(100 + state.collections.length),
@@ -6832,13 +7283,16 @@ ${itemsList}
         partyName: party.name,
         salespersonName: document.getElementById("colSalesperson").value,
         amount: Number(document.getElementById("colAmount").value),
-        mode: document.getElementById("colMode").value,
+        mode: colModeVal,
+        depositAccount: depositAccountVal,
         bankRef: document.getElementById("colRef").value
       };
       await saveRecord("collections", newCol);
       document.getElementById("colAmount").value = "";
       document.getElementById("colRef").value = "";
       document.getElementById("colPartyInput").value = "";
+      const colDepGrp = document.getElementById("colDepositAccountGroup");
+      if (colDepGrp) colDepGrp.style.display = "none";
       const alertEl = document.getElementById("colPartyDueAlert");
       if (alertEl) alertEl.innerHTML = "";
       
