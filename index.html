@@ -1889,7 +1889,7 @@
 
   <!-- ==================== EDIT ORDER MEMO MODAL ==================== -->
   <div class="modal-backdrop" id="editOrderModal">
-    <div class="modal" style="max-width:540px;text-align:left;">
+    <div class="modal" style="max-width:620px;text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
         <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
           <span>✏️</span> ऑर्डर बुकिंग मेमो दुरुस्त करा (<span id="editMemoDisplayNo"></span>)
@@ -1897,21 +1897,54 @@
         <button type="button" class="modal-close" onclick="closeModal('editOrderModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
       </div>
 
-      <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:14px;border:1px solid #e2e8f0;font-size:0.85rem;">
-        <div><strong>पार्टीचे नाव:</strong> <span id="editPartyName"></span></div>
+      <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid #e2e8f0;font-size:0.85rem;">
+        <div><strong>पार्टीचे नाव:</strong> <span id="editPartyName" style="font-weight:700;color:#0f172a;"></span></div>
         <div><strong>बुक केलेला सेल्समन:</strong> <span id="editSalespersonName"></span></div>
         <div><strong>तारीख:</strong> <span id="editMemoDate"></span></div>
       </div>
 
-      <div style="font-weight:700;color:#334155;margin-bottom:8px;font-size:0.85rem;">
+      <div style="font-weight:700;color:#334155;margin-bottom:6px;font-size:0.85rem;">
         📦 मेमोमधील प्रॉडक्ट्स (नग व दर दुरुस्त करा):
       </div>
 
-      <div id="editOrderItemsList" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+      <div id="editOrderItemsList" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding-right:2px;">
         <!-- Items rendered dynamically -->
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:16px;">
+      <!-- Add Extra Product to Memo Section -->
+      <div style="background:#f1f5f9;border:1px dashed #94a3b8;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+        <div style="font-weight:700;font-size:0.82rem;color:#0f766e;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+          <span>➕</span> या मेमोमध्ये आणखी प्रॉडक्ट जोडा (Add Extra Product to Memo):
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div>
+            <input type="text" list="productDatalist" id="editAddProdInput" class="form-control" placeholder="प्रॉडक्ट नाव किंवा कोड शोधा..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect()" oninput="handleEditAddProdSelect()" />
+            <div id="editAddAvailHint" style="font-size:0.74rem;color:var(--muted);margin-top:2px;"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;">
+            <div style="width:75px;">
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
+              <input type="number" id="editAddQty" class="form-control font-bold" min="1" value="1" style="padding:6px 8px;font-size:0.88rem;" />
+            </div>
+            <div style="width:130px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                <label style="font-size:0.72rem;color:#0f766e;font-weight:700;margin:0;">दर (₹):</label>
+                <button type="button" id="editAddFocBtn" class="btn btn-sm" onclick="toggleEditAddFoc()" style="padding:0px 5px;font-size:0.65rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;cursor:pointer;border-radius:3px;">
+                  🎁 FOC
+                </button>
+              </div>
+              <input type="number" id="editAddRate" class="form-control font-bold" min="0" step="0.01" placeholder="दर (₹)" style="padding:6px 8px;font-size:0.88rem;" />
+            </div>
+            <div>
+              <button type="button" class="btn btn-teal btn-sm" onclick="addExtraItemToEditingOrder()" style="padding:7px 12px;font-weight:700;height:35px;white-space:nowrap;">
+                ➕ जोडा
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:14px;">
         <div><strong>एकूण नग:</strong> <span id="editMemoTotalUnits" style="font-weight:700;">0 Units</span></div>
         <div><strong>नवीन एकूण रक्कम:</strong> <span id="editMemoTotalAmt" style="font-size:1.1rem;font-weight:800;color:#15803d;">₹0.00</span></div>
       </div>
@@ -5683,6 +5716,7 @@ ${itemsList}
     }
 
     let currentEditingOrderId = null;
+    let editingOrderItems = [];
 
     function openEditOrderModal(orderId) {
       if (!isAdminLoggedIn && !currentStaff) {
@@ -5703,72 +5737,268 @@ ${itemsList}
       document.getElementById("editSalespersonName").textContent = ord.salespersonName;
       document.getElementById("editMemoDate").textContent = fmtDate(ord.date);
 
-      // Normalize items array
-      let items = ord.items;
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        items = [{
+      // Clone items array into working copy
+      if (ord.items && Array.isArray(ord.items) && ord.items.length > 0) {
+        editingOrderItems = JSON.parse(JSON.stringify(ord.items));
+      } else {
+        editingOrderItems = [{
           productId: ord.productId,
           productName: ord.productName,
+          code: ord.code || "",
+          hsn: ord.hsn || "85166000",
           qty: Number(ord.orderQty || 1),
           rate: Number(ord.rate || 0),
+          isFoc: (Number(ord.rate || 0) === 0),
           totalAmt: Number(ord.totalAmt || (ord.orderQty * ord.rate) || 0)
         }];
       }
 
-      const container = document.getElementById("editOrderItemsList");
-      container.innerHTML = items.map((it, idx) => `
-        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-          <div style="font-weight:700;font-size:0.88rem;color:#0f172a;margin-bottom:6px;">
-            ${idx + 1}. ${it.productName}
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div style="flex:1;">
-              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
-              <input type="number" id="editQty_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="1" value="${it.qty}" oninput="recalcEditTotal()" />
-            </div>
-            <div style="flex:1.6;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-                <label style="font-size:0.75rem;color:#64748b;margin:0;">दर (Rate ₹):</label>
-                <button type="button" class="btn btn-sm" style="padding:1px 6px;font-size:0.68rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">🎁 FOC</button>
-              </div>
-              <input type="number" id="editRate_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="0" step="any" value="${it.rate}" oninput="recalcEditTotal()" />
-            </div>
-            <div style="flex:1.2;text-align:right;">
-              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
-              <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">${it.rate == 0 ? '<span class="pill pill-yellow" style="font-size:0.75rem;">₹0 (FOC)</span>' : fmtINR(it.qty * it.rate)}</span>
-            </div>
-          </div>
-        </div>
-      `).join("");
+      // Reset add extra product inputs
+      const addProdInp = document.getElementById("editAddProdInput");
+      if (addProdInp) addProdInp.value = "";
+      const addQtyInp = document.getElementById("editAddQty");
+      if (addQtyInp) addQtyInp.value = "1";
+      const addRateInp = document.getElementById("editAddRate");
+      if (addRateInp) {
+        addRateInp.value = "";
+        addRateInp.placeholder = "दर (₹)";
+        addRateInp.style.background = "";
+        addRateInp.style.color = "";
+      }
+      const addFocBtn = document.getElementById("editAddFocBtn");
+      if (addFocBtn) {
+        addFocBtn.style.background = "#fef3c7";
+        addFocBtn.style.color = "#92400e";
+        addFocBtn.textContent = "🎁 FOC";
+      }
+      const hint = document.getElementById("editAddAvailHint");
+      if (hint) hint.textContent = "";
 
-      recalcEditTotal();
+      renderEditOrderItemsList();
       openModal("editOrderModal");
     }
 
-    function recalcEditTotal() {
-      const ord = state.orders.find(o => o.id === currentEditingOrderId);
-      if (!ord) return;
+    function renderEditOrderItemsList() {
+      const container = document.getElementById("editOrderItemsList");
+      if (!container) return;
 
-      let items = ord.items;
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        items = [{ productName: ord.productName, qty: ord.orderQty, rate: ord.rate }];
+      if (editingOrderItems.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:14px;color:var(--muted);font-size:0.85rem;">मेमोमध्ये कोणताही आयटम नाही. खालील फॉर्ममधून नवीन आयटम जोडा.</div>`;
+        recalcEditTotal();
+        return;
       }
 
+      container.innerHTML = editingOrderItems.map((it, idx) => {
+        const isFoc = (it.isFoc || Number(it.rate) === 0);
+        return `
+        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="font-weight:700;font-size:0.88rem;color:#0f172a;line-height:1.3;">
+              ${idx + 1}. ${it.productName}
+              ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.68rem;padding:1px 5px;margin-left:4px;">🎁 FOC</span>' : ''}
+            </div>
+            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 8px;font-size:0.75rem;font-weight:700;" onclick="removeEditingOrderItem(${idx})" title="हा आयटम मेमोमधून काढा">
+              ✕ काढा
+            </button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;">
+            <div style="width:75px;">
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
+              <input type="number" id="editQty_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;" min="1" value="${it.qty}" oninput="updateEditingItemQty(${idx}, this.value)" />
+            </div>
+            <div style="width:125px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                <label style="font-size:0.72rem;color:#64748b;margin:0;">दर (₹):</label>
+                <button type="button" class="btn btn-sm" style="padding:0px 4px;font-size:0.65rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">🎁 FOC</button>
+              </div>
+              <input type="number" id="editRate_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;" min="0" step="any" value="${it.rate}" oninput="updateEditingItemRate(${idx}, this.value)" />
+            </div>
+            <div style="flex:1;text-align:right;">
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
+              <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">
+                ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (FOC)</span>' : fmtINR(it.qty * it.rate)}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+      }).join("");
+
+      recalcEditTotal();
+    }
+
+    function updateEditingItemQty(idx, val) {
+      if (!editingOrderItems[idx]) return;
+      const q = Math.max(1, Number(val) || 1);
+      editingOrderItems[idx].qty = q;
+      editingOrderItems[idx].totalAmt = q * Number(editingOrderItems[idx].rate || 0);
+      recalcEditTotal();
+    }
+
+    function updateEditingItemRate(idx, val) {
+      if (!editingOrderItems[idx]) return;
+      const r = Math.max(0, Number(val) || 0);
+      editingOrderItems[idx].rate = r;
+      editingOrderItems[idx].isFoc = (r === 0);
+      editingOrderItems[idx].totalAmt = Number(editingOrderItems[idx].qty || 1) * r;
+      recalcEditTotal();
+    }
+
+    function setEditItemFoc(idx) {
+      if (!editingOrderItems[idx]) return;
+      editingOrderItems[idx].rate = 0;
+      editingOrderItems[idx].isFoc = true;
+      editingOrderItems[idx].totalAmt = 0;
+      const rateEl = document.getElementById(`editRate_${idx}`);
+      if (rateEl) rateEl.value = 0;
+      recalcEditTotal();
+    }
+
+    function removeEditingOrderItem(idx) {
+      if (editingOrderItems.length <= 1) {
+        if (!confirm("मेमोमध्ये फक्त एकच आयटम शिल्लक आहे. हा आयटम काढल्यास मेमो रिकामा होईल. तुम्हाला खात्री आहे का? (किंवा संपूर्ण मेमो डिलीट करण्यासाठी 🗑️ बटण वापरा)")) {
+          return;
+        }
+      }
+      editingOrderItems.splice(idx, 1);
+      renderEditOrderItemsList();
+    }
+
+    function toggleEditAddFoc() {
+      const rateInp = document.getElementById("editAddRate");
+      const focBtn = document.getElementById("editAddFocBtn");
+      if (!rateInp) return;
+      if (rateInp.value === "0" || rateInp.value === "0.00") {
+        rateInp.value = "";
+        rateInp.placeholder = "दर (₹)";
+        rateInp.style.background = "";
+        rateInp.style.color = "";
+        if (focBtn) {
+          focBtn.style.background = "#fef3c7";
+          focBtn.style.color = "#92400e";
+          focBtn.textContent = "🎁 FOC";
+        }
+      } else {
+        rateInp.value = "0";
+        rateInp.placeholder = "0.00 (FOC)";
+        rateInp.style.background = "#fef3c7";
+        rateInp.style.color = "#92400e";
+        if (focBtn) {
+          focBtn.style.background = "#15803d";
+          focBtn.style.color = "#ffffff";
+          focBtn.textContent = "✓ FOC";
+        }
+      }
+    }
+
+    function handleEditAddProdSelect() {
+      const inp = document.getElementById("editAddProdInput");
+      const hint = document.getElementById("editAddAvailHint");
+      const rateInp = document.getElementById("editAddRate");
+      if (!inp) return;
+      const prod = findProductByName(inp.value);
+      if (prod) {
+        if (hint) hint.textContent = `(उपलब्ध स्टॉक: ${prod.available} Units | MRP: ₹${prod.mrp})`;
+        if (rateInp && !rateInp.value) {
+          rateInp.placeholder = "Type Rate (₹)";
+          rateInp.focus();
+        }
+      } else {
+        if (hint) hint.textContent = "";
+      }
+    }
+
+    function addExtraItemToEditingOrder() {
+      const prodInp = document.getElementById("editAddProdInput");
+      const qtyInp = document.getElementById("editAddQty");
+      const rateInp = document.getElementById("editAddRate");
+
+      if (!prodInp || !prodInp.value.trim()) {
+        alert("कृपया मेमोमध्ये जोडण्यासाठी प्रॉडक्ट निवडा.");
+        if (prodInp) prodInp.focus();
+        return;
+      }
+
+      const prod = findProductByName(prodInp.value);
+      if (!prod) {
+        alert("निवडलेले प्रॉडक्ट यादीत सापडले नाही. कृपया ड्रॉपडाउनमधून निवडा.");
+        prodInp.focus();
+        return;
+      }
+
+      const qty = Number(qtyInp ? qtyInp.value : 1);
+      if (!qty || qty <= 0) {
+        alert("कृपया वैध नग (Quantity) टाका.");
+        if (qtyInp) qtyInp.focus();
+        return;
+      }
+
+      const rateVal = rateInp ? rateInp.value.trim() : "";
+      if (rateVal === "" || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
+        alert("कृपया या प्रॉडक्टसाठी दर (Rate) टाका किंवा मोफत असल्यास '🎁 FOC' वर क्लिक करा.");
+        if (rateInp) rateInp.focus();
+        return;
+      }
+      const rate = Number(rateVal);
+      const isFoc = (rate === 0);
+
+      // Check if item already exists in editingOrderItems
+      const existingIdx = editingOrderItems.findIndex(it => it.productId === prod.id);
+      if (existingIdx !== -1) {
+        editingOrderItems[existingIdx].qty = Number(editingOrderItems[existingIdx].qty) + qty;
+        editingOrderItems[existingIdx].rate = rate;
+        editingOrderItems[existingIdx].isFoc = isFoc;
+        editingOrderItems[existingIdx].totalAmt = editingOrderItems[existingIdx].qty * rate;
+      } else {
+        editingOrderItems.push({
+          productId: prod.id,
+          productName: prod.name,
+          code: prod.code || "",
+          hsn: prod.hsn || "85166000",
+          qty: qty,
+          rate: rate,
+          isFoc: isFoc,
+          totalAmt: qty * rate
+        });
+      }
+
+      // Reset add inputs
+      prodInp.value = "";
+      if (qtyInp) qtyInp.value = "1";
+      if (rateInp) {
+        rateInp.value = "";
+        rateInp.placeholder = "दर (₹)";
+        rateInp.style.background = "";
+        rateInp.style.color = "";
+      }
+      const focBtn = document.getElementById("editAddFocBtn");
+      if (focBtn) {
+        focBtn.style.background = "#fef3c7";
+        focBtn.style.color = "#92400e";
+        focBtn.textContent = "🎁 FOC";
+      }
+      const hint = document.getElementById("editAddAvailHint");
+      if (hint) hint.textContent = "";
+
+      renderEditOrderItemsList();
+      showToast(`➕ "${prod.name}" मेमोमध्ये जोडले गेले!`);
+    }
+
+    function recalcEditTotal() {
       let totalUnits = 0;
       let totalAmount = 0;
 
-      items.forEach((it, idx) => {
-        const qtyEl = document.getElementById(`editQty_${idx}`);
-        const rateEl = document.getElementById(`editRate_${idx}`);
-        const totalEl = document.getElementById(`editItemTotal_${idx}`);
-        const q = Math.max(1, Number(qtyEl ? qtyEl.value : it.qty) || 1);
-        const r = Math.max(0, Number(rateEl ? rateEl.value : it.rate) || 0);
+      editingOrderItems.forEach((it, idx) => {
+        const q = Math.max(1, Number(it.qty) || 1);
+        const r = Math.max(0, Number(it.rate) || 0);
         const lineTotal = q * r;
+        it.totalAmt = lineTotal;
         totalUnits += q;
         totalAmount += lineTotal;
+        const totalEl = document.getElementById(`editItemTotal_${idx}`);
         if (totalEl) {
           totalEl.innerHTML = (r === 0)
-            ? '<span class="pill pill-yellow" style="font-size:0.75rem;">₹0 (FOC)</span>'
+            ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (FOC)</span>'
             : fmtINR(lineTotal);
         }
       });
@@ -5783,21 +6013,15 @@ ${itemsList}
       const ord = state.orders.find(o => o.id === currentEditingOrderId);
       if (!ord) return;
 
-      let items = ord.items;
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        items = [{
-          productId: ord.productId,
-          productName: ord.productName,
-          qty: Number(ord.orderQty || 1),
-          rate: Number(ord.rate || 0),
-          totalAmt: Number(ord.totalAmt || 0)
-        }];
+      if (!editingOrderItems || editingOrderItems.length === 0) {
+        alert("मेमोमध्ये किमान एक प्रॉडक्ट असणे आवश्यक आहे. जर मेमो नको असेल तर 🗑️ बटणाने डिलीट करा.");
+        return;
       }
 
       let totalUnits = 0;
       let totalAmount = 0;
 
-      items.forEach((it, idx) => {
+      editingOrderItems.forEach((it, idx) => {
         const qtyEl = document.getElementById(`editQty_${idx}`);
         const rateEl = document.getElementById(`editRate_${idx}`);
         const q = Math.max(1, Number(qtyEl ? qtyEl.value : it.qty) || 1);
@@ -5810,11 +6034,11 @@ ${itemsList}
         totalAmount += it.totalAmt;
       });
 
-      ord.items = items;
+      ord.items = JSON.parse(JSON.stringify(editingOrderItems));
       ord.orderQty = totalUnits;
       ord.totalAmt = totalAmount;
       ord.rate = totalUnits > 0 ? totalAmount / totalUnits : 0;
-      ord.productName = items.map(it => `${it.productName} (${it.qty}${it.rate === 0 ? ' 🎁 FOC' : ''})`).join(", ");
+      ord.productName = editingOrderItems.map(it => `${it.productName} (${it.qty}${it.rate === 0 ? ' 🎁 FOC' : ''})`).join(", ");
 
       persistLocal();
       refreshAll();
@@ -5825,7 +6049,7 @@ ${itemsList}
       }
 
       closeModal("editOrderModal");
-      showToast(`✅ ऑर्डर मेमो #${ord.memoNo || ord.orderNo} चे दर व नग यशस्वीरीत्या दुरुस्त झाले!`);
+      showToast(`✅ ऑर्डर मेमो #${ord.memoNo || ord.orderNo} चे सर्व प्रॉडक्ट्स व बदल यशस्वीरीत्या सेव्ह झाले!`);
     }
 
     async function deleteOrderMemo(orderId) {
