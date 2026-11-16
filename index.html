@@ -3911,7 +3911,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v17";
+    const STORAGE_KEY = "madhav_shivom_erp_v18";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5693,6 +5693,9 @@ ${itemsList}
       document.getElementById("ordersTableBody").innerHTML = list.map(o => {
         const pending = o.orderQty - o.dispatchedQty;
         const st = o.dispatchedQty === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
+        const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+        const isDispatched = Number(o.dispatchedQty || 0) > 0;
+        const canEditOrder = !isSalesperson || !isDispatched;
         return `
           <tr>
             <td class="font-bold">#${o.orderNo}</td>
@@ -5709,8 +5712,12 @@ ${itemsList}
               ${(canDispatch && pending > 0) ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
               <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
               <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Bill PDF">Bill PDF</button>
-              <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="दुरुस्त करा (Edit Rate/Qty)">✏️ Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="रद्द करा (Delete Memo)">🗑️</button>
+              ${canEditOrder ? `
+                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="दुरुस्त करा (Edit Rate/Qty)">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="रद्द करा (Delete Memo)">🗑️</button>
+              ` : `
+                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="माल डिस्पॅच झाला आहे — सेल्समनला बदल करता येणार नाही">🔒 Dispatched</button>
+              `}
             </td>
           </tr>
         `;
@@ -5729,6 +5736,12 @@ ${itemsList}
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) {
         alert("ऑर्डर सापडला नाही.");
+        return;
+      }
+
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
+        alert("हा माल गोदामातून आधीच डिस्पॅच झाला असल्याने सेल्समनला या ऑर्डरमध्ये बदल करता येणार नाही. काही दुरुस्ती असल्यास मॅनेजर (प्रशिक) किंवा मालकांशी संपर्क साधा.");
         return;
       }
 
@@ -6089,8 +6102,18 @@ ${itemsList}
     }
 
     async function deleteOrderMemo(orderId) {
+      if (!isAdminLoggedIn && !currentStaff) {
+        alert("कृपया आधी लॉगिन करा.");
+        return;
+      }
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) return;
+
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
+        alert("हा माल गोदामातून आधीच डिस्पॅच झाला असल्याने ही ऑर्डर डिलीट / रद्द करता येणार नाही.");
+        return;
+      }
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
       if (!confirm(`तुम्हाला खात्री आहे का की ऑर्डर मेमो #${memoDisplayNo} (${ord.partyName} - ${fmtINR(ord.totalAmt)}) कायमचा रद्द / डिलीट करायचा आहे?`)) {
