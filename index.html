@@ -1569,8 +1569,9 @@
             <div class="form-group">
               <label>Mode</label>
               <select id="colMode" class="form-control" required onchange="toggleColDepositAccount()">
-                <option value="Cash">Cash</option>
-                <option value="Bank">Bank / UPI / Cheque</option>
+                <option value="Cash">Cash (रोख)</option>
+                <option value="Bank">Bank / UPI (ऑनलाइन)</option>
+                <option value="Cheque">Cheque (धनादेश)</option>
               </select>
             </div>
             <div class="form-group" id="colDepositAccountGroup" style="display:none;">
@@ -5187,10 +5188,10 @@
         "date": "2026-11-16",
         "partyId": "P020",
         "partyName": "SHREE KRUSHNA ELECTRICAL",
-        "salespersonName": "VIKARAM SING THAKUR",
+        "salespersonName": "PRASHIK HAJARE",
         "amount": 1700,
         "mode": "Cash",
-        "bankRef": "Cash"
+        "bankRef": "Collected via Vikram / Handed to Prashik"
       }
     ],
     "salespersons": [
@@ -5212,7 +5213,7 @@
   }
 };
 
-    const STORAGE_KEY = "madhav_shivom_erp_v22";
+    const STORAGE_KEY = "madhav_shivom_erp_v23";
     const FB_CONFIG_KEY = "madhav_enterprises_fb_cfg";
     const ACTIVE_CO_KEY = "madhav_active_company";
     const AUTH_SESSION_KEY = "madhav_admin_session";
@@ -5326,9 +5327,18 @@
 
     function toggleColDepositAccount() {
       const modeEl = document.getElementById("colMode");
-      const grp = document.getElementById("colDepositAccountGroup");
-      if (grp && modeEl) {
-        grp.style.display = (modeEl.value === "Bank") ? "block" : "none";
+      const bankGrp = document.getElementById("colDepositAccountGroup");
+      const chqGrp = document.getElementById("colChequeFieldsGroup");
+      
+      const isVikram = currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM"));
+      if (isVikram && modeEl && modeEl.value === "Cash") {
+        alert("⚠️ नियम: विक्रम सिंग ठाकूर यांना रोख (Cash) स्वीकारण्याची परवानगी नाही. कृपया ऑनलाइन किंवा चेकने पेमेंट घ्या.");
+        modeEl.value = "Bank";
+      }
+
+      if (modeEl) {
+        if (bankGrp) bankGrp.style.display = (modeEl.value === "Bank") ? "block" : "none";
+        if (chqGrp) chqGrp.style.display = (modeEl.value === "Cheque") ? "block" : "none";
       }
     }
 
@@ -5950,6 +5960,100 @@
     }
 
     // ==================== REFRESH ALL ====================
+
+    async function directReceiveCashFromStaff(staffName, amount) {
+      if (!confirm(`${staffName} यांच्याकडून ${fmtINR(amount)} रोख रक्कम (Cash) थेट जमा घेतली का?\n\n(जमा घेतल्यावर गोपाळची कॅश जबाबदारी शून्य होईल आणि ती मॅनेजर प्रशांत यांच्या खात्यात जमा होईल)`)) return;
+      const newHo = {
+        id: "HO_" + Date.now(),
+        date: new Date().toISOString().split("T")[0],
+        time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        fromStaffName: staffName,
+        toStaffName: "PRASHIK HAJARE",
+        amount: Number(amount),
+        status: "Accepted",
+        acceptedAt: new Date().toISOString(),
+        note: "प्रशिकने स्वतः थेट रोख जमा घेतली (Direct Received by Manager)"
+      };
+      if (!state.cashHandovers) state.cashHandovers = [];
+      state.cashHandovers.unshift(newHo);
+      persistLocal();
+      refreshAll();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        await db.collection(prefix + "cashHandovers").doc(newHo.id).set(newHo).catch(e => console.error(e));
+      }
+      showToast(`✓ ${staffName} यांच्याकडून ${fmtINR(amount)} रोख यशस्वीरीत्या जमा झाली!`);
+    }
+
+    function renderChequeRegister() {
+      const card = document.getElementById("chequeRegisterCard");
+      const tbody = document.getElementById("chequeTableBody");
+      const badge = document.getElementById("badgePendingChequesCount");
+      if (!card || !tbody) return;
+
+      const cheques = (state.collections || []).filter(c => c.mode === "Cheque");
+      if (cheques.length === 0) {
+        card.style.display = "none";
+        return;
+      }
+
+      card.style.display = "block";
+      const pendingCount = cheques.filter(c => (c.chequeStatus || "Pending") === "Pending").length;
+      if (badge) badge.textContent = `${pendingCount} In Hand / Pending`;
+
+      const canManageCheque = isAdminLoggedIn || (currentStaff && (currentStaff.role === "Manager" || currentStaff.role === "Owner"));
+
+      tbody.innerHTML = cheques.map(c => {
+        const chqSt = c.chequeStatus || "Pending";
+        const isPending = chqSt === "Pending";
+        const badgeClass = isPending ? "pill-yellow" : (chqSt === "Cleared" ? "pill-green" : "pill-red");
+        return `
+          <tr>
+            <td class="font-bold">${c.receiptNo}<br/><small style="color:var(--muted);">Chq #${c.chequeNo || '-'}</small></td>
+            <td>${fmtDate(c.chequeDate || c.date)}</td>
+            <td><strong>${c.partyName}</strong></td>
+            <td>${c.chequeBank || '-'}</td>
+            <td class="text-right font-bold" style="color:var(--primary);">${fmtINR(c.amount)}</td>
+            <td>${getAccShortName(c.depositAccount)}</td>
+            <td class="text-center"><span class="pill ${badgeClass}">${chqSt}</span></td>
+            <td class="text-center" style="white-space:nowrap;">
+              ${(isPending && canManageCheque) ? `
+                <button class="btn btn-sm btn-success" style="font-weight:700;padding:4px 8px;" onclick="markChequeStatus('${c.id}', 'Cleared')">✓ पास झाला (Clear)</button>
+                <button class="btn btn-sm btn-danger" style="font-weight:700;padding:4px 8px;margin-left:4px;" onclick="markChequeStatus('${c.id}', 'Bounced')">✕ बाऊन्स</button>
+              ` : `
+                <span style="font-size:0.75rem;color:var(--muted);">${chqSt === 'Cleared' ? '✓ पास' : (chqSt === 'Bounced' ? '✕ बाऊन्स' : 'प्रतीक्षेत')}</span>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function markChequeStatus(colId, newStatus) {
+      const c = (state.collections || []).find(x => x.id === colId);
+      if (!c) return;
+      if (newStatus === "Cleared") {
+        if (!confirm(`पावती #${c.receiptNo} (${c.partyName}) चा ${fmtINR(c.amount)} चा चेक बँकेत पास (Cleared) झाला आहे का?\n\n(पास झाल्याचे नोंदवताच पार्टीच्या खात्याची बाकी प्रत्यक्षात कमी होईल)`)) return;
+        c.chequeStatus = "Cleared";
+        c.clearedDate = new Date().toISOString().split("T")[0];
+        c.bankRef = `Chq #${c.chequeNo || ''} (${c.chequeBank || 'Bank'}) - Cleared on ${fmtDate(c.clearedDate)}`;
+        showToast(`✓ चेक #${c.chequeNo} (${fmtINR(c.amount)}) पास झाला! पार्टीची बाकी कमी झाली.`);
+      } else if (newStatus === "Bounced") {
+        const reason = prompt("चेक बाऊन्स होण्याचे कारण (उदा. Insufficient Funds / Signature mismatch):", "Insufficient Funds");
+        if (reason === null) return;
+        c.chequeStatus = "Bounced";
+        c.bouncedDate = new Date().toISOString().split("T")[0];
+        c.bankRef = `Chq #${c.chequeNo || ''} (${c.chequeBank || 'Bank'}) - BOUNCED (${reason})`;
+        showToast(`⚠️ चेक #${c.chequeNo} बाऊन्स म्हणून नोंदवला गेला.`);
+      }
+      persistLocal();
+      refreshAll();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        await db.collection(prefix + "collections").doc(c.id).set(c).catch(e => console.error(e));
+      }
+    }
+
     function refreshAll() {
       populateDropdowns();
       renderOpenStock();
@@ -7999,6 +8103,12 @@ ${itemsList}
             <div class="kpi-val" style="color:#d97706;">${fmtINR(cs.totalPendingHandover)}</div>
             <div class="kpi-sub">Awaiting your acceptance above</div>
           </div>
+          <div class="kpi-card" style="border-top:4px solid #ea580c;">
+            <div class="kpi-label">Cash with Gopal (In Pocket)</div>
+            <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalPocket)}</div>
+            <div class="kpi-sub">गोपाळकडील शिल्लक रोख</div>
+            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 थेट जमा घ्या (Receive)</button>` : ''}
+          </div>
           <div class="kpi-card">
             <div class="kpi-label">Accepted from Gopal</div>
             <div class="kpi-val">${fmtINR(cs.handoversAccepted["GOPAL AMBAGADE"] || 0)}</div>
@@ -8116,6 +8226,7 @@ ${itemsList}
             <div class="kpi-label">Cash with Gopal (In Pocket)</div>
             <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalPocket)}</div>
             <div class="kpi-sub">Pending handover to Prashik</div>
+            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 थेट जमा घ्या (Receive)</button>` : ''}
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Cash with Vikram (In Pocket)</div>
