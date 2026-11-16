@@ -1430,7 +1430,12 @@
                   <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" inputmode="numeric" />
                 </div>
                 <div class="form-group col-rate">
-                  <label style="color:#0f766e;font-weight:700;">Rate Per Unit (₹) *</label>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                    <label style="color:#0f766e;font-weight:700;margin:0;">Rate Per Unit (₹) *</label>
+                    <button type="button" id="ordFocBtn" class="btn btn-sm" onclick="toggleOrdFoc()" style="padding:1px 8px;font-size:0.72rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;cursor:pointer;border-radius:4px;">
+                      🎁 FOC (Free)
+                    </button>
+                  </div>
                   <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" inputmode="decimal" />
                 </div>
               </div>
@@ -5132,6 +5137,41 @@
       }
     }
 
+    function toggleOrdFoc() {
+      const rateInput = document.getElementById("ordRate");
+      const focBtn = document.getElementById("ordFocBtn");
+      if (!rateInput) return;
+      if (rateInput.value === "0" || rateInput.value === "0.00") {
+        rateInput.value = "";
+        rateInput.placeholder = "Type Rate (₹)";
+        rateInput.style.background = "";
+        rateInput.style.color = "";
+        if (focBtn) {
+          focBtn.style.background = "#fef3c7";
+          focBtn.style.color = "#92400e";
+          focBtn.textContent = "🎁 FOC (Free)";
+        }
+      } else {
+        rateInput.value = "0";
+        rateInput.placeholder = "0.00 (FOC Free)";
+        rateInput.style.background = "#fef3c7";
+        rateInput.style.color = "#92400e";
+        if (focBtn) {
+          focBtn.style.background = "#15803d";
+          focBtn.style.color = "#ffffff";
+          focBtn.textContent = "✓ FOC Selected";
+        }
+      }
+    }
+
+    function setEditItemFoc(idx) {
+      const rateEl = document.getElementById(`editRate_${idx}`);
+      if (rateEl) {
+        rateEl.value = 0;
+        recalcEditTotal();
+      }
+    }
+
     function addItemToMemoCart() {
       const prodInput = document.getElementById("ordProductInput");
       const qtyInput = document.getElementById("ordQty");
@@ -5152,12 +5192,13 @@
       }
 
       const rateVal = rateInput.value.trim();
-      if (!rateVal || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
-        alert("कृपया या प्रॉडक्टसाठी ठरलेला दर (Rate) टाका! दर रिकामा ठेवता येणार नाही.");
+      if (rateVal === "" || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
+        alert("कृपया या प्रॉडक्टसाठी ठरलेला दर (Rate) टाका! मोफत (Scheme Free) असल्यास '🎁 FOC (Free)' बटणावर क्लिक करा.");
         rateInput.focus();
         return;
       }
       const rate = Number(rateVal);
+      const isFoc = (rate === 0);
 
       // Check stock availability warning
       if (qty > prod.available) {
@@ -5171,6 +5212,7 @@
       if (existingIdx !== -1) {
         memoCart[existingIdx].qty = qty;
         memoCart[existingIdx].rate = rate;
+        memoCart[existingIdx].isFoc = isFoc;
         memoCart[existingIdx].totalAmt = qty * rate;
       } else {
         memoCart.push({
@@ -5180,6 +5222,7 @@
           hsn: prod.hsn || "85166000",
           qty: qty,
           rate: rate,
+          isFoc: isFoc,
           totalAmt: qty * rate
         });
       }
@@ -5191,6 +5234,14 @@
       qtyInput.value = 1;
       rateInput.value = "";
       rateInput.placeholder = "Type Rate (₹)";
+      rateInput.style.background = "";
+      rateInput.style.color = "";
+      const focBtn = document.getElementById("ordFocBtn");
+      if (focBtn) {
+        focBtn.style.background = "#fef3c7";
+        focBtn.style.color = "#92400e";
+        focBtn.textContent = "🎁 FOC (Free)";
+      }
       document.getElementById("ordAvailHint").textContent = "";
       prodInput.focus();
     }
@@ -5243,40 +5294,54 @@
       if (mobileSumCard) mobileSumCard.style.display = "block";
 
       if (mobileListEl) {
-        mobileListEl.innerHTML = memoCart.map((it, idx) => `
+        mobileListEl.innerHTML = memoCart.map((it, idx) => {
+          const isFoc = (it.isFoc || it.rate === 0);
+          return `
           <div class="memo-mobile-item-card">
             <div class="memo-mobile-item-header">
-              <div class="memo-mobile-item-title">${idx + 1}. ${it.productName}</div>
+              <div class="memo-mobile-item-title">
+                ${idx + 1}. ${it.productName}
+                ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.7rem;margin-left:4px;">🎁 FOC</span>' : ''}
+              </div>
               <button type="button" class="memo-mobile-item-remove" onclick="removeMemoItem(${idx})" title="Remove item">✕</button>
             </div>
             <div class="memo-mobile-item-sub">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
-            <div class="memo-mobile-item-badge">
-              ${it.qty} नग × ${fmtINR(it.rate)} = ${fmtINR(it.totalAmt)}
+            <div class="memo-mobile-item-badge" style="${isFoc ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;' : ''}">
+              ${it.qty} नग × ${isFoc ? '<span class="pill pill-yellow" style="padding:1px 6px;font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)} = <strong style="${isFoc ? 'color:#16a34a;' : ''}">${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}</strong>
             </div>
           </div>
-        `).join("");
+        `;
+        }).join("");
       }
 
-      tbody.innerHTML = memoCart.map((it, idx) => `
+      tbody.innerHTML = memoCart.map((it, idx) => {
+        const isFoc = (it.isFoc || it.rate === 0);
+        return `
         <tr>
           <td class="memo-col-num font-bold text-center">#${idx + 1}</td>
           <td class="memo-col-desc">
             <strong style="font-size:0.92rem;color:var(--dark);">${it.productName}</strong>
+            ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;vertical-align:middle;">🎁 FOC (Free Scheme)</span>' : ''}
             <div style="font-size:0.73rem;color:var(--muted);margin-bottom:4px;">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
-            <div class="memo-mobile-breakdown" style="display:inline-block;background:#f0fdf4;padding:4px 8px;border-radius:4px;font-size:0.82rem;color:#0f766e;font-weight:700;border:1px solid #bbf7d0;">
-              ${it.qty} नग × ${fmtINR(it.rate)} = ${fmtINR(it.totalAmt)}
+            <div class="memo-mobile-breakdown" style="display:inline-block;background:${isFoc ? '#fef3c7' : '#f0fdf4'};padding:4px 8px;border-radius:4px;font-size:0.82rem;color:${isFoc ? '#92400e' : '#0f766e'};font-weight:700;border:1px solid ${isFoc ? '#fde68a' : '#bbf7d0'};">
+              ${it.qty} नग × ${isFoc ? '🎁 FOC (₹0)' : fmtINR(it.rate)} = ${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}
             </div>
           </td>
           <td class="memo-col-qty text-right font-bold">${it.qty}</td>
-          <td class="memo-col-rate text-right font-bold" style="color:#0f766e;">${fmtINR(it.rate)}</td>
-          <td class="memo-col-total text-right font-bold">${fmtINR(it.totalAmt)}</td>
+          <td class="memo-col-rate text-right font-bold" style="color:#0f766e;">
+            ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.75rem;padding:2px 6px;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)}
+          </td>
+          <td class="memo-col-total text-right font-bold">
+            ${isFoc ? '<span style="color:#16a34a;">₹0.00 (Free)</span>' : fmtINR(it.totalAmt)}
+          </td>
           <td class="memo-col-action text-center">
             <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;padding:5px 10px;font-weight:700;" onclick="removeMemoItem(${idx})" title="Remove">
               ✕
             </button>
           </td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function removeMemoItem(idx) {
@@ -5388,11 +5453,17 @@
 
       let itemsList = "";
       if (ord.items && ord.items.length > 0) {
-        itemsList = ord.items.map((it, idx) =>
-          `${idx + 1}. *${it.productName}* — ${it.qty} Nos @ ${fmtINR(it.rate)} = ${fmtINR(it.totalAmt)}`
-        ).join("\n");
+        itemsList = ord.items.map((it, idx) => {
+          const isFoc = (it.isFoc || Number(it.rate) === 0);
+          const ratePart = isFoc ? "🎁 FOC (Free Scheme) @ ₹0" : `@ ${fmtINR(it.rate)}`;
+          const totPart = isFoc ? "₹0.00 (Free)" : fmtINR(it.totalAmt);
+          return `${idx + 1}. *${it.productName}* — ${it.qty} Nos ${ratePart} = ${totPart}`;
+        }).join("\n");
       } else {
-        itemsList = `1. *${ord.productName}* — ${ord.orderQty} Nos @ ${fmtINR(ord.rate)} = ${fmtINR(ord.totalAmt)}`;
+        const isFoc = (Number(ord.rate) === 0);
+        const ratePart = isFoc ? "🎁 FOC (Free Scheme) @ ₹0" : `@ ${fmtINR(ord.rate)}`;
+        const totPart = isFoc ? "₹0.00 (Free)" : fmtINR(ord.totalAmt);
+        itemsList = `1. *${ord.productName}* — ${ord.orderQty} Nos ${ratePart} = ${totPart}`;
       }
 
       const totalQty = ord.items && ord.items.length > 0
@@ -5480,23 +5551,34 @@ ${itemsList}
 
       let itemsRows = "";
       if (ord.items && ord.items.length > 0) {
-        itemsRows = ord.items.map((it, idx) => `
+        itemsRows = ord.items.map((it, idx) => {
+          const isFoc = (it.isFoc || Number(it.rate) === 0);
+          return `
           <tr>
             <td class="text-center">${idx + 1}</td>
-            <td><strong>${it.productName}</strong><br/><span style="font-size:11px;color:var(--muted);">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</span></td>
+            <td>
+              <strong>${it.productName}</strong>
+              ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;">🎁 FOC (Free Scheme)</span>' : ''}
+              <br/><span style="font-size:11px;color:var(--muted);">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</span>
+            </td>
             <td class="text-right font-bold">${it.qty}</td>
-            <td class="text-right">${fmtINR(it.rate)}</td>
-            <td class="text-right font-bold">${fmtINR(it.totalAmt)}</td>
+            <td class="text-right">${isFoc ? '<span class="pill pill-yellow" style="font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)}</td>
+            <td class="text-right font-bold">${isFoc ? '<span style="color:#16a34a;">₹0.00 (Free)</span>' : fmtINR(it.totalAmt)}</td>
           </tr>
-        `).join("");
+        `;
+        }).join("");
       } else {
+        const isFoc = (Number(ord.rate) === 0);
         itemsRows = `
           <tr>
             <td class="text-center">1</td>
-            <td><strong>${ord.productName}</strong></td>
+            <td>
+              <strong>${ord.productName}</strong>
+              ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;">🎁 FOC (Free Scheme)</span>' : ''}
+            </td>
             <td class="text-right font-bold">${ord.orderQty}</td>
-            <td class="text-right">${fmtINR(ord.rate)}</td>
-            <td class="text-right font-bold">${fmtINR(ord.totalAmt)}</td>
+            <td class="text-right">${isFoc ? '<span class="pill pill-yellow" style="font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(ord.rate)}</td>
+            <td class="text-right font-bold">${isFoc ? '<span style="color:#16a34a;">₹0.00 (Free)</span>' : fmtINR(ord.totalAmt)}</td>
           </tr>
         `;
       }
@@ -5644,13 +5726,16 @@ ${itemsList}
               <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
               <input type="number" id="editQty_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="1" value="${it.qty}" oninput="recalcEditTotal()" />
             </div>
-            <div style="flex:1.5;">
-              <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">दर (Rate ₹):</label>
+            <div style="flex:1.6;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                <label style="font-size:0.75rem;color:#64748b;margin:0;">दर (Rate ₹):</label>
+                <button type="button" class="btn btn-sm" style="padding:1px 6px;font-size:0.68rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">🎁 FOC</button>
+              </div>
               <input type="number" id="editRate_${idx}" class="form-control" style="padding:6px 8px;font-size:0.9rem;" min="0" step="any" value="${it.rate}" oninput="recalcEditTotal()" />
             </div>
             <div style="flex:1.2;text-align:right;">
               <label style="font-size:0.75rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
-              <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">${fmtINR(it.qty * it.rate)}</span>
+              <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">${it.rate == 0 ? '<span class="pill pill-yellow" style="font-size:0.75rem;">₹0 (FOC)</span>' : fmtINR(it.qty * it.rate)}</span>
             </div>
           </div>
         </div>
@@ -5681,7 +5766,11 @@ ${itemsList}
         const lineTotal = q * r;
         totalUnits += q;
         totalAmount += lineTotal;
-        if (totalEl) totalEl.textContent = fmtINR(lineTotal);
+        if (totalEl) {
+          totalEl.innerHTML = (r === 0)
+            ? '<span class="pill pill-yellow" style="font-size:0.75rem;">₹0 (FOC)</span>'
+            : fmtINR(lineTotal);
+        }
       });
 
       const unitsEl = document.getElementById("editMemoTotalUnits");
@@ -5715,6 +5804,7 @@ ${itemsList}
         const r = Math.max(0, Number(rateEl ? rateEl.value : it.rate) || 0);
         it.qty = q;
         it.rate = r;
+        it.isFoc = (r === 0);
         it.totalAmt = q * r;
         totalUnits += q;
         totalAmount += it.totalAmt;
@@ -5724,7 +5814,7 @@ ${itemsList}
       ord.orderQty = totalUnits;
       ord.totalAmt = totalAmount;
       ord.rate = totalUnits > 0 ? totalAmount / totalUnits : 0;
-      ord.productName = items.map(it => `${it.productName} (${it.qty})`).join(", ");
+      ord.productName = items.map(it => `${it.productName} (${it.qty}${it.rate === 0 ? ' 🎁 FOC' : ''})`).join(", ");
 
       persistLocal();
       refreshAll();
