@@ -5240,13 +5240,13 @@
         }
       }
 
-      // Check if already in cart
-      const existingIdx = memoCart.findIndex(it => it.productId === prod.id);
+      // Check if already in cart with same FOC status (do not merge paid with free)
+      const existingIdx = memoCart.findIndex(it => it.productId === prod.id && Boolean(it.isFoc) === Boolean(isFoc));
       if (existingIdx !== -1) {
-        memoCart[existingIdx].qty = qty;
+        memoCart[existingIdx].qty = Number(memoCart[existingIdx].qty) + qty;
         memoCart[existingIdx].rate = rate;
         memoCart[existingIdx].isFoc = isFoc;
-        memoCart[existingIdx].totalAmt = qty * rate;
+        memoCart[existingIdx].totalAmt = memoCart[existingIdx].qty * rate;
       } else {
         memoCart.push({
           productId: prod.id,
@@ -5778,6 +5778,22 @@ ${itemsList}
       openModal("editOrderModal");
     }
 
+    function syncEditingOrderItemsFromDOM() {
+      editingOrderItems.forEach((it, idx) => {
+        const qtyEl = document.getElementById(`editQty_${idx}`);
+        const rateEl = document.getElementById(`editRate_${idx}`);
+        if (qtyEl) {
+          it.qty = Math.max(1, Number(qtyEl.value) || 1);
+        }
+        if (rateEl) {
+          const r = Math.max(0, Number(rateEl.value) || 0);
+          it.rate = r;
+          it.isFoc = (r === 0);
+        }
+        it.totalAmt = it.qty * it.rate;
+      });
+    }
+
     function renderEditOrderItemsList() {
       const container = document.getElementById("editOrderItemsList");
       if (!container) return;
@@ -5795,7 +5811,7 @@ ${itemsList}
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-weight:700;font-size:0.88rem;color:#0f172a;line-height:1.3;">
               ${idx + 1}. ${it.productName}
-              ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.68rem;padding:1px 5px;margin-left:4px;">🎁 FOC</span>' : ''}
+              ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.68rem;padding:1px 5px;margin-left:4px;">🎁 FOC (Free Scheme)</span>' : ''}
             </div>
             <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 8px;font-size:0.75rem;font-weight:700;" onclick="removeEditingOrderItem(${idx})" title="हा आयटम मेमोमधून काढा">
               ✕ काढा
@@ -5809,14 +5825,16 @@ ${itemsList}
             <div style="width:125px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
                 <label style="font-size:0.72rem;color:#64748b;margin:0;">दर (₹):</label>
-                <button type="button" class="btn btn-sm" style="padding:0px 4px;font-size:0.65rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">🎁 FOC</button>
+                <button type="button" class="btn btn-sm" style="padding:0px 4px;font-size:0.65rem;background:${isFoc ? '#15803d' : '#fef3c7'};color:${isFoc ? '#fff' : '#92400e'};border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">
+                  ${isFoc ? '✓ FOC' : '🎁 FOC'}
+                </button>
               </div>
-              <input type="number" id="editRate_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;" min="0" step="any" value="${it.rate}" oninput="updateEditingItemRate(${idx}, this.value)" />
+              <input type="number" id="editRate_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;${isFoc ? 'background:#fef3c7;color:#92400e;' : ''}" min="0" step="any" value="${it.rate}" oninput="updateEditingItemRate(${idx}, this.value)" />
             </div>
             <div style="flex:1;text-align:right;">
               <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
               <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">
-                ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (FOC)</span>' : fmtINR(it.qty * it.rate)}
+                ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (Free)</span>' : fmtINR(it.qty * it.rate)}
               </span>
             </div>
           </div>
@@ -5846,15 +5864,26 @@ ${itemsList}
 
     function setEditItemFoc(idx) {
       if (!editingOrderItems[idx]) return;
-      editingOrderItems[idx].rate = 0;
-      editingOrderItems[idx].isFoc = true;
-      editingOrderItems[idx].totalAmt = 0;
-      const rateEl = document.getElementById(`editRate_${idx}`);
-      if (rateEl) rateEl.value = 0;
-      recalcEditTotal();
+      syncEditingOrderItemsFromDOM();
+      const it = editingOrderItems[idx];
+      if (it.isFoc || Number(it.rate) === 0) {
+        // Toggle OFF: restore regular rate
+        const prod = getComputedStock().find(p => p.id === it.productId || p.name.toLowerCase() === it.productName.toLowerCase());
+        const restoredRate = prod ? Number(prod.rate || 0) : 0;
+        it.rate = restoredRate;
+        it.isFoc = false;
+        it.totalAmt = it.qty * restoredRate;
+      } else {
+        // Toggle ON: set to 0 FOC
+        it.rate = 0;
+        it.isFoc = true;
+        it.totalAmt = 0;
+      }
+      renderEditOrderItemsList();
     }
 
     function removeEditingOrderItem(idx) {
+      syncEditingOrderItemsFromDOM();
       if (editingOrderItems.length <= 1) {
         if (!confirm("मेमोमध्ये फक्त एकच आयटम शिल्लक आहे. हा आयटम काढल्यास मेमो रिकामा होईल. तुम्हाला खात्री आहे का? (किंवा संपूर्ण मेमो डिलीट करण्यासाठी 🗑️ बटण वापरा)")) {
           return;
@@ -5909,6 +5938,8 @@ ${itemsList}
     }
 
     function addExtraItemToEditingOrder() {
+      syncEditingOrderItemsFromDOM();
+
       const prodInp = document.getElementById("editAddProdInput");
       const qtyInp = document.getElementById("editAddQty");
       const rateInp = document.getElementById("editAddRate");
@@ -5921,7 +5952,7 @@ ${itemsList}
 
       const prod = findProductByName(prodInp.value);
       if (!prod) {
-        alert("निवडलेले प्रॉडक्ट यादीत सापडले नाही. कृपया ड्रॉपडाउनमधून निवडा.");
+        alert("निवडलेले प्रॉडक्ट सापडले नाही. कृपया ड्रॉपडाउनमधून निवडा.");
         prodInp.focus();
         return;
       }
@@ -5942,8 +5973,11 @@ ${itemsList}
       const rate = Number(rateVal);
       const isFoc = (rate === 0);
 
-      // Check if item already exists in editingOrderItems
-      const existingIdx = editingOrderItems.findIndex(it => it.productId === prod.id);
+      // Check if item already exists with the SAME FOC status (do not merge paid with free)
+      const existingIdx = editingOrderItems.findIndex(it =>
+        it.productId === prod.id && Boolean(it.isFoc) === Boolean(isFoc)
+      );
+
       if (existingIdx !== -1) {
         editingOrderItems[existingIdx].qty = Number(editingOrderItems[existingIdx].qty) + qty;
         editingOrderItems[existingIdx].rate = rate;
@@ -5981,7 +6015,7 @@ ${itemsList}
       if (hint) hint.textContent = "";
 
       renderEditOrderItemsList();
-      showToast(`➕ "${prod.name}" मेमोमध्ये जोडले गेले!`);
+      showToast(`➕ "${prod.name}"${isFoc ? ' (🎁 FOC Free)' : ''} मेमोमध्ये जोडले गेले!`);
     }
 
     function recalcEditTotal() {
@@ -5998,7 +6032,7 @@ ${itemsList}
         const totalEl = document.getElementById(`editItemTotal_${idx}`);
         if (totalEl) {
           totalEl.innerHTML = (r === 0)
-            ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (FOC)</span>'
+            ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (Free)</span>'
             : fmtINR(lineTotal);
         }
       });
@@ -6010,6 +6044,8 @@ ${itemsList}
     }
 
     async function saveEditedOrderMemo() {
+      syncEditingOrderItemsFromDOM();
+
       const ord = state.orders.find(o => o.id === currentEditingOrderId);
       if (!ord) return;
 
@@ -6021,11 +6057,9 @@ ${itemsList}
       let totalUnits = 0;
       let totalAmount = 0;
 
-      editingOrderItems.forEach((it, idx) => {
-        const qtyEl = document.getElementById(`editQty_${idx}`);
-        const rateEl = document.getElementById(`editRate_${idx}`);
-        const q = Math.max(1, Number(qtyEl ? qtyEl.value : it.qty) || 1);
-        const r = Math.max(0, Number(rateEl ? rateEl.value : it.rate) || 0);
+      editingOrderItems.forEach((it) => {
+        const q = Math.max(1, Number(it.qty) || 1);
+        const r = Math.max(0, Number(it.rate) || 0);
         it.qty = q;
         it.rate = r;
         it.isFoc = (r === 0);
@@ -6688,8 +6722,18 @@ ${itemsList}
 
     // ==================== FORM HANDLERS ====================
     function findProductByName(nameInput) {
+      if (!nameInput) return null;
       const clean = nameInput.trim().toLowerCase();
-      return getComputedStock().find(p => p.name.toLowerCase() === clean || p.code.toLowerCase() === clean);
+      const stock = getComputedStock();
+      // 1. Exact match on name or code
+      let match = stock.find(p => p.name.toLowerCase() === clean || (p.code && p.code.toLowerCase() === clean));
+      if (match) return match;
+      // 2. Starts with name or code
+      match = stock.find(p => p.name.toLowerCase().startsWith(clean) || (p.code && p.code.toLowerCase().startsWith(clean)));
+      if (match) return match;
+      // 3. Includes clean substring
+      match = stock.find(p => p.name.toLowerCase().includes(clean) || (p.code && p.code.toLowerCase().includes(clean)));
+      return match || null;
     }
 
     function findPartyByName(nameInput) {
