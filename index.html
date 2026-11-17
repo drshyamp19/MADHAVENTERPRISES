@@ -1401,7 +1401,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                   <label style="margin:0;font-weight:600;">Select Party / Dealer</label>
                   <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal()" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-                    ➕ नवीन पार्टी जोडा
+                    ➕ Add New Party
                   </button>
                 </div>
                 <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." oninput="updatePartyDueAlert()" onchange="updatePartyDueAlert()" required />
@@ -1426,7 +1426,7 @@
               </div>
               <div class="order-qty-rate-row">
                 <div class="form-group col-qty">
-                  <label>Quantity (नग)</label>
+                  <label>Quantity (Units)</label>
                   <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" inputmode="numeric" />
                 </div>
                 <div class="form-group col-rate">
@@ -1493,11 +1493,11 @@
             </div>
             <div class="memo-mobile-summary-card" id="memoMobileSummaryCard" style="display:none;">
               <div class="memo-mobile-summary-row">
-                <span style="color:#64748b;font-weight:600;">एकूण नग (Total Units):</span>
+                <span style="color:#64748b;font-weight:600;">Total Units:</span>
                 <strong id="memoMobileTotalQty" style="font-size:0.95rem;color:#0f172a;">0 Units</strong>
               </div>
               <div class="memo-mobile-summary-row total-line">
-                <span>एकूण अंदाजे रक्कम:</span>
+                <span>Total Estimated Amount:</span>
                 <span class="total-amount" id="memoMobileTotalAmt">₹0.00</span>
               </div>
             </div>
@@ -1523,13 +1523,13 @@
             <!-- Smart Filter Tabs for Orders -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
               <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;">
-                📁 सर्व ऑर्डर्स / All (<span id="countAllOrders">0</span>)
+                📁 All Orders (<span id="countAllOrders">0</span>)
               </button>
               <button type="button" class="btn btn-sm order-tab-btn" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                📦 चालू / Pending Dispatch (<span id="countPendingOrders">0</span>)
+                📦 Pending Dispatch (<span id="countPendingOrders">0</span>)
               </button>
               <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                ✓ डिस्पॅच झालेल्या / Completed (<span id="countCompletedOrders">0</span>)
+                ✓ Dispatched / Completed (<span id="countCompletedOrders">0</span>)
               </button>
             </div>
           </div>
@@ -1566,7 +1566,7 @@
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                 <label style="margin:0;font-weight:600;">Party / Dealer Name</label>
                 <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal('colPartyInput')" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
-                  ➕ नवीन पार्टी जोडा
+                  ➕ Add New Party
                 </button>
               </div>
               <input type="text" list="partyDatalist" id="colPartyInput" class="form-control" placeholder="Type party name..." oninput="updateColPartyDueAlert()" onchange="updateColPartyDueAlert()" required />
@@ -1583,13 +1583,13 @@
             <div class="form-group">
               <label>Mode</label>
               <select id="colMode" class="form-control" required onchange="toggleColDepositAccount()">
-                <option value="Cash">Cash (रोख)</option>
-                <option value="Bank">Bank / UPI (ऑनलाइन)</option>
-                <option value="Cheque">Cheque (धनादेश)</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank">Bank / UPI</option>
+                <option value="Cheque">Cheque</option>
               </select>
             </div>
             <div class="form-group" id="colDepositAccountGroup" style="display:none;">
-              <label>Deposit To Account (खाते)</label>
+              <label>Deposit To Account</label>
               <select id="colDepositAccount" class="form-control">
                 <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
                 <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
@@ -1598,22 +1598,22 @@
               </select>
             </div>
             <div class="form-group" id="colChequeFieldsGroup" style="display:none;grid-column: span 2;background:#f8fafc;padding:12px;border-radius:10px;border:1.5px dashed #0284c7;">
-              <div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:0.88rem;">📝 धनादेश तपशील (Cheque Details)</div>
+              <div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:0.88rem;">📝 Cheque Details</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                  <label style="font-size:0.75rem;">Cheque No (६ अंकी चेक नंबर)</label>
-                  <input type="text" id="colChequeNo" class="form-control" placeholder="उदा. 045129" />
+                  <label style="font-size:0.75rem;">Cheque No. (6-digit number)</label>
+                  <input type="text" id="colChequeNo" class="form-control" placeholder="e.g. 045129" />
                 </div>
                 <div>
-                  <label style="font-size:0.75rem;">Party Bank Name (बँकेचे नाव)</label>
-                  <input type="text" id="colChequeBank" class="form-control" placeholder="उदा. SBI / HDFC / BOI" />
+                  <label style="font-size:0.75rem;">Party Bank Name</label>
+                  <input type="text" id="colChequeBank" class="form-control" placeholder="e.g. SBI / HDFC / BOI" />
                 </div>
                 <div>
-                  <label style="font-size:0.75rem;">Cheque Date (चेकची तारीख)</label>
+                  <label style="font-size:0.75rem;">Cheque Date</label>
                   <input type="date" id="colChequeDate" class="form-control" />
                 </div>
                 <div>
-                  <label style="font-size:0.75rem;">Deposit To Account (आपले खाते)</label>
+                  <label style="font-size:0.75rem;">Deposit To Account</label>
                   <select id="colChequeDepositAccount" class="form-control">
                     <option value="IOB">🏢 IOB Bhadravati (MADHAV)</option>
                     <option value="ROSHAN">👤 ROSHAN THAKRE (Personal)</option>
@@ -1623,7 +1623,7 @@
                 </div>
               </div>
               <div style="font-size:0.75rem;color:#0369a1;margin-top:6px;font-weight:600;">
-                ℹ️ नियम: चेक बँकेत जमा होऊन पास (Cleared) झाल्यावरच पार्टीची उधारी कमी होईल. तोपर्यंत चेक 'In Hand' दिसेल.
+                ℹ️ Rule: Party outstanding balance will only be credited once the cheque is marked Cleared. Until then, status remains 'In Hand'.
               </div>
             </div>
             <div class="form-group" style="grid-column: span 2;">
@@ -1642,7 +1642,7 @@
           <div class="card-header" style="background:#f1f5f9;border-bottom:1px solid #e2e8f0;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="font-size:1.3rem;">📜</span>
-              <span class="card-title" style="color:var(--primary);">धनादेश व्यवस्थापन व क्लिअरिंग (Cheque Clearance Hub)</span>
+              <span class="card-title" style="color:var(--primary);">Cheque Clearance Hub</span>
             </div>
             <span class="pill pill-yellow" id="badgePendingChequesCount">0 Pending</span>
           </div>
@@ -1716,7 +1716,7 @@
         <div class="card" style="margin-bottom:16px;">
           <div class="card-header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 16px;">
             <span class="card-title" style="font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:6px;">
-              🏦 4 बँक खात्यांनुसार जमा रक्कम (Account-wise Direct UPI &amp; Cash Deposits)
+              🏦 Account-wise Direct UPI &amp; Cash Deposits (4 Accounts)
             </span>
           </div>
           <div style="padding:16px;">
@@ -1887,33 +1887,33 @@
     <div class="modal" style="max-width:420px;text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
         <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
-          <span>🏪</span> नवीन पार्टी / डीलर जोडा
+          <span>🏪</span> Add New Party / Dealer
         </h3>
         <button type="button" class="modal-close" onclick="closeModal('quickAddPartyModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
       </div>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
-        नवीन दुकानाची नोंद करून लगेच त्याच्या नावाने ऑर्डर बुक करा.
+        Register a new store to immediately book orders.
       </p>
       <form onsubmit="handleQuickAddParty(event)">
         <div class="form-group" style="margin-bottom:12px;">
-          <label style="font-size:0.8rem;font-weight:700;color:#334155;">दुकान / पार्टीचे नाव (Store Name) *</label>
-          <input type="text" id="quickPartyName" class="form-control" placeholder="उदा. विजय इलेक्ट्रिकल्स" required />
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">Store / Party Name *</label>
+          <input type="text" id="quickPartyName" class="form-control" placeholder="e.g. Vijay Electricals" required />
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label style="font-size:0.8rem;font-weight:700;color:#334155;">मोबाईल नंबर (Mobile Number) *</label>
-          <input type="tel" id="quickPartyMobile" class="form-control" placeholder="१० अंकी मोबाईल नंबर" pattern="[0-9]{10}" maxlength="10" required />
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">Mobile Number *</label>
+          <input type="tel" id="quickPartyMobile" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required />
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label style="font-size:0.8rem;font-weight:700;color:#334155;">एरिया / मार्केट (Area / Market) *</label>
-          <input type="text" id="quickPartyArea" class="form-control" placeholder="उदा. इतवारी, महाल, गोधनी" required />
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">Area / Market *</label>
+          <input type="text" id="quickPartyArea" class="form-control" placeholder="e.g. Itwari, Mahal, Godhani" required />
         </div>
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-size:0.8rem;font-weight:700;color:#334155;">सुरुवातीची जुनी बाकी (Opening Due Balance - असल्यास)</label>
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">Opening Due Balance (Optional)</label>
           <input type="number" id="quickPartyOpen" class="form-control" placeholder="0" min="0" value="0" />
         </div>
         <div style="display:flex;gap:10px;">
-          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('quickAddPartyModal')">रद्द करा</button>
-          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;font-weight:700;">💾 पार्टी सेव्ह करा</button>
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('quickAddPartyModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;font-weight:700;">💾 Save Party</button>
         </div>
       </form>
     </div>
@@ -1924,28 +1924,28 @@
     <div class="modal" style="max-width:480px;text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
         <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
-          <span>✏️</span> पावती दुरुस्त करा (<span id="editColReceiptNo"></span>)
+          <span>✏️</span> Edit Collection Receipt (<span id="editColReceiptNo"></span>)
         </h3>
         <button type="button" class="modal-close" onclick="closeModal('editCollectionModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
       </div>
 
       <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:14px;border:1px solid #e2e8f0;font-size:0.85rem;">
-        <div><strong>पार्टीचे नाव:</strong> <span id="editColPartyName" style="font-weight:700;"></span></div>
+        <div><strong>Party Name:</strong> <span id="editColPartyName" style="font-weight:700;"></span></div>
       </div>
 
       <form onsubmit="saveEditedCollectionRecord(event)">
         <div class="form-group" style="margin-bottom:10px;">
-          <label style="font-size:0.8rem;font-weight:600;">पावती तारीख (Payment Date):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Payment Date:</label>
           <input type="date" id="editColDate" class="form-control" required />
         </div>
 
         <div class="form-group" style="margin-bottom:10px;">
-          <label style="font-size:0.8rem;font-weight:600;">जमा रक्कम (Amount Received ₹):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Amount Received (₹):</label>
           <input type="number" id="editColAmount" class="form-control font-bold" min="1" step="0.01" style="font-size:1.1rem;color:#15803d;" required />
         </div>
 
         <div class="form-group" style="margin-bottom:10px;">
-          <label style="font-size:0.8rem;font-weight:600;">पेमेंट मोड (Mode):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Payment Mode:</label>
           <select id="editColMode" class="form-control" required onchange="toggleEditColDepositAccount()">
             <option value="Cash">Cash</option>
             <option value="Bank">Bank / UPI / Cheque</option>
@@ -1953,7 +1953,7 @@
         </div>
 
         <div class="form-group" id="editColDepositAccountGroup" style="display:none;margin-bottom:10px;">
-          <label style="font-size:0.8rem;font-weight:600;">जमा खाते (Deposit Account):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Deposit Account:</label>
           <select id="editColDepositAccount" class="form-control">
             <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
             <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
@@ -1963,18 +1963,18 @@
         </div>
 
         <div class="form-group" style="margin-bottom:10px;">
-          <label style="font-size:0.8rem;font-weight:600;">कलेक्शन घेणारा (Collected By):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Collected By:</label>
           <select id="editColSalesperson" class="form-control" required></select>
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-size:0.8rem;font-weight:600;">रेफरन्स / रिमार्क (Remark / UTR / Cheque):</label>
+          <label style="font-size:0.8rem;font-weight:600;">Remark / Reference / UTR / Cheque:</label>
           <input type="text" id="editColRef" class="form-control" placeholder="e.g. Cash / GPay / Cheque" />
         </div>
 
         <div style="display:flex;gap:10px;">
-          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('editCollectionModal')">रद्द करा</button>
-          <button type="submit" class="btn btn-success" style="flex:1.5;justify-content:center;font-weight:700;">💾 बदल सेव्ह करा (Update Receipt)</button>
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('editCollectionModal')">Cancel</button>
+          <button type="submit" class="btn btn-success" style="flex:1.5;justify-content:center;font-weight:700;">💾 Save Changes</button>
         </div>
       </form>
     </div>
@@ -1999,19 +1999,19 @@
     <div class="modal" style="max-width:620px;text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
         <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
-          <span>✏️</span> ऑर्डर बुकिंग मेमो दुरुस्त करा (<span id="editMemoDisplayNo"></span>)
+          <span>✏️</span> Edit Order Memo (<span id="editMemoDisplayNo"></span>)
         </h3>
         <button type="button" class="modal-close" onclick="closeModal('editOrderModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
       </div>
 
       <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid #e2e8f0;font-size:0.85rem;">
-        <div><strong>पार्टीचे नाव:</strong> <span id="editPartyName" style="font-weight:700;color:#0f172a;"></span></div>
-        <div><strong>बुक केलेला सेल्समन:</strong> <span id="editSalespersonName"></span></div>
-        <div><strong>तारीख:</strong> <span id="editMemoDate"></span></div>
+        <div><strong>Party Name:</strong> <span id="editPartyName" style="font-weight:700;color:#0f172a;"></span></div>
+        <div><strong>Booked By:</strong> <span id="editSalespersonName"></span></div>
+        <div><strong>Date:</strong> <span id="editMemoDate"></span></div>
       </div>
 
       <div style="font-weight:700;color:#334155;margin-bottom:6px;font-size:0.85rem;">
-        📦 मेमोमधील प्रॉडक्ट्स (नग व दर दुरुस्त करा):
+        📦 Products in Memo (Edit Qty &amp; Rate):
       </div>
 
       <div id="editOrderItemsList" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding-right:2px;">
@@ -2021,30 +2021,30 @@
       <!-- Add Extra Product to Memo Section -->
       <div style="background:#f1f5f9;border:1px dashed #94a3b8;border-radius:8px;padding:10px 12px;margin-bottom:12px;">
         <div style="font-weight:700;font-size:0.82rem;color:#0f766e;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
-          <span>➕</span> या मेमोमध्ये आणखी प्रॉडक्ट जोडा (Add Extra Product to Memo):
+          <span>➕</span> Add Extra Product to Memo:
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div>
-            <input type="text" list="productDatalist" id="editAddProdInput" class="form-control" placeholder="प्रॉडक्ट नाव किंवा कोड शोधा..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect()" oninput="handleEditAddProdSelect()" />
+            <input type="text" list="productDatalist" id="editAddProdInput" class="form-control" placeholder="Search product name or code..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect()" oninput="handleEditAddProdSelect()" />
             <div id="editAddAvailHint" style="font-size:0.74rem;color:var(--muted);margin-top:2px;"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
             <div style="width:75px;">
-              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">Qty (Units):</label>
               <input type="number" id="editAddQty" class="form-control font-bold" min="1" value="1" style="padding:6px 8px;font-size:0.88rem;" />
             </div>
             <div style="width:130px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-                <label style="font-size:0.72rem;color:#0f766e;font-weight:700;margin:0;">दर (₹):</label>
+                <label style="font-size:0.72rem;color:#0f766e;font-weight:700;margin:0;">Rate (₹):</label>
                 <button type="button" id="editAddFocBtn" class="btn btn-sm" onclick="toggleEditAddFoc()" style="padding:0px 5px;font-size:0.65rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:700;cursor:pointer;border-radius:3px;">
                   🎁 FOC
                 </button>
               </div>
-              <input type="number" id="editAddRate" class="form-control font-bold" min="0" step="0.01" placeholder="दर (₹)" style="padding:6px 8px;font-size:0.88rem;" />
+              <input type="number" id="editAddRate" class="form-control font-bold" min="0" step="0.01" placeholder="Rate (₹)" style="padding:6px 8px;font-size:0.88rem;" />
             </div>
             <div>
               <button type="button" class="btn btn-teal btn-sm" onclick="addExtraItemToEditingOrder()" style="padding:7px 12px;font-weight:700;height:35px;white-space:nowrap;">
-                ➕ जोडा
+                ➕ Add
               </button>
             </div>
           </div>
@@ -2052,13 +2052,13 @@
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:14px;">
-        <div><strong>एकूण नग:</strong> <span id="editMemoTotalUnits" style="font-weight:700;">0 Units</span></div>
-        <div><strong>नवीन एकूण रक्कम:</strong> <span id="editMemoTotalAmt" style="font-size:1.1rem;font-weight:800;color:#15803d;">₹0.00</span></div>
+        <div><strong>Total Units:</strong> <span id="editMemoTotalUnits" style="font-weight:700;">0 Units</span></div>
+        <div><strong>New Total Amount:</strong> <span id="editMemoTotalAmt" style="font-size:1.1rem;font-weight:800;color:#15803d;">₹0.00</span></div>
       </div>
 
       <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('editOrderModal')">रद्द करा</button>
-        <button type="button" class="btn btn-success" style="flex:1.5;justify-content:center;font-weight:700;" onclick="saveEditedOrderMemo()">💾 बदल सेव्ह करा (Update Memo)</button>
+        <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('editOrderModal')">Cancel</button>
+        <button type="button" class="btn btn-success" style="flex:1.5;justify-content:center;font-weight:700;" onclick="saveEditedOrderMemo()">💾 Save Changes</button>
       </div>
     </div>
   </div>
@@ -2124,11 +2124,11 @@
         <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('bankDepositModal')">✕ Close</button>
       </div>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">
-        मॅनेजरकडे जमा झालेली कॅश खालीलपैकी अधिकृत बँक किंवा खात्यामध्ये भरा.
+        Deposit collected cash into one of the authorized bank accounts below.
       </p>
       <form onsubmit="submitBankDeposit(event)">
         <div class="form-group" style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;font-weight:700;color:var(--muted);">Deposit Into Account (जमा करण्याचे खाते)</label>
+          <label style="font-size:0.78rem;font-weight:700;color:var(--muted);">Deposit Into Account</label>
           <select id="bankDepAccount" class="form-control font-bold" required onchange="updateBankDepAccountHint()">
             <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
             <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
@@ -5403,7 +5403,7 @@
       
       const isVikram = currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM"));
       if (isVikram && modeEl && modeEl.value === "Cash") {
-        alert("⚠️ नियम: विक्रम सिंग ठाकूर यांना रोख (Cash) स्वीकारण्याची परवानगी नाही. कृपया ऑनलाइन किंवा चेकने पेमेंट घ्या.");
+        alert("⚠️ Rule: Vikram Singh Thakur is not permitted to accept Cash. Please take payment via Online or Cheque.");
         modeEl.value = "Bank";
       }
 
@@ -6054,7 +6054,7 @@
     // ==================== REFRESH ALL ====================
 
     async function directReceiveCashFromStaff(staffName, amount) {
-      if (!confirm(`${staffName} यांच्याकडून ${fmtINR(amount)} रोख रक्कम (Cash) थेट जमा घेतली का?\n\n(जमा घेतल्यावर गोपाळची कॅश जबाबदारी शून्य होईल आणि ती मॅनेजर प्रशांत यांच्या खात्यात जमा होईल)`)) return;
+      if (!confirm(`Directly receive ${fmtINR(amount)} cash from ${staffName}?\n\n(This will clear ${staffName}'s in-hand cash liability and add it to Manager Prashik's cash box)`)) return;
       const newHo = {
         id: "HO_" + Date.now(),
         date: new Date().toISOString().split("T")[0],
@@ -6064,7 +6064,7 @@
         amount: Number(amount),
         status: "Accepted",
         acceptedAt: new Date().toISOString(),
-        note: "प्रशिकने स्वतः थेट रोख जमा घेतली (Direct Received by Manager)"
+        note: "Directly received cash by Manager (Prashik)"
       };
       if (!state.cashHandovers) state.cashHandovers = [];
       state.cashHandovers.unshift(newHo);
@@ -6074,7 +6074,7 @@
         const prefix = activeCompany.toLowerCase() + "_";
         await db.collection(prefix + "cashHandovers").doc(newHo.id).set(newHo).catch(e => console.error(e));
       }
-      showToast(`✓ ${staffName} यांच्याकडून ${fmtINR(amount)} रोख यशस्वीरीत्या जमा झाली!`);
+      showToast(`✓ Received ${fmtINR(amount)} cash directly from ${staffName}!`);
     }
 
     function renderChequeRegister() {
@@ -6110,10 +6110,10 @@
             <td class="text-center"><span class="pill ${badgeClass}">${chqSt}</span></td>
             <td class="text-center" style="white-space:nowrap;">
               ${(isPending && canManageCheque) ? `
-                <button class="btn btn-sm btn-success" style="font-weight:700;padding:4px 8px;" onclick="markChequeStatus('${c.id}', 'Cleared')">✓ पास झाला (Clear)</button>
-                <button class="btn btn-sm btn-danger" style="font-weight:700;padding:4px 8px;margin-left:4px;" onclick="markChequeStatus('${c.id}', 'Bounced')">✕ बाऊन्स</button>
+                <button class="btn btn-sm btn-success" style="font-weight:700;padding:4px 8px;" onclick="markChequeStatus('${c.id}', 'Cleared')">✓ Mark Cleared</button>
+                <button class="btn btn-sm btn-danger" style="font-weight:700;padding:4px 8px;margin-left:4px;" onclick="markChequeStatus('${c.id}', 'Bounced')">✕ Mark Bounced</button>
               ` : `
-                <span style="font-size:0.75rem;color:var(--muted);">${chqSt === 'Cleared' ? '✓ पास' : (chqSt === 'Bounced' ? '✕ बाऊन्स' : 'प्रतीक्षेत')}</span>
+                <span style="font-size:0.75rem;color:var(--muted);">${chqSt === 'Cleared' ? '✓ Cleared' : (chqSt === 'Bounced' ? '✕ Bounced' : '⏳ In Hand')}</span>
               `}
             </td>
           </tr>
@@ -6125,18 +6125,18 @@
       const c = (state.collections || []).find(x => x.id === colId);
       if (!c) return;
       if (newStatus === "Cleared") {
-        if (!confirm(`पावती #${c.receiptNo} (${c.partyName}) चा ${fmtINR(c.amount)} चा चेक बँकेत पास (Cleared) झाला आहे का?\n\n(पास झाल्याचे नोंदवताच पार्टीच्या खात्याची बाकी प्रत्यक्षात कमी होईल)`)) return;
+        if (!confirm(`Confirm that cheque for Receipt #${c.receiptNo} (${c.partyName} - ${fmtINR(c.amount)}) has cleared in the bank?\n\n(Party outstanding balance will be reduced upon clearance)`)) return;
         c.chequeStatus = "Cleared";
         c.clearedDate = new Date().toISOString().split("T")[0];
         c.bankRef = `Chq #${c.chequeNo || ''} (${c.chequeBank || 'Bank'}) - Cleared on ${fmtDate(c.clearedDate)}`;
-        showToast(`✓ चेक #${c.chequeNo} (${fmtINR(c.amount)}) पास झाला! पार्टीची बाकी कमी झाली.`);
+        showToast(`✓ Cheque #${c.chequeNo} (${fmtINR(c.amount)}) cleared! Party balance updated.`);
       } else if (newStatus === "Bounced") {
-        const reason = prompt("चेक बाऊन्स होण्याचे कारण (उदा. Insufficient Funds / Signature mismatch):", "Insufficient Funds");
+        const reason = prompt("Reason for cheque bounce (e.g. Insufficient Funds / Signature mismatch):", "Insufficient Funds");
         if (reason === null) return;
         c.chequeStatus = "Bounced";
         c.bouncedDate = new Date().toISOString().split("T")[0];
         c.bankRef = `Chq #${c.chequeNo || ''} (${c.chequeBank || 'Bank'}) - BOUNCED (${reason})`;
-        showToast(`⚠️ चेक #${c.chequeNo} बाऊन्स म्हणून नोंदवला गेला.`);
+        showToast(`⚠️ Cheque #${c.chequeNo} marked as Bounced.`);
       }
       persistLocal();
       refreshAll();
@@ -6598,7 +6598,7 @@
     function openQuickAddPartyModal(targetInputId = "ordPartyInput") {
       quickAddPartyTarget = targetInputId;
       if (!isAdminLoggedIn && !currentStaff) {
-        alert("कृपया नवीन पार्टी जोडण्यासाठी आधी लॉगिन करा.");
+        alert("Please login first to add a new party.");
         return;
       }
       const existingTyped = document.getElementById(targetInputId) ? document.getElementById(targetInputId).value.trim() : "";
@@ -6621,7 +6621,7 @@
     async function handleQuickAddParty(e) {
       e.preventDefault();
       if (!isAdminLoggedIn && !currentStaff) {
-        alert("कृपया आधी लॉगिन करा.");
+        alert("Please login first.");
         return;
       }
 
@@ -6631,18 +6631,18 @@
       const openBal = Number(document.getElementById("quickPartyOpen").value || 0);
 
       if (!name) {
-        alert("कृपया पार्टीचे नाव टाका.");
+        alert("Please enter party name.");
         return;
       }
       if (mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-        alert("कृपया १० अंकी वैध मोबाईल नंबर टाका.");
+        alert("Please enter a valid 10-digit mobile number.");
         return;
       }
 
       // Check if party name already exists
       const existing = state.parties.find(p => p.name.toUpperCase() === name);
       if (existing) {
-        alert(`पार्टी "${name}" आधीपासूनच सिस्टीममध्ये अस्तित्वात आहे! ती आपोआप निवडली आहे.`);
+        alert(`Party "${name}" already exists in the system! Automatically selected.`);
         closeModal("quickAddPartyModal");
         const targetInp = document.getElementById(quickAddPartyTarget);
         if (targetInp) {
@@ -6694,7 +6694,7 @@
         }
       }
 
-      showToast(`✅ नवीन पार्टी "${newParty.name}" यशस्वीरीत्या जोडली गेली!`);
+      showToast(`✅ New party "${newParty.name}" added successfully!`);
     }
 
     function updatePartyDueAlert() {
@@ -6790,7 +6790,7 @@
 
       const rateVal = rateInput.value.trim();
       if (rateVal === "" || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
-        alert("कृपया या प्रॉडक्टसाठी ठरलेला दर (Rate) टाका! मोफत (Scheme Free) असल्यास '🎁 FOC (Free)' बटणावर क्लिक करा.");
+        alert("Please enter the agreed rate for this product! Click '🎁 FOC (Free)' if provided under free scheme.");
         rateInput.focus();
         return;
       }
@@ -6904,7 +6904,7 @@
             </div>
             <div class="memo-mobile-item-sub">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
             <div class="memo-mobile-item-badge" style="${isFoc ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;' : ''}">
-              ${it.qty} नग × ${isFoc ? '<span class="pill pill-yellow" style="padding:1px 6px;font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)} = <strong style="${isFoc ? 'color:#16a34a;' : ''}">${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}</strong>
+              ${it.qty} pcs × ${isFoc ? '<span class="pill pill-yellow" style="padding:1px 6px;font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)} = <strong style="${isFoc ? 'color:#16a34a;' : ''}">${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}</strong>
             </div>
           </div>
         `;
@@ -6921,7 +6921,7 @@
             ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;vertical-align:middle;">🎁 FOC (Free Scheme)</span>' : ''}
             <div style="font-size:0.73rem;color:var(--muted);margin-bottom:4px;">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
             <div class="memo-mobile-breakdown" style="display:inline-block;background:${isFoc ? '#fef3c7' : '#f0fdf4'};padding:4px 8px;border-radius:4px;font-size:0.82rem;color:${isFoc ? '#92400e' : '#0f766e'};font-weight:700;border:1px solid ${isFoc ? '#fde68a' : '#bbf7d0'};">
-              ${it.qty} नग × ${isFoc ? '🎁 FOC (₹0)' : fmtINR(it.rate)} = ${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}
+              ${it.qty} pcs × ${isFoc ? '🎁 FOC (₹0)' : fmtINR(it.rate)} = ${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}
             </div>
           </td>
           <td class="memo-col-qty text-right font-bold">${it.qty}</td>
@@ -7084,8 +7084,8 @@ ${itemsList}
 *Total Estimated Value:* ${fmtINR(ord.totalAmt)}
 *Status:* Order Booked (Pending Dispatch)
 -----------------------------
-टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. अधिकृत टॅक्स बिल माल डिस्पॅच करताना दिले जाईल.
-धन्यवाद!`;
+Note: This is an order booking memo only. Official tax invoice will be issued upon dispatch.
+Thank you!`;
     }
 
     function showOrderSuccessModal(ord, party) {
@@ -7124,7 +7124,7 @@ ${itemsList}
           <div style="color:#0f766e;font-weight:800;font-size:1.05rem;">${fmtINR(ord.totalAmt)}</div>
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic;">
-          (टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. टॅक्स बिल डिस्पॅच करताना दिले जाईल.)
+          (Note: This is an order booking memo only. Tax invoice will be issued upon dispatch.)
         </div>
       `;
 
@@ -7235,7 +7235,7 @@ ${itemsList}
           </table>
 
           <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--muted);">
-            <div>* टीप: हा केवळ तात्पुरता ऑर्डर बुकिंग मेमो आहे. अंतिम टॅक्स बिल गोदामातून माल पाठवताना दिले जाईल.</div>
+            <div>* Note: This is an order booking memo only. Final tax invoice will be provided upon dispatch from warehouse.</div>
             <div>Booked by: <strong>${ord.salespersonName}</strong></div>
           </div>
         </div>
@@ -7307,7 +7307,7 @@ ${itemsList}
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:20px;color:var(--muted);">कोणतीही ऑर्डर सापडली नाही (No orders found in '${currentOrderRegisterTab}' tab).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:20px;color:var(--muted);">No orders found in '${currentOrderRegisterTab}' tab.</td></tr>`;
         return;
       }
 
@@ -7334,10 +7334,10 @@ ${itemsList}
               <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
               <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Bill PDF">Bill PDF</button>
               ${canEditOrder ? `
-                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="दुरुस्त करा (Edit Rate/Qty)">✏️ Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="रद्द करा (Delete Memo)">🗑️</button>
+                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="Edit Order Memo (Rate / Qty)">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="Delete Order Memo">🗑️</button>
               ` : `
-                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="माल डिस्पॅच झाला आहे — सेल्समनला बदल करता येणार नाही">🔒 Dispatched</button>
+                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="Order already dispatched - cannot be modified by salesperson">🔒 Dispatched</button>
               `}
             </td>
           </tr>
@@ -7350,19 +7350,19 @@ ${itemsList}
 
     function openEditOrderModal(orderId) {
       if (!isAdminLoggedIn && !currentStaff) {
-        alert("कृपया दुरुस्ती करण्यासाठी आधी लॉगिन करा.");
+        alert("Please login first to edit order.");
         return;
       }
 
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) {
-        alert("ऑर्डर सापडला नाही.");
+        alert("Order not found.");
         return;
       }
 
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
-        alert("हा माल गोदामातून आधीच डिस्पॅच झाला असल्याने सेल्समनला या ऑर्डरमध्ये बदल करता येणार नाही. काही दुरुस्ती असल्यास मॅनेजर (प्रशिक) किंवा मालकांशी संपर्क साधा.");
+        alert("Cannot edit: This order has already been dispatched from warehouse. Please contact Manager (Prashik) or Owner for changes.");
         return;
       }
 
@@ -7397,7 +7397,7 @@ ${itemsList}
       const addRateInp = document.getElementById("editAddRate");
       if (addRateInp) {
         addRateInp.value = "";
-        addRateInp.placeholder = "दर (₹)";
+        addRateInp.placeholder = "Rate (₹)";
         addRateInp.style.background = "";
         addRateInp.style.color = "";
       }
@@ -7435,7 +7435,7 @@ ${itemsList}
       if (!container) return;
 
       if (editingOrderItems.length === 0) {
-        container.innerHTML = `<div style="text-align:center;padding:14px;color:var(--muted);font-size:0.85rem;">मेमोमध्ये कोणताही आयटम नाही. खालील फॉर्ममधून नवीन आयटम जोडा.</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:14px;color:var(--muted);font-size:0.85rem;">No items in memo. Add items from the form below.</div>`;
         recalcEditTotal();
         return;
       }
@@ -7449,18 +7449,18 @@ ${itemsList}
               ${idx + 1}. ${it.productName}
               ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.68rem;padding:1px 5px;margin-left:4px;">🎁 FOC (Free Scheme)</span>' : ''}
             </div>
-            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 8px;font-size:0.75rem;font-weight:700;" onclick="removeEditingOrderItem(${idx})" title="हा आयटम मेमोमधून काढा">
-              ✕ काढा
+            <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:2px 8px;font-size:0.75rem;font-weight:700;" onclick="removeEditingOrderItem(${idx})" title="Remove this item from memo">
+              ✕ Remove
             </button>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
             <div style="width:75px;">
-              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">नग (Qty):</label>
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">Qty (Units):</label>
               <input type="number" id="editQty_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;" min="1" value="${it.qty}" oninput="updateEditingItemQty(${idx}, this.value)" />
             </div>
             <div style="width:125px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-                <label style="font-size:0.72rem;color:#64748b;margin:0;">दर (₹):</label>
+                <label style="font-size:0.72rem;color:#64748b;margin:0;">Rate (₹):</label>
                 <button type="button" class="btn btn-sm" style="padding:0px 4px;font-size:0.65rem;background:${isFoc ? '#15803d' : '#fef3c7'};color:${isFoc ? '#fff' : '#92400e'};border:1px solid #fde68a;font-weight:700;" onclick="setEditItemFoc(${idx})">
                   ${isFoc ? '✓ FOC' : '🎁 FOC'}
                 </button>
@@ -7468,7 +7468,7 @@ ${itemsList}
               <input type="number" id="editRate_${idx}" class="form-control" style="padding:5px 6px;font-size:0.88rem;${isFoc ? 'background:#fef3c7;color:#92400e;' : ''}" min="0" step="any" value="${it.rate}" oninput="updateEditingItemRate(${idx}, this.value)" />
             </div>
             <div style="flex:1;text-align:right;">
-              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">एकूण:</label>
+              <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">Total:</label>
               <span id="editItemTotal_${idx}" style="font-weight:700;color:#0f766e;font-size:0.95rem;">
                 ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;">₹0 (Free)</span>' : fmtINR(it.qty * it.rate)}
               </span>
@@ -7521,7 +7521,7 @@ ${itemsList}
     function removeEditingOrderItem(idx) {
       syncEditingOrderItemsFromDOM();
       if (editingOrderItems.length <= 1) {
-        if (!confirm("मेमोमध्ये फक्त एकच आयटम शिल्लक आहे. हा आयटम काढल्यास मेमो रिकामा होईल. तुम्हाला खात्री आहे का? (किंवा संपूर्ण मेमो डिलीट करण्यासाठी 🗑️ बटण वापरा)")) {
+        if (!confirm("Only one item remains in this memo. Removing it will leave the memo empty. Are you sure? (Or use 🗑️ to delete the entire memo)")) {
           return;
         }
       }
@@ -7535,7 +7535,7 @@ ${itemsList}
       if (!rateInp) return;
       if (rateInp.value === "0" || rateInp.value === "0.00") {
         rateInp.value = "";
-        rateInp.placeholder = "दर (₹)";
+        rateInp.placeholder = "Rate (₹)";
         rateInp.style.background = "";
         rateInp.style.color = "";
         if (focBtn) {
@@ -7563,7 +7563,7 @@ ${itemsList}
       if (!inp) return;
       const prod = findProductByName(inp.value);
       if (prod) {
-        if (hint) hint.textContent = `(उपलब्ध स्टॉक: ${prod.available} Units | MRP: ₹${prod.mrp})`;
+        if (hint) hint.textContent = `(Available Stock: ${prod.available} Units | MRP: ₹${prod.mrp})`;
         if (rateInp && !rateInp.value) {
           rateInp.placeholder = "Type Rate (₹)";
           rateInp.focus();
@@ -7581,28 +7581,28 @@ ${itemsList}
       const rateInp = document.getElementById("editAddRate");
 
       if (!prodInp || !prodInp.value.trim()) {
-        alert("कृपया मेमोमध्ये जोडण्यासाठी प्रॉडक्ट निवडा.");
+        alert("Please select a product to add to the memo.");
         if (prodInp) prodInp.focus();
         return;
       }
 
       const prod = findProductByName(prodInp.value);
       if (!prod) {
-        alert("निवडलेले प्रॉडक्ट सापडले नाही. कृपया ड्रॉपडाउनमधून निवडा.");
+        alert("Selected product not found. Please select from the dropdown list.");
         prodInp.focus();
         return;
       }
 
       const qty = Number(qtyInp ? qtyInp.value : 1);
       if (!qty || qty <= 0) {
-        alert("कृपया वैध नग (Quantity) टाका.");
+        alert("Please enter a valid quantity.");
         if (qtyInp) qtyInp.focus();
         return;
       }
 
       const rateVal = rateInp ? rateInp.value.trim() : "";
       if (rateVal === "" || isNaN(Number(rateVal)) || Number(rateVal) < 0) {
-        alert("कृपया या प्रॉडक्टसाठी दर (Rate) टाका किंवा मोफत असल्यास '🎁 FOC' वर क्लिक करा.");
+        alert("Please enter the rate for this product or click '🎁 FOC' if free.");
         if (rateInp) rateInp.focus();
         return;
       }
@@ -7637,7 +7637,7 @@ ${itemsList}
       if (qtyInp) qtyInp.value = "1";
       if (rateInp) {
         rateInp.value = "";
-        rateInp.placeholder = "दर (₹)";
+        rateInp.placeholder = "Rate (₹)";
         rateInp.style.background = "";
         rateInp.style.color = "";
       }
@@ -7651,7 +7651,7 @@ ${itemsList}
       if (hint) hint.textContent = "";
 
       renderEditOrderItemsList();
-      showToast(`➕ "${prod.name}"${isFoc ? ' (🎁 FOC Free)' : ''} मेमोमध्ये जोडले गेले!`);
+      showToast(`➕ "${prod.name}"${isFoc ? ' (🎁 FOC Free)' : ''} added to memo!`);
     }
 
     function recalcEditTotal() {
@@ -7686,7 +7686,7 @@ ${itemsList}
       if (!ord) return;
 
       if (!editingOrderItems || editingOrderItems.length === 0) {
-        alert("मेमोमध्ये किमान एक प्रॉडक्ट असणे आवश्यक आहे. जर मेमो नको असेल तर 🗑️ बटणाने डिलीट करा.");
+        alert("Memo must contain at least one product. To delete the memo completely, use the 🗑️ Delete button.");
         return;
       }
 
@@ -7719,12 +7719,12 @@ ${itemsList}
       }
 
       closeModal("editOrderModal");
-      showToast(`✅ ऑर्डर मेमो #${ord.memoNo || ord.orderNo} चे सर्व प्रॉडक्ट्स व बदल यशस्वीरीत्या सेव्ह झाले!`);
+      showToast(`✅ Order Memo #${ord.memoNo || ord.orderNo} updated and saved successfully!`);
     }
 
     async function deleteOrderMemo(orderId) {
       if (!isAdminLoggedIn && !currentStaff) {
-        alert("कृपया आधी लॉगिन करा.");
+        alert("Please login first.");
         return;
       }
       const ord = state.orders.find(o => o.id === orderId);
@@ -7732,12 +7732,12 @@ ${itemsList}
 
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
-        alert("हा माल गोदामातून आधीच डिस्पॅच झाला असल्याने ही ऑर्डर डिलीट / रद्द करता येणार नाही.");
+        alert("Cannot delete: This order has already been dispatched from the warehouse.");
         return;
       }
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
-      if (!confirm(`तुम्हाला खात्री आहे का की ऑर्डर मेमो #${memoDisplayNo} (${ord.partyName} - ${fmtINR(ord.totalAmt)}) कायमचा रद्द / डिलीट करायचा आहे?`)) {
+      if (!confirm(`Are you sure you want to permanently delete Order Memo #${memoDisplayNo} (${ord.partyName} - ${fmtINR(ord.totalAmt)})?`)) {
         return;
       }
 
@@ -7752,7 +7752,7 @@ ${itemsList}
         db.collection(prefix + "orders").doc(orderId).delete().catch(e => console.warn("Firebase delete order error:", e));
       }
 
-      showToast(`🗑️ ऑर्डर मेमो #${memoDisplayNo} रद्द करण्यात आला.`);
+      showToast(`🗑️ Order Memo #${memoDisplayNo} deleted successfully.`);
     }
 
     function renderCollectionTable() {
@@ -7781,7 +7781,7 @@ ${itemsList}
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:16px;color:var(--muted);">${isSalesperson ? 'तुमच्या नावावर कोणतीही पावती सापडली नाही.' : 'कोणतीही पावती सापडली नाही.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:16px;color:var(--muted);">${isSalesperson ? 'No collection receipts found under your name.' : 'No collection receipts found.'}</td></tr>`;
         return;
       }
 
@@ -7817,8 +7817,8 @@ ${itemsList}
               <button class="btn btn-whatsapp btn-sm" onclick="sendCollectionWhatsApp('${c.id}')" title="Send WhatsApp">💬 WhatsApp</button>
               <button class="btn btn-primary btn-sm" onclick="openPaymentReceipt('${c.id}')" title="Print/View Official Receipt">📄 Receipt</button>
               ${isAdmin ? `
-                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditCollectionModal('${c.id}')" title="दुरुस्त करा (Edit Receipt)">✏️ Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCollectionRecord('${c.id}')" title="रद्द करा (Delete Receipt)">🗑️</button>
+                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditCollectionModal('${c.id}')" title="Edit Collection Receipt">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCollectionRecord('${c.id}')" title="Delete Collection Receipt">🗑️</button>
               ` : ''}
             </td>
           </tr>
@@ -7845,9 +7845,9 @@ ${itemsList}
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;background:#fef2f2;border:1px solid #fecaca;padding:6px 10px;border-radius:6px;margin-top:4px;">
               <span class="pill ${badgeClass}">${p.alertBadge}</span>
               <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Mob: <strong>${p.mobile || "-"}</strong></span>
-              <span style="margin-left:auto;font-weight:700;color:#dc2626;">चालू येणे बाकी: ${fmtINR(p.netBalance)}</span>
+              <span style="margin-left:auto;font-weight:700;color:#dc2626;">Current Balance Due: ${fmtINR(p.netBalance)}</span>
               <button type="button" class="btn btn-sm" style="padding:2px 8px;font-size:0.72rem;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;font-weight:700;cursor:pointer;" onclick="fillFullDueAmount(${p.netBalance})">
-                बाकी भरा (${fmtINR(p.netBalance)})
+                Pay Full Due (${fmtINR(p.netBalance)})
               </button>
             </div>
           `;
@@ -7856,12 +7856,12 @@ ${itemsList}
             <div style="display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;padding:6px 10px;border-radius:6px;margin-top:4px;">
               <span class="pill pill-green">✓ Clear</span>
               <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Mob: <strong>${p.mobile || "-"}</strong></span>
-              <span style="margin-left:auto;font-weight:700;color:#16a34a;">कोणतीही बाकी नाही (₹0 / Advance)</span>
+              <span style="margin-left:auto;font-weight:700;color:#16a34a;">No Outstanding Due (₹0 / Advance)</span>
             </div>
           `;
         }
       } else {
-        alertEl.innerHTML = '<span style="color:var(--muted);font-size:0.75rem;">पार्टी यादीमध्ये सापडली नाही. वरून "+ नवीन पार्टी जोडा" करू शकता.</span>';
+        alertEl.innerHTML = '<span style="color:var(--muted);font-size:0.75rem;">Party not found in list. Use \'+ Add New Party\' above.</span>';
       }
     }
 
@@ -7877,12 +7877,12 @@ ${itemsList}
 
     function openEditCollectionModal(colId) {
       if (!isAdminLoggedIn && !currentStaff) {
-        alert("कृपया दुरुस्ती करण्यासाठी आधी लॉगिन करा.");
+        alert("Please login first to edit receipt.");
         return;
       }
       const col = state.collections.find(c => c.id === colId);
       if (!col) {
-        alert("पावती सापडली नाही.");
+        alert("Collection receipt not found.");
         return;
       }
       currentEditingColId = colId;
@@ -7941,14 +7941,14 @@ ${itemsList}
       }
 
       closeModal("editCollectionModal");
-      showToast(`✅ पावती #${col.receiptNo} ची दुरुस्ती यशस्वीरीत्या सेव्ह झाली!`);
+      showToast(`✅ Collection Receipt #${col.receiptNo} updated successfully!`);
     }
 
     async function deleteCollectionRecord(colId) {
       const col = state.collections.find(c => c.id === colId);
       if (!col) return;
 
-      if (!confirm(`तुम्हाला खात्री आहे का की पावती #${col.receiptNo} (${col.partyName} - ${fmtINR(col.amount)}) कायमची रद्द / डिलीट करायची आहे?`)) {
+      if (!confirm(`Are you sure you want to permanently delete Receipt #${col.receiptNo} (${col.partyName} - ${fmtINR(col.amount)})?`)) {
         return;
       }
 
@@ -7961,7 +7961,7 @@ ${itemsList}
         db.collection(prefix + "collections").doc(colId).delete().catch(err => console.warn("Firebase delete col error:", err));
       }
 
-      showToast(`🗑️ पावती #${col.receiptNo} रद्द करण्यात आली.`);
+      showToast(`🗑️ Receipt #${col.receiptNo} deleted successfully.`);
     }
 
     function numberToWordsINR(num) {
@@ -8047,7 +8047,7 @@ ${itemsList}
           </div>
 
           <div style="background:#f0fdf4;border:2px dashed #86efac;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px;">
-            <div style="font-size:0.8rem;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Amount Received (रुपये प्राप्त झाले):</div>
+            <div style="font-size:0.8rem;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Amount Received:</div>
             <div style="font-size:2.2rem;font-weight:900;color:#15803d;margin:4px 0;">${fmtINR(col.amount)}</div>
             <div style="font-size:0.88rem;font-weight:700;color:#334155;font-style:italic;">"${numberToWordsINR(col.amount)}"</div>
           </div>
@@ -8055,14 +8055,14 @@ ${itemsList}
           <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:10px 14px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:20px;font-size:0.85rem;">
             <div>Account Status:</div>
             <div>
-              Current Balance Due (उर्वरित येणे बाकी): <strong style="font-size:1rem;color:${remBal > 0 ? '#dc2626' : '#16a34a'};">${fmtINR(remBal)}</strong>
+              Current Balance Due: <strong style="font-size:1rem;color:${remBal > 0 ? '#dc2626' : '#16a34a'};">${fmtINR(remBal)}</strong>
             </div>
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px;padding-top:14px;border-top:1px solid #cbd5e1;">
             <div style="font-size:0.75rem;color:#64748b;line-height:1.4;">
               <div>• Computer generated receipt. No physical signature required.</div>
-              <div>• धन्यवाद! आपले पेमेंट यशस्वीरित्या जमा झाले आहे.</div>
+              <div>• Thank you! Your payment has been received successfully.</div>
             </div>
             <div style="text-align:center;">
               <div style="font-size:0.82rem;font-weight:700;color:#0f172a;margin-bottom:30px;">For ${co.name}</div>
@@ -8194,8 +8194,8 @@ ${itemsList}
         `;
       }).join("") + `
         <div class="kpi-card teal" style="background:#f0fdf4;border-top:4px solid #16a34a;">
-          <div style="font-size:0.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:4px;">Grand Total (सर्व 4 खाती)</div>
-          <div class="kpi-label" style="font-weight:700;color:var(--text);font-size:0.83rem;">एकूण जमा (All Accounts)</div>
+          <div style="font-size:0.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:4px;">Grand Total (All 4 Accounts)</div>
+          <div class="kpi-label" style="font-weight:700;color:var(--text);font-size:0.83rem;">Total Deposited (All Accounts)</div>
           <div class="kpi-val" style="color:#16a34a;font-size:1.3rem;margin:6px 0;">${fmtINR(grandTotal)}</div>
           <div class="kpi-sub" style="color:#15803d;">Total Direct Online + Cash Deposits</div>
         </div>
@@ -8225,9 +8225,9 @@ ${itemsList}
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
                   <span style="font-size:1.6rem;">🔔</span>
                   <div>
-                    <h4 style="margin:0;color:#b45309;font-size:1.05rem;">कॅश मंजुरीसाठी प्रलंबित विनंत्या (${pendingHandovers.length} Pending)</h4>
+                    <h4 style="margin:0;color:#b45309;font-size:1.05rem;">Pending Cash Handover Requests (${pendingHandovers.length})</h4>
                     <div style="font-size:0.8rem;color:#78350f;">
-                      सेल्समनकडून आलेली कॅश प्रत्यक्षात मोजून तपासा. खात्री झाल्यावर 'स्वीकारा' दाबा म्हणजे ती तुमच्या कॅश बॉक्समध्ये जमा होईल.
+                      Verify physical cash received from the salesperson. Click 'Accept' once verified to add it to your cash box.
                     </div>
                   </div>
                 </div>
@@ -8236,16 +8236,16 @@ ${itemsList}
                     <div style="background:#ffffff;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                       <div>
                         <div style="font-size:0.95rem;font-weight:800;color:#1e293b;">${h.fromStaffName}</div>
-                        <div style="font-size:0.78rem;color:#64748b;">${fmtDate(h.date)} ${h.time || ''} | प्रलंबित रक्कम</div>
+                        <div style="font-size:0.78rem;color:#64748b;">${fmtDate(h.date)} ${h.time || ''} | Pending Handover Amount</div>
                       </div>
                       <div style="display:flex;align-items:center;gap:14px;">
                         <span style="font-size:1.25rem;font-weight:900;color:#ea580c;">${fmtINR(h.amount)}</span>
                         <div style="display:flex;gap:6px;">
                           <button class="btn btn-sm btn-success" onclick="acceptCashHandover('${h.id}')" style="font-weight:700;padding:6px 14px;">
-                            ✓ स्वीकारा (Accept Cash)
+                            ✓ Accept Cash
                           </button>
                           <button class="btn btn-sm btn-danger" onclick="rejectCashHandover('${h.id}')" style="font-weight:700;padding:6px 12px;">
-                            ✕ नाकारा (Reject)
+                            ✕ Reject
                           </button>
                         </div>
                       </div>
@@ -8267,9 +8267,9 @@ ${itemsList}
                 <div style="display:flex;align-items:center;gap:10px;">
                   <span style="font-size:1.4rem;">⏳</span>
                   <div>
-                    <strong style="color:#b45309;font-size:0.95rem;">तुमची ${fmtINR(pendingTotal)} ची कॅश हॅन्डओव्हर विनंती मॅनेजर प्रशिक यांच्या मंजुरीसाठी प्रलंबित आहे</strong>
+                    <strong style="color:#b45309;font-size:0.95rem;">Your cash handover request of ${fmtINR(pendingTotal)} is pending approval from Manager Prashik</strong>
                     <div style="font-size:0.8rem;color:#78350f;margin-top:2px;">
-                      प्रशिक हजारे यांनी ही कॅश स्वीकारल्यानंतर तुमच्या खात्यातील शिल्लक रक्कम शून्य (₹0.00) होईल आणि अधिकृत मंजुरी दिसेल.
+                      Once Prashik Hajare approves this request, your in-hand liability will become ₹0.00.
                     </div>
                   </div>
                 </div>
@@ -8300,8 +8300,8 @@ ${itemsList}
           <div class="kpi-card" style="border-top:4px solid #ea580c;">
             <div class="kpi-label">Cash with Gopal (In Pocket)</div>
             <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalPocket)}</div>
-            <div class="kpi-sub">गोपाळकडील शिल्लक रोख</div>
-            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 थेट जमा घ्या (Receive)</button>` : ''}
+            <div class="kpi-sub">Gopal's Cash in Hand</div>
+            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 Direct Receive Cash</button>` : ''}
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Accepted from Gopal</div>
@@ -8326,7 +8326,7 @@ ${itemsList}
               <div>
                 <h4 style="color:#0f766e;margin-bottom:4px;font-size:1.05rem;">🏦 Ready to Deposit into Bank / Accounts</h4>
                 <p style="color:var(--muted);font-size:0.83rem;">
-                  तुमच्याकडे <strong>${fmtINR(cs.prashikInHand)}</strong> कॅश उपलब्ध आहे. 4 अधिकृत खात्यांपैकी एका खात्यामध्ये भरणा नोंदवा.
+                  You have <strong>${fmtINR(cs.prashikInHand)}</strong> cash in hand. Record deposit into one of the 4 authorized accounts.
                 </p>
               </div>
               <button class="btn btn-teal" onclick="openBankDepositModal(${cs.prashikInHand})" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
@@ -8337,7 +8337,7 @@ ${itemsList}
         } else {
           actionCard.innerHTML = `
             <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
-              ✓ सर्व कॅश अधिकृत बँक / खात्यांमध्ये जमा झाली आहे! प्रशिककडे सध्या शिल्लक कॅश ₹0.00 आहे.
+              ✓ All collected cash has been deposited into authorized accounts! Prashik's current cash balance is ₹0.00.
             </div>
           `;
         }
@@ -8353,24 +8353,24 @@ ${itemsList}
         if (roleBadge) roleBadge.textContent = "Salesperson View: " + currentStaff.name;
         grid.innerHTML = `
           <div class="kpi-card" style="border-top:4px solid #ea580c;">
-            <div class="kpi-label">माझ्याकडील कॅश (In Pocket)</div>
+            <div class="kpi-label">My Cash in Hand</div>
             <div class="kpi-val" style="color:#ea580c;">${fmtINR(myPocket)}</div>
-            <div class="kpi-sub">हॅन्डओव्हर न केलेली प्रत्यक्ष कॅश</div>
+            <div class="kpi-sub">Physical Cash Pending Handover</div>
           </div>
           <div class="kpi-card" style="border-top:4px solid #f59e0b;">
-            <div class="kpi-label">प्रशिककडे मंजुरी बाकी (Pending)</div>
+            <div class="kpi-label">Pending Approval (Prashik)</div>
             <div class="kpi-val" style="color:#d97706;">${fmtINR(myPending)}</div>
             <div class="kpi-sub">🟡 Awaiting Prashik's Acceptance</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">प्रशिकने स्वीकारलेली (Accepted)</div>
+            <div class="kpi-label">Approved &amp; Cleared (Prashik)</div>
             <div class="kpi-val" style="color:#15803d;">${fmtINR(myAccepted)}</div>
             <div class="kpi-sub">🟢 Approved &amp; Cleared</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">एकूण जमा कॅश (Total Collected)</div>
+            <div class="kpi-label">Total Cash Collected</div>
             <div class="kpi-val">${fmtINR(totalCollected)}</div>
-            <div class="kpi-sub">मार्केटमधून जमा केलेली सर्व कॅश</div>
+            <div class="kpi-sub">Total cash collected from market</div>
           </div>
         `;
 
@@ -8380,12 +8380,12 @@ ${itemsList}
               <div>
                 <h4 style="color:#ea580c;margin-bottom:4px;font-size:1.02rem;">🤝 Handover Cash to Prashik Hajare (Manager)</h4>
                 <p style="color:var(--muted);font-size:0.83rem;">
-                  तुमच्या खिशात <strong>${fmtINR(myPocket)}</strong> कॅश आहे. ही कॅश प्रशिक यांच्या स्वाधीन करा आणि खाली नोंद करा.
+                  You have <strong>${fmtINR(myPocket)}</strong> cash in hand. Hand over this cash to Prashik and record below.
                 </p>
               </div>
               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                  <label style="font-weight:600;font-size:0.82rem;">रक्कम (₹):</label>
+                  <label style="font-weight:600;font-size:0.82rem;">Handover Amount (₹):</label>
                   <input type="number" id="customHandoverAmt" class="form-control font-bold" value="${myPocket}" max="${myPocket}" min="1" step="0.01" style="width:130px;font-size:1rem;color:#ea580c;" />
                 </div>
                 <button class="btn btn-primary" onclick="handleCustomStaffHandover()" style="font-weight:700;padding:10px 18px;font-size:0.9rem;">
@@ -8398,8 +8398,8 @@ ${itemsList}
           actionCard.innerHTML = `
             <div style="text-align:center;padding:10px;color:#15803d;font-weight:700;">
               ${myPending > 0
-                ? "⏳ तुमची कॅश हॅन्डओव्हर विनंती मॅनेजर प्रशिक यांच्या मंजुरीसाठी प्रलंबित आहे. प्रशिकने स्वीकारेपर्यंत प्रतीक्षा करा."
-                : "✓ तुमच्याकडील सर्व कॅश क्लिअर आहे (₹0.00). सर्व रक्कम मॅनेजर प्रशिक हजारे यांच्या स्वाधीन करण्यात आली आहे."}
+                ? "⏳ Your cash handover request is pending approval from Manager Prashik. Please wait until approved."
+                : "✓ All cash is cleared (₹0.00). All collected cash has been handed over to Manager Prashik Hajare."}
             </div>
           `;
         }
@@ -8420,12 +8420,12 @@ ${itemsList}
             <div class="kpi-label">Cash with Gopal (In Pocket)</div>
             <div class="kpi-val" style="color:#ea580c;">${fmtINR(cs.gopalPocket)}</div>
             <div class="kpi-sub">Pending handover to Prashik</div>
-            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 थेट जमा घ्या (Receive)</button>` : ''}
+            ${cs.gopalPocket > 0 ? `<button class="btn btn-sm btn-success" style="margin-top:6px;width:100%;font-weight:700;" onclick="directReceiveCashFromStaff('GOPAL AMBAGADE', ${cs.gopalPocket})">📥 Direct Receive Cash</button>` : ''}
           </div>
           <div class="kpi-card" style="border-top:4px solid #ef4444;">
             <div class="kpi-label">Cash with Vikram (In Pocket)</div>
             <div class="kpi-val" style="color:#15803d;">${fmtINR(cs.vikramPocket)}</div>
-            <div class="kpi-sub" style="color:#b91c1c;font-weight:700;">🚫 रोख रक्कम बंदी (Cash Prohibited)</div>
+            <div class="kpi-sub" style="color:#b91c1c;font-weight:700;">🚫 Cash Collections Prohibited</div>
           </div>
           <div class="kpi-card teal">
             <div class="kpi-label">Total Deposited in Banks</div>
@@ -8472,7 +8472,7 @@ ${itemsList}
                   </div>
                 `;
               } else {
-                actionHtml = '<span style="font-size:0.75rem;color:#b45309;font-weight:600;">⏳ प्रशिक मंजुरी बाकी</span>';
+                actionHtml = '<span style="font-size:0.75rem;color:#b45309;font-weight:600;">⏳ Pending Approval</span>';
               }
             } else if (isAccepted) {
               actionHtml = `<span style="font-size:0.75rem;color:#15803d;font-weight:600;">✓ Cleared ${h.acceptedBy ? '(' + h.acceptedBy + ')' : ''}</span>`;
@@ -8524,7 +8524,7 @@ ${itemsList}
       const amtInput = document.getElementById("customHandoverAmt");
       const amt = Number(amtInput ? amtInput.value : 0);
       if (isNaN(amt) || amt <= 0) {
-        alert("कृपया वैध रक्कम प्रविष्ट करा.");
+        alert("Please enter a valid amount.");
         return;
       }
 
@@ -8534,11 +8534,11 @@ ${itemsList}
       const myPocket = isGopal ? cs.gopalPocket : cs.vikramPocket;
 
       if (amt > myPocket) {
-        alert("रक्कम तुमच्या शिल्लक कॅशपेक्षा (" + fmtINR(myPocket) + ") जास्त असू शकत नाही.");
+        alert("Amount cannot exceed your in-hand cash balance (" + fmtINR(myPocket) + ").");
         return;
       }
 
-      if (!confirm(`Confirm cash handover request of ${fmtINR(amt)} to PRASHIK HAJARE (Manager)?\n\nही रक्कम मॅनेजर प्रशिक यांनी स्वीकारेपर्यंत 'प्रलंबित (Pending)' राहील.`)) {
+      if (!confirm(`Confirm cash handover request of ${fmtINR(amt)} to PRASHIK HAJARE (Manager)?\n\n(This amount will remain Pending until accepted by Manager Prashik)`)) {
         return;
       }
 
@@ -8556,7 +8556,7 @@ ${itemsList}
 
       if (!state.cashHandovers) state.cashHandovers = [];
       await saveRecord("cashHandovers", record);
-      showToast(`🤝 हॅन्डओव्हर विनंती पाठवली: ${fmtINR(amt)} प्रशिक हजारे यांच्या मंजुरीची प्रतीक्षा!`);
+      showToast(`🤝 Handover request submitted: ${fmtINR(amt)} awaiting Prashik Hajare's approval!`);
       renderStaffCashTab();
     }
 
@@ -8564,16 +8564,16 @@ ${itemsList}
       const isPrashik = currentStaff && currentStaff.role === "Manager";
       const isAdmin = !!isAdminLoggedIn;
       if (!isPrashik && !isAdmin) {
-        alert("फक्त मॅनेजर (प्रशिक हजारे) किंवा ओनर कॅश स्वीकारू शकतात.");
+        alert("Only Manager (Prashik Hajare) or Owner can accept cash.");
         return;
       }
       const h = (state.cashHandovers || []).find(x => x.id === id);
       if (!h) return;
       if (h.status !== "Pending") {
-        alert("हे हॅन्डओव्हर आधीच " + h.status + " झाले आहे.");
+        alert("This handover request has already been " + h.status + ".");
         return;
       }
-      if (!confirm(`Confirm receiving ${fmtINR(h.amount)} cash from ${h.fromStaffName}?\n\nस्वीकारल्यानंतर ही रक्कम तुमच्या मॅनेजर कॅश बॉक्समध्ये जमा होईल.`)) {
+      if (!confirm(`Confirm receiving ${fmtINR(h.amount)} cash from ${h.fromStaffName}?\n\n(This amount will be added to your Manager cash balance)`)) {
         return;
       }
 
@@ -8582,7 +8582,7 @@ ${itemsList}
       h.acceptedBy = currentStaff ? currentStaff.name : "OWNER";
 
       await saveRecord("cashHandovers", h);
-      showToast(`✅ स्वीकारले: ${h.fromStaffName} कडून ${fmtINR(h.amount)} कॅश स्वीकारली!`);
+      showToast(`✅ Accepted: Received ${fmtINR(h.amount)} cash from ${h.fromStaffName}!`);
       renderStaffCashTab();
     }
 
@@ -8590,25 +8590,25 @@ ${itemsList}
       const isPrashik = currentStaff && currentStaff.role === "Manager";
       const isAdmin = !!isAdminLoggedIn;
       if (!isPrashik && !isAdmin) {
-        alert("फक्त मॅनेजर (प्रशिक हजारे) किंवा ओनर कॅश नाकारू शकतात.");
+        alert("Only Manager (Prashik Hajare) or Owner can reject cash.");
         return;
       }
       const h = (state.cashHandovers || []).find(x => x.id === id);
       if (!h) return;
       if (h.status !== "Pending") {
-        alert("हे हॅन्डओव्हर आधीच " + h.status + " झाले आहे.");
+        alert("This handover request has already been " + h.status + ".");
         return;
       }
-      const reason = prompt(`कृपया ${h.fromStaffName} चे हॅन्डओव्हर नाकारण्याचे कारण प्रविष्ट करा:`, "कॅश मोजणीत फरक / चुकीची नोंद");
+      const reason = prompt(`Please enter reason for rejecting handover from ${h.fromStaffName}:`, "Discrepancy in cash count / incorrect entry");
       if (reason === null) return;
 
       h.status = "Rejected";
-      h.rejectReason = reason.trim() || "नाकारले";
+      h.rejectReason = reason.trim() || "Rejected";
       h.rejectedAt = new Date().toISOString();
       h.rejectedBy = currentStaff ? currentStaff.name : "OWNER";
 
       await saveRecord("cashHandovers", h);
-      showToast(`हॅन्डओव्हर विनंती नाकारली (${h.fromStaffName} - ${fmtINR(h.amount)}).`);
+      showToast(`Handover request rejected (${h.fromStaffName} - ${fmtINR(h.amount)}).`);
       renderStaffCashTab();
     }
 
@@ -8630,7 +8630,7 @@ ${itemsList}
 
       const cs = getCashSummary();
       if (amt > cs.prashikInHand) {
-        if (!confirm(`सूचना: डिपॉझिट रक्कम (${fmtINR(amt)}) तुमच्याकडील शिल्लक कॅशपेक्षा (${fmtINR(cs.prashikInHand)}) जास्त आहे. तरीही पुढे जायचे का?`)) {
+        if (!confirm(`Warning: Deposit amount (${fmtINR(amt)}) exceeds your in-hand cash balance (${fmtINR(cs.prashikInHand)}). Do you still wish to proceed?`)) {
           return;
         }
       }
@@ -8648,7 +8648,7 @@ ${itemsList}
       if (!state.bankDeposits) state.bankDeposits = [];
       await saveRecord("bankDeposits", record);
       closeModal("bankDepositModal");
-      showToast(`✅ यश: ${fmtINR(amt)} रक्कम ${accObj.shortName} मध्ये जमा केली (Challan #${challan})!`);
+      showToast(`✅ Success: Deposited ${fmtINR(amt)} into ${accObj.shortName} (Challan #${challan})!`);
       renderStaffCashTab();
     }
 
@@ -8719,7 +8719,7 @@ ${itemsList}
 -----------------------------
 *Current Balance Due:* ${fmtINR(remBal)}
 -----------------------------
-धन्यवाद! आपले पेमेंट यशस्वीरित्या जमा झाले आहे.`;
+Thank you! Your payment has been received successfully.`;
 
       const waBtn = document.getElementById("succColWhatsAppBtn");
       waBtn.href = cleanPhone.length >= 10
@@ -8796,7 +8796,7 @@ ${itemsList}
     function openDispatchModal(orderId) {
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       if (!canDispatch) {
-        alert("माल डिस्पॅच करण्याचा अधिकार फक्त मालक आणि मॅनेजर (प्रशिक हजारे) यांनाच आहे.");
+        alert("Only Owner and Manager (Prashik Hajare) are authorized to dispatch orders.");
         return;
       }
       const ord = state.orders.find(o => o.id === orderId);
@@ -8813,7 +8813,7 @@ ${itemsList}
       e.preventDefault();
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       if (!canDispatch) {
-        alert("माल डिस्पॅच करण्याचा अधिकार फक्त मालक आणि मॅनेजर (प्रशिक हजारे) यांनाच आहे.");
+        alert("Only Owner and Manager (Prashik Hajare) are authorized to dispatch orders.");
         return;
       }
       const orderId = document.getElementById("dispatchOrderId").value;
@@ -8827,10 +8827,10 @@ ${itemsList}
 
     async function handleCreateCollection(e) {
       e.preventDefault();
-      if (!isAdminLoggedIn && !currentStaff) { alert("कृपया आधी लॉगिन करा."); return; }
+      if (!isAdminLoggedIn && !currentStaff) { alert("Please login first."); return; }
       const party = findPartyByName(document.getElementById("colPartyInput").value);
       if (!party) {
-        alert("कृपया यादीतून वैध पार्टी निवडा किंवा नवीन पार्टी जोडा.");
+        alert("Please select a valid party from the list or add a new party.");
         return;
       }
       
@@ -8840,7 +8840,7 @@ ${itemsList}
       // Vikram Cash Prohibition Check
       const isVikram = (spVal || "").toUpperCase().includes("VIKARAM") || (spVal || "").toUpperCase().includes("VIKRAM") || (currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM")));
       if (isVikram && colModeVal === "Cash") {
-        alert("विक्रम सिंग ठाकूर यांना रोख रक्कम (Cash) स्वीकारण्यास बंदी आहे. सोबत गोपाळ किंवा प्रशिक असणे आवश्यक.");
+        alert("Vikram Singh Thakur is prohibited from collecting Cash payments. Gopal or Prashik must accompany for cash collections.");
         return;
       }
 
@@ -8893,7 +8893,7 @@ ${itemsList}
       const alertEl = document.getElementById("colPartyDueAlert");
       if (alertEl) alertEl.innerHTML = "";
       
-      showToast(`पावती #${newCol.receiptNo} (${fmtINR(newCol.amount)}) सेव्ह झाली!`);
+      showToast(`Collection Receipt #${newCol.receiptNo} (${fmtINR(newCol.amount)}) saved successfully!`);
       showCollectionSuccessModal(newCol, party);
     }
 
