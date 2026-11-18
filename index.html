@@ -1147,6 +1147,7 @@
       <!-- Admin Only Tabs -->
       <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
       <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
       <button class="nav-tab admin-only-item" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
     </nav>
 
@@ -1362,23 +1363,57 @@
       <!-- ==================== ADMIN TAB 2: INWARD STOCK ==================== -->
       <section id="tab-admin-stock" class="tab-panel">
         <div class="card">
-          <div class="card-header"><span class="card-title">Add New Purchase / Inward Stock Entry</span></div>
+          <div class="card-header">
+            <div>
+              <span class="card-title">Add New Purchase / Inward Stock Entry (with GST ITC)</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Adds inward stock and optionally records Supplier Purchase Bill for Monthly Input Tax Credit (ITC)</div>
+            </div>
+          </div>
           <form class="form-grid" onsubmit="handleInwardStock(event)">
             <div class="form-group" style="grid-column: span 2;">
-              <label>Select Product</label>
-              <input type="text" list="productDatalist" id="inwardProductInput" class="form-control" placeholder="Type product name or code..." required />
+              <label>Select Product *</label>
+              <input type="text" list="productDatalist" id="inwardProductInput" class="form-control" placeholder="Type product name or code..." oninput="handleInwardProdSelected()" onchange="handleInwardProdSelected()" required />
             </div>
             <div class="form-group">
-              <label>Inward Quantity Received (+)</label>
-              <input type="number" id="inwardQty" class="form-control" min="1" placeholder="e.g. 24" required />
+              <label>Inward Quantity Received (+) *</label>
+              <input type="number" id="inwardQty" class="form-control font-bold" min="1" placeholder="e.g. 24" oninput="updateInwardItcPreview()" required />
             </div>
             <div class="form-group">
-              <label>Supplier / Ref Note</label>
-              <input type="text" id="inwardNote" class="form-control" placeholder="e.g. Factory Invoice / Transporter" />
+              <label>Purchase Bill Date</label>
+              <input type="date" id="inwardBillDate" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Supplier Name (Optional for ITC)</label>
+              <input type="text" id="inwardSupplierName" class="form-control" placeholder="e.g. Greenchef Appliances Ltd." />
+            </div>
+            <div class="form-group">
+              <label>Supplier GSTIN (15-Char, Optional)</label>
+              <input type="text" id="inwardSupplierGstin" class="form-control" maxlength="15" placeholder="e.g. 27AAACG1234A1Z5" style="text-transform:uppercase;" oninput="updateInwardItcPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Purchase Bill / Invoice No.</label>
+              <input type="text" id="inwardNote" class="form-control" placeholder="e.g. INV-2026-089" />
+            </div>
+            <div class="form-group">
+              <label>Purchase Taxable Rate / Unit (₹)</label>
+              <input type="number" id="inwardPurchaseRate" class="form-control" min="0" step="0.01" placeholder="e.g. 950 (for ITC)" oninput="updateInwardItcPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Purchase GST %</label>
+              <select id="inwardGstPct" class="form-control" onchange="updateInwardItcPreview()">
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18" selected>18%</option>
+                <option value="28">28%</option>
+                <option value="0">0% (Exempt)</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <div id="inwardItcPreview" style="font-size:0.78rem;color:#0f766e;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:7px 10px;display:none;"></div>
             </div>
             <div class="form-group">
               <label>&nbsp;</label>
-              <button type="submit" class="btn btn-success" style="width:100%">+ Add Inward Stock</button>
+              <button type="submit" class="btn btn-success" style="width:100%;font-weight:700;">+ Save Inward Stock &amp; ITC</button>
             </div>
           </form>
         </div>
@@ -1451,6 +1486,16 @@
                 <label>Booked By (Salesperson)</label>
                 <select id="ordSalesperson" class="form-control" required></select>
               </div>
+            </div>
+            <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:10px;border-top:1px dashed #cbd5e1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <label for="ordGstMode" style="font-size:0.78rem;font-weight:700;color:var(--primary);margin:0;">🧾 GST Pricing Mode:</label>
+                <select id="ordGstMode" class="form-control" style="width:auto;min-width:240px;font-size:0.8rem;font-weight:600;padding:5px 10px;" onchange="renderMemoCart()">
+                  <option value="inclusive" selected>GST Inclusive (Entered Rate includes GST)</option>
+                  <option value="exclusive">+ GST Exclusive (Add Product GST % on top)</option>
+                </select>
+              </div>
+              <div id="ordGstLiveSummary" style="font-size:0.78rem;font-weight:700;color:#0f766e;"></div>
             </div>
           </div>
 
@@ -1805,6 +1850,178 @@
         </div>
       </section>
 
+      <!-- ==================== ADMIN TAB: GST & GSTR-1 HUB ==================== -->
+      <section id="tab-admin-gst" class="tab-panel">
+        <div class="card" style="border-left:4px solid #0f766e;margin-bottom:16px;">
+          <div class="card-header" style="background:#f0fdfa;flex-wrap:wrap;gap:12px;">
+            <div>
+              <span class="card-title" style="color:#0f766e;display:flex;align-items:center;gap:6px;">🧾 GST Billing, ITC &amp; GSTR-1 Compliance Hub</span>
+              <div id="gstHubHeaderInfo" style="font-size:0.78rem;color:#334155;margin-top:3px;">Company GSTIN: 27BQIPP3836Q1ZZ | State: 27-Maharashtra</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <label style="font-size:0.78rem;font-weight:700;color:#334155;">Month:</label>
+              <input type="month" id="gstReportMonth" class="form-control" style="width:165px;font-weight:600;" onchange="renderGstHub()" />
+              <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:700;color:#334155;background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;">
+                <input type="checkbox" id="gstAllTimeChk" onchange="renderGstHub()" /> All Time
+              </label>
+              <button type="button" class="btn btn-success btn-sm" onclick="exportGstr1Excel()" style="font-weight:700;">
+                📥 Export CA GSTR-1 Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" style="margin-bottom:16px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Taxable Outward Sales</div>
+            <div class="kpi-val" id="gstKpiTaxable">₹0</div>
+            <div class="kpi-sub" id="gstKpiTaxableSub">0 B2B | 0 B2C Invoices</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Total Output GST</div>
+            <div class="kpi-val" id="gstKpiOutput">₹0</div>
+            <div class="kpi-sub" id="gstKpiOutputSub">CGST: ₹0 | SGST: ₹0 | IGST: ₹0</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Input Tax Credit (ITC)</div>
+            <div class="kpi-val" id="gstKpiInputItc">₹0</div>
+            <div class="kpi-sub" id="gstKpiInputSub">0 Purchase Bills</div>
+          </div>
+          <div class="kpi-card red" id="gstKpiNetCard">
+            <div class="kpi-label">Net GST Payable / Credit</div>
+            <div class="kpi-val" id="gstKpiNetPayable">₹0</div>
+            <div class="kpi-sub" id="gstKpiNetSub">Output GST - Input ITC</div>
+          </div>
+        </div>
+
+        <!-- Outward Sales Tax Register -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <span class="card-title">Outward Sales Tax Register (B2B &amp; B2C)</span>
+              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Auto-classified Intra-State (CGST+SGST) vs Inter-State (IGST) with E-Way Bill alerts (≥ ₹50,000)</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="gstSalesFilter" class="form-control" style="width:185px;" onchange="renderGstHub()">
+                <option value="ALL">All Invoices</option>
+                <option value="B2B">B2B (With GSTIN) Only</option>
+                <option value="B2C">B2C (Unregistered) Only</option>
+                <option value="EWAY">⚠️ E-Way Required (≥₹50k)</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Invoice No</th>
+                  <th>Date</th>
+                  <th>Party &amp; GSTIN</th>
+                  <th>Type / POS</th>
+                  <th class="text-right">Taxable (₹)</th>
+                  <th class="text-right">CGST (₹)</th>
+                  <th class="text-right">SGST (₹)</th>
+                  <th class="text-right">IGST (₹)</th>
+                  <th class="text-right">Invoice Total</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="gstSalesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HSN-Wise Outward Summary -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">HSN-Wise Outward Tax Summary (GSTR-1 Table 12)</span>
+              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Consolidated by HSN Code and GST Slab (5%, 12%, 18%, 28%, 0%)</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>HSN / SAC</th>
+                  <th class="text-center">GST Slab</th>
+                  <th class="text-right">Total Qty</th>
+                  <th class="text-right">Taxable Value (₹)</th>
+                  <th class="text-right">CGST (₹)</th>
+                  <th class="text-right">SGST (₹)</th>
+                  <th class="text-right">IGST (₹)</th>
+                  <th class="text-right">Total Tax (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="gstHsnTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Purchase GST / ITC Register -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <span class="card-title">Purchase GST &amp; Input Tax Credit (ITC) Register</span>
+              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Recorded automatically from Inward Stock entries with Purchase Rate &amp; GST%</div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('admin-stock', document.querySelector('.nav-tab[data-tab=\'admin-stock\']'))">
+              + Add Purchase Bill (Stock)
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bill Date</th>
+                  <th>Bill No</th>
+                  <th>Supplier &amp; GSTIN</th>
+                  <th>Product &amp; Qty</th>
+                  <th class="text-right">Taxable (₹)</th>
+                  <th class="text-center">GST %</th>
+                  <th class="text-right">Input ITC (₹)</th>
+                  <th class="text-right">Bill Total (₹)</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="gstPurchaseTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Party GSTIN Directory -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <span class="card-title">Party GSTIN Directory (Quick B2B Setup)</span>
+              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Add or update 15-character dealer GSTIN to auto-enable B2B invoicing &amp; IGST/CGST detection</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="gstPartyFilter" class="form-control" style="width:160px;" onchange="renderGstPartyDirectory()">
+                <option value="ALL">All Parties</option>
+                <option value="B2B">With GSTIN (B2B)</option>
+                <option value="B2C">Missing GSTIN (B2C)</option>
+              </select>
+              <input type="text" id="gstPartySearch" class="form-control" style="width:210px;" placeholder="Search party, area, GSTIN..." oninput="renderGstPartyDirectory()" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Party Name</th>
+                  <th>Area / Mobile</th>
+                  <th>GSTIN</th>
+                  <th>Category / State</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="gstPartyDirectoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- ==================== ADMIN TAB 5: MASTERS & TEAM ==================== -->
       <section id="tab-admin-masters" class="tab-panel">
         <div class="grid-2">
@@ -1862,8 +2079,8 @@
                 <input type="text" id="mPartyArea" class="form-control" placeholder="e.g. Godhni, Hingna" required />
               </div>
               <div class="form-group">
-                <label>Party GSTIN (Optional)</label>
-                <input type="text" id="mPartyGstin" class="form-control" placeholder="27XXXXXXXXXXXXX" />
+                <label>Party GSTIN (Optional, 15-Char)</label>
+                <input type="text" id="mPartyGstin" class="form-control" maxlength="15" style="text-transform:uppercase;" placeholder="27ABCDE1234F1Z5" />
               </div>
               <div class="form-group">
                 <label>Opening Balance (₹)</label>
@@ -1961,6 +2178,10 @@
         <div class="form-group" style="margin-bottom:12px;">
           <label style="font-size:0.8rem;font-weight:700;color:#334155;">Area / Market *</label>
           <input type="text" id="quickPartyArea" class="form-control" placeholder="e.g. Itwari, Mahal, Godhani" required />
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.8rem;font-weight:700;color:#334155;">Party GSTIN (Optional - for B2B Tax Invoice)</label>
+          <input type="text" id="quickPartyGstin" class="form-control" maxlength="15" style="text-transform:uppercase;" placeholder="e.g. 27ABCDE1234F1Z5" />
         </div>
         <div class="form-group" style="margin-bottom:16px;">
           <label style="font-size:0.8rem;font-weight:700;color:#334155;">Opening Due Balance (Optional)</label>
@@ -5516,11 +5737,19 @@
       MADHAV: {
         name: "MADHAV ENTERPRISES",
         sub: "Plot No 408, Besan Bag, Indora, Nagpur | GSTIN: 27BQIPP3836Q1ZZ | Ph: 7499477581",
+        gstin: "27BQIPP3836Q1ZZ",
+        stateCode: "27",
+        stateName: "Maharashtra",
+        invPrefix: "ME",
         hasLogo: true
       },
       SHIVOM: {
         name: "SHIVOM SALES & SERVICES",
         sub: "10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur | Ph: 7499477581",
+        gstin: "",
+        stateCode: "27",
+        stateName: "Maharashtra",
+        invPrefix: "SS",
         hasLogo: false
       }
     };
@@ -5712,6 +5941,7 @@
       if (!state.collections) state.collections = [];
       if (!state.cashHandovers) state.cashHandovers = [];
       if (!state.bankDeposits) state.bankDeposits = [];
+      if (!state.purchaseBills) state.purchaseBills = [];
 
       // Auto-merge orders, parties, collections from any previous version storages (skip if Owner explicitly cleared data)
       if (!state._clearedAt) {
@@ -6102,7 +6332,7 @@
           if (remoteResetAt > localResetAt) {
             const colsToClear = Array.isArray(meta.clearedCollections)
               ? meta.clearedCollections
-              : ["orders", "collections", "cashHandovers", "bankDeposits"];
+              : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"];
             colsToClear.forEach(c => { state[c] = []; });
             if (meta.resetPartyOpening && Array.isArray(state.parties)) {
               state.parties.forEach(p => { p.openingBalance = 0; });
@@ -6116,12 +6346,12 @@
       }, err => console.log("Firebase meta notice:", err));
       fbUnsubscribers.push(unsubMeta);
 
-      ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits"].forEach(col => {
+      ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"].forEach(col => {
         const unsub = db.collection(prefix + col).onSnapshot(snap => {
           if (activeCompany !== boundCompany || isResetInProgress) return;
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits") {
+            if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits" || col === "purchaseBills") {
               const localList = state[col] || [];
               remoteItems.forEach(r => {
                 const idx = localList.findIndex(x => x.id === r.id);
@@ -6379,6 +6609,7 @@
       renderCollectionTable();
       renderChequeRegister();
       renderMasterSalespersons();
+      if (typeof renderGstHub === "function") renderGstHub();
     }
 
     function populateDropdowns() {
@@ -6612,7 +6843,7 @@
               <div class="dealer-card-top">
                 <div>
                   <div class="dealer-name">${p.name}</div>
-                  <div class="dealer-area">📱 ${cleanPhone || "No Mobile"}</div>
+                  <div class="dealer-area">📱 ${cleanPhone || "No Mobile"}${p.gstin ? ` &nbsp;|&nbsp; <span style="color:#0f766e;font-weight:700;">🧾 ${p.gstin}</span>` : ""}</div>
                 </div>
                 <div class="dealer-bal-box">
                   <div class="dealer-bal-num ${isZero ? 'dealer-bal-zero' : ''}">${fmtINR(p.netBalance)}</div>
@@ -6831,6 +7062,8 @@
       if (mobInp) mobInp.value = "";
       const areaInp = document.getElementById("quickPartyArea");
       if (areaInp) areaInp.value = "";
+      const gstinInp = document.getElementById("quickPartyGstin");
+      if (gstinInp) gstinInp.value = "";
       const openInp = document.getElementById("quickPartyOpen");
       if (openInp) openInp.value = "0";
       
@@ -6851,6 +7084,7 @@
       const name = (document.getElementById("quickPartyName").value || "").trim().toUpperCase();
       const mobile = (document.getElementById("quickPartyMobile").value || "").trim();
       const area = (document.getElementById("quickPartyArea").value || "").trim().toUpperCase();
+      const gstin = (document.getElementById("quickPartyGstin")?.value || "").trim().toUpperCase();
       const openBal = Number(document.getElementById("quickPartyOpen").value || 0);
 
       if (!name) {
@@ -6859,6 +7093,11 @@
       }
       if (mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
         alert("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      if (gstin && !isValidGstin(gstin)) {
+        alert("Invalid 15-character GSTIN format! Example: 27ABCDE1234F1Z5 (or leave blank for B2C).");
+        document.getElementById("quickPartyGstin")?.focus();
         return;
       }
 
@@ -6886,7 +7125,7 @@
         name: name,
         mobile: mobile,
         area: area,
-        gstin: "",
+        gstin: gstin,
         openingBalance: openBal
       };
 
@@ -7028,10 +7267,12 @@
       }
 
       // Check if already in cart with same FOC status (do not merge paid with free)
+      const itemGst = Number(prod.gst != null ? prod.gst : 18);
       const existingIdx = memoCart.findIndex(it => it.productId === prod.id && Boolean(it.isFoc) === Boolean(isFoc));
       if (existingIdx !== -1) {
         memoCart[existingIdx].qty = Number(memoCart[existingIdx].qty) + qty;
         memoCart[existingIdx].rate = rate;
+        memoCart[existingIdx].gst = itemGst;
         memoCart[existingIdx].isFoc = isFoc;
         memoCart[existingIdx].totalAmt = memoCart[existingIdx].qty * rate;
       } else {
@@ -7040,6 +7281,7 @@
           productName: prod.name,
           code: prod.code,
           hsn: prod.hsn || "85166000",
+          gst: itemGst,
           qty: qty,
           rate: rate,
           isFoc: isFoc,
@@ -7082,6 +7324,9 @@
 
       countEl.textContent = memoCart.length;
 
+      const gstMode = document.getElementById("ordGstMode")?.value || "inclusive";
+      const gstSummaryEl = document.getElementById("ordGstLiveSummary");
+
       if (memoCart.length === 0) {
         tbody.innerHTML = `
           <tr>
@@ -7092,6 +7337,7 @@
         `;
         totalQtyEl.textContent = "0 Units";
         totalAmtEl.textContent = "₹0.00";
+        if (gstSummaryEl) gstSummaryEl.style.display = "none";
         if (mobileListEl) {
           mobileListEl.innerHTML = `
             <div class="memo-mobile-empty">
@@ -7103,19 +7349,51 @@
         return;
       }
 
-      const totalQty = memoCart.reduce((s, it) => s + it.qty, 0);
-      const totalAmt = memoCart.reduce((s, it) => s + it.totalAmt, 0);
+      let totalQty = 0;
+      let totalTaxable = 0;
+      let totalGst = 0;
+      let totalGrand = 0;
+
+      const computedLines = memoCart.map(it => {
+        const isFoc = (it.isFoc || Number(it.rate) === 0);
+        const gstPct = Number(it.gst != null ? it.gst : 18);
+        const base = Number(it.qty) * Number(it.rate);
+        let taxable = 0, gstAmt = 0, lineTotal = 0;
+        if (!isFoc) {
+          if (gstMode === "exclusive") {
+            taxable = base;
+            gstAmt = taxable * (gstPct / 100);
+            lineTotal = taxable + gstAmt;
+          } else {
+            lineTotal = base;
+            taxable = gstPct > 0 ? lineTotal / (1 + gstPct / 100) : lineTotal;
+            gstAmt = lineTotal - taxable;
+          }
+        }
+        totalQty += Number(it.qty);
+        totalTaxable += taxable;
+        totalGst += gstAmt;
+        totalGrand += lineTotal;
+        return { ...it, isFoc, gstPct, taxable, gstAmt, lineTotal };
+      });
 
       totalQtyEl.textContent = totalQty + " Units";
-      totalAmtEl.textContent = fmtINR(totalAmt);
+      totalAmtEl.textContent = fmtINR(totalGrand);
+
+      if (gstSummaryEl) {
+        gstSummaryEl.style.display = "block";
+        gstSummaryEl.innerHTML = gstMode === "exclusive"
+          ? `🧾 <strong>GST Extra Mode:</strong> Taxable ${fmtINR(totalTaxable)} + GST ${fmtINR(totalGst)} = <strong>${fmtINR(totalGrand)}</strong>${totalGrand >= 50000 ? ' &nbsp;|&nbsp; <span style="color:#b91c1c;font-weight:800;">⚠️ E-Way Bill Required (≥₹50k)</span>' : ''}`
+          : `🧾 <strong>GST Inclusive Mode:</strong> Taxable ${fmtINR(totalTaxable)} + GST ${fmtINR(totalGst)} = <strong>${fmtINR(totalGrand)}</strong>${totalGrand >= 50000 ? ' &nbsp;|&nbsp; <span style="color:#b91c1c;font-weight:800;">⚠️ E-Way Bill Required (≥₹50k)</span>' : ''}`;
+      }
 
       if (mobileTotalQtyEl) mobileTotalQtyEl.textContent = totalQty + " Units";
-      if (mobileTotalAmtEl) mobileTotalAmtEl.textContent = fmtINR(totalAmt);
+      if (mobileTotalAmtEl) mobileTotalAmtEl.textContent = fmtINR(totalGrand);
       if (mobileSumCard) mobileSumCard.style.display = "block";
 
       if (mobileListEl) {
-        mobileListEl.innerHTML = memoCart.map((it, idx) => {
-          const isFoc = (it.isFoc || it.rate === 0);
+        mobileListEl.innerHTML = computedLines.map((it, idx) => {
+          const isFoc = it.isFoc;
           return `
           <div class="memo-mobile-item-card">
             <div class="memo-mobile-item-header">
@@ -7125,26 +7403,26 @@
               </div>
               <button type="button" class="memo-mobile-item-remove" onclick="removeMemoItem(${idx})" title="Remove item">✕</button>
             </div>
-            <div class="memo-mobile-item-sub">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
+            <div class="memo-mobile-item-sub">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'} | GST: ${it.gstPct}%</div>
             <div class="memo-mobile-item-badge" style="${isFoc ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;' : ''}">
-              ${it.qty} pcs × ${isFoc ? '<span class="pill pill-yellow" style="padding:1px 6px;font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)} = <strong style="${isFoc ? 'color:#16a34a;' : ''}">${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}</strong>
+              ${it.qty} pcs × ${isFoc ? '<span class="pill pill-yellow" style="padding:1px 6px;font-size:0.75rem;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)}${(!isFoc && gstMode === "exclusive") ? ` + ${it.gstPct}% GST` : ''} = <strong style="${isFoc ? 'color:#16a34a;' : ''}">${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.lineTotal)}</strong>
             </div>
           </div>
         `;
         }).join("");
       }
 
-      tbody.innerHTML = memoCart.map((it, idx) => {
-        const isFoc = (it.isFoc || it.rate === 0);
+      tbody.innerHTML = computedLines.map((it, idx) => {
+        const isFoc = it.isFoc;
         return `
         <tr>
           <td class="memo-col-num font-bold text-center">#${idx + 1}</td>
           <td class="memo-col-desc">
             <strong style="font-size:0.92rem;color:var(--dark);">${it.productName}</strong>
-            ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;vertical-align:middle;">🎁 FOC (Free Scheme)</span>' : ''}
+            ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.72rem;margin-left:6px;vertical-align:middle;">🎁 FOC (Free Scheme)</span>' : `<span class="pill pill-gray" style="font-size:0.68rem;margin-left:6px;vertical-align:middle;">GST ${it.gstPct}%</span>`}
             <div style="font-size:0.73rem;color:var(--muted);margin-bottom:4px;">Code: ${it.code || '-'} | HSN: ${it.hsn || '-'}</div>
             <div class="memo-mobile-breakdown" style="display:inline-block;background:${isFoc ? '#fef3c7' : '#f0fdf4'};padding:4px 8px;border-radius:4px;font-size:0.82rem;color:${isFoc ? '#92400e' : '#0f766e'};font-weight:700;border:1px solid ${isFoc ? '#fde68a' : '#bbf7d0'};">
-              ${it.qty} pcs × ${isFoc ? '🎁 FOC (₹0)' : fmtINR(it.rate)} = ${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.totalAmt)}
+              ${it.qty} pcs × ${isFoc ? '🎁 FOC (₹0)' : fmtINR(it.rate)}${(!isFoc && gstMode === "exclusive") ? ` + ${it.gstPct}% GST` : ''} = ${isFoc ? '₹0.00 (Free Scheme)' : fmtINR(it.lineTotal)}
             </div>
           </td>
           <td class="memo-col-qty text-right font-bold">${it.qty}</td>
@@ -7152,7 +7430,7 @@
             ${isFoc ? '<span class="pill pill-yellow" style="font-size:0.75rem;padding:2px 6px;">🎁 FOC (₹0)</span>' : fmtINR(it.rate)}
           </td>
           <td class="memo-col-total text-right font-bold">
-            ${isFoc ? '<span style="color:#16a34a;">₹0.00 (Free)</span>' : fmtINR(it.totalAmt)}
+            ${isFoc ? '<span style="color:#16a34a;">₹0.00 (Free)</span>' : fmtINR(it.lineTotal)}
           </td>
           <td class="memo-col-action text-center">
             <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;padding:5px 10px;font-weight:700;" onclick="removeMemoItem(${idx})" title="Remove">
@@ -7206,35 +7484,61 @@
       const salespersonName = currentStaff ? currentStaff.name : (document.getElementById("ordSalesperson").value || "Direct");
       const nextNum = 200 + state.orders.length;
       const memoNo = "OB-" + nextNum;
+      const gstPricingMode = document.getElementById("ordGstMode")?.value || "inclusive";
 
-      const totalQty = memoCart.reduce((s, it) => s + it.qty, 0);
-      const totalAmt = memoCart.reduce((s, it) => s + it.totalAmt, 0);
+      const totalQty = memoCart.reduce((s, it) => s + Number(it.qty || 0), 0);
+      const savedItems = memoCart.map(it => {
+        const gstPct = Number(it.gst != null ? it.gst : 18);
+        const isFoc = Boolean(it.isFoc || Number(it.rate) === 0);
+        const base = Number(it.qty) * Number(it.rate);
+        let taxableAmt = 0, gstAmt = 0, lineTotal = 0;
+        if (!isFoc) {
+          if (gstPricingMode === "exclusive") {
+            taxableAmt = base;
+            gstAmt = Number((taxableAmt * gstPct / 100).toFixed(2));
+            lineTotal = Number((taxableAmt + gstAmt).toFixed(2));
+          } else {
+            lineTotal = Number(base.toFixed(2));
+            taxableAmt = gstPct > 0 ? Number((lineTotal / (1 + gstPct / 100)).toFixed(2)) : lineTotal;
+            gstAmt = Number((lineTotal - taxableAmt).toFixed(2));
+          }
+        }
+        return {
+          productId: it.productId,
+          productName: it.productName,
+          code: it.code,
+          hsn: it.hsn || "85166000",
+          gst: gstPct,
+          qty: Number(it.qty),
+          rate: Number(it.rate),
+          isFoc: isFoc,
+          taxableAmt: taxableAmt,
+          gstAmt: gstAmt,
+          totalAmt: lineTotal,
+          dispatchedQty: 0
+        };
+      });
+      const totalAmt = Number(savedItems.reduce((s, it) => s + Number(it.totalAmt || 0), 0).toFixed(2));
+      const gstInvoiceNo = formatOfficialGstInvoiceNo({ orderNo: String(nextNum), date: ordDate }, activeCompany);
 
       const newOrder = {
         id: "ORD_" + Date.now(),
         orderNo: String(nextNum),
         memoNo: memoNo,
+        gstInvoiceNo: gstInvoiceNo,
+        gstPricingMode: gstPricingMode,
         date: ordDate,
         partyId: party.id,
         partyName: party.name,
         salespersonName: salespersonName,
-        items: memoCart.map(it => ({
-          productId: it.productId,
-          productName: it.productName,
-          code: it.code,
-          hsn: it.hsn || "85166000",
-          qty: it.qty,
-          rate: it.rate,
-          totalAmt: it.totalAmt,
-          dispatchedQty: 0
-        })),
+        items: savedItems,
         // For backwards compatibility with older reports and single-item tables:
-        productId: memoCart[0].productId,
-        productName: memoCart.map(it => `${it.productName} (${it.qty})`).join(", "),
+        productId: savedItems[0].productId,
+        productName: savedItems.map(it => `${it.productName} (${it.qty})`).join(", "),
         orderQty: totalQty,
         dispatchedQty: 0,
         rate: totalAmt / (totalQty || 1),
-        gst: 18,
+        gst: savedItems[0].gst,
         totalAmt: totalAmt
       };
 
@@ -7837,9 +8141,11 @@ Thank you!`;
         it.productId === prod.id && Boolean(it.isFoc) === Boolean(isFoc)
       );
 
+      const itemGst = Number(prod.gst != null ? prod.gst : 18);
       if (existingIdx !== -1) {
         editingOrderItems[existingIdx].qty = Number(editingOrderItems[existingIdx].qty) + qty;
         editingOrderItems[existingIdx].rate = rate;
+        editingOrderItems[existingIdx].gst = itemGst;
         editingOrderItems[existingIdx].isFoc = isFoc;
         editingOrderItems[existingIdx].totalAmt = editingOrderItems[existingIdx].qty * rate;
       } else {
@@ -7848,6 +8154,7 @@ Thank you!`;
           productName: prod.name,
           code: prod.code || "",
           hsn: prod.hsn || "85166000",
+          gst: itemGst,
           qty: qty,
           rate: rate,
           isFoc: isFoc,
@@ -7915,17 +8222,23 @@ Thank you!`;
 
       let totalUnits = 0;
       let totalAmount = 0;
+      const isExcl = (ord.gstPricingMode === "exclusive");
 
       editingOrderItems.forEach((it) => {
         const q = Math.max(1, Number(it.qty) || 1);
         const r = Math.max(0, Number(it.rate) || 0);
+        const prodMatch = state.products.find(p => p.id === it.productId || (it.code && p.code === it.code));
+        const gstPct = Number(it.gst != null ? it.gst : (prodMatch && prodMatch.gst != null ? prodMatch.gst : 18));
         it.qty = q;
         it.rate = r;
+        it.gst = gstPct;
         it.isFoc = (r === 0);
-        it.totalAmt = q * r;
+        const base = q * r;
+        it.totalAmt = (it.isFoc || !isExcl) ? Number(base.toFixed(2)) : Number((base * (1 + gstPct / 100)).toFixed(2));
         totalUnits += q;
         totalAmount += it.totalAmt;
       });
+      totalAmount = Number(totalAmount.toFixed(2));
 
       ord.items = JSON.parse(JSON.stringify(editingOrderItems));
       ord.orderQty = totalUnits;
@@ -8998,6 +9311,51 @@ Thank you! Your payment has been received successfully.`;
       return state.parties.find(p => p.name.toLowerCase() === clean);
     }
 
+    function handleInwardProdSelected() {
+      const prodInp = document.getElementById("inwardProductInput");
+      const gstSel = document.getElementById("inwardGstPct");
+      const dateInp = document.getElementById("inwardBillDate");
+      const rateInp = document.getElementById("inwardPurchaseRate");
+      if (!prodInp) return;
+      if (dateInp && !dateInp.value) {
+        dateInp.value = new Date().toISOString().split("T")[0];
+      }
+      const prod = findProductByName(prodInp.value);
+      if (prod) {
+        if (gstSel && prod.gst != null) {
+          const optExists = Array.from(gstSel.options).some(o => Number(o.value) === Number(prod.gst));
+          if (optExists) gstSel.value = String(prod.gst);
+        }
+        if (rateInp) {
+          rateInp.placeholder = `Dealer Rate ₹${prod.rate || 0} (enter purchase rate)`;
+        }
+      }
+      updateInwardItcPreview();
+    }
+
+    function updateInwardItcPreview() {
+      const box = document.getElementById("inwardItcPreview");
+      if (!box) return;
+      const qty = Number(document.getElementById("inwardQty")?.value || 0);
+      const rate = Number(document.getElementById("inwardPurchaseRate")?.value || 0);
+      const gstPct = Number(document.getElementById("inwardGstPct")?.value || 0);
+      const supGstin = (document.getElementById("inwardSupplierGstin")?.value || "").trim().toUpperCase();
+      if (qty > 0 && rate > 0) {
+        const taxable = qty * rate;
+        const gstAmt = taxable * (gstPct / 100);
+        const total = taxable + gstAmt;
+        const supCode = isValidGstin(supGstin) ? supGstin.slice(0, 2) : "27";
+        const isInter = supCode !== "27";
+        const taxSplit = isInter
+          ? `IGST (${gstPct}%): ${fmtINR(gstAmt)}`
+          : `CGST (${(gstPct / 2).toFixed(1)}%): ${fmtINR(gstAmt / 2)} + SGST (${(gstPct / 2).toFixed(1)}%): ${fmtINR(gstAmt / 2)}`;
+        box.style.display = "block";
+        box.innerHTML = `🧾 <strong>ITC Preview:</strong> Taxable <strong>${fmtINR(taxable)}</strong> | ${taxSplit} | <strong>Bill Total: ${fmtINR(total)}</strong>`;
+      } else {
+        box.style.display = "none";
+      }
+    }
+
     async function handleInwardStock(e) {
       e.preventDefault();
       if (!isAdminLoggedIn) { alert("Only Owner can add stock."); return; }
@@ -9007,11 +9365,88 @@ Thank you! Your payment has been received successfully.`;
         return;
       }
       const qty = Number(document.getElementById("inwardQty").value);
+      if (!qty || qty <= 0) {
+        alert("Please enter a valid inward quantity.");
+        return;
+      }
+
+      const billDate = (document.getElementById("inwardBillDate")?.value || "").trim() || new Date().toISOString().split("T")[0];
+      const supplierName = (document.getElementById("inwardSupplierName")?.value || "").trim();
+      const supplierGstin = (document.getElementById("inwardSupplierGstin")?.value || "").trim().toUpperCase();
+      const billNo = (document.getElementById("inwardNote")?.value || "").trim();
+      const purchaseRate = Number(document.getElementById("inwardPurchaseRate")?.value || 0);
+      const gstPct = Number(document.getElementById("inwardGstPct")?.value || 18);
+
+      if (supplierGstin && !isValidGstin(supplierGstin)) {
+        alert("Invalid 15-character Supplier GSTIN format! Example: 27AAACG1234A1Z5 (or leave blank).");
+        document.getElementById("inwardSupplierGstin")?.focus();
+        return;
+      }
+
       const rawProd = state.products.find(p => p.id === prod.id);
       rawProd.inwardStock = Number(rawProd.inwardStock || 0) + qty;
       await saveRecord("products", rawProd);
+
+      let itcSaved = false;
+      if (purchaseRate > 0 || supplierName || billNo || supplierGstin) {
+        const taxableAmt = Number((qty * purchaseRate).toFixed(2));
+        const totalGst = Number((taxableAmt * (gstPct / 100)).toFixed(2));
+        const supStateCode = isValidGstin(supplierGstin) ? supplierGstin.slice(0, 2) : "27";
+        const isInterState = supStateCode !== "27";
+        const igstAmt = isInterState ? totalGst : 0;
+        const cgstAmt = isInterState ? 0 : Number((totalGst / 2).toFixed(2));
+        const sgstAmt = isInterState ? 0 : Number((totalGst - cgstAmt).toFixed(2));
+        const billTotal = Number((taxableAmt + totalGst).toFixed(2));
+
+        const billRec = {
+          id: "PB_" + Date.now(),
+          date: billDate,
+          billNo: billNo || ("PUR-" + String(100 + (state.purchaseBills || []).length)),
+          supplierName: supplierName || "Stock Supplier",
+          supplierGstin: supplierGstin,
+          supplyType: isInterState ? "Inter-State (IGST)" : "Intra-State (CGST+SGST)",
+          productId: rawProd.id,
+          productCode: rawProd.code || "",
+          productName: rawProd.name,
+          hsn: rawProd.hsn || "85166000",
+          qty: qty,
+          rate: purchaseRate,
+          taxableAmt: taxableAmt,
+          gstPct: gstPct,
+          cgstAmt: cgstAmt,
+          sgstAmt: sgstAmt,
+          igstAmt: igstAmt,
+          totalGst: totalGst,
+          totalAmt: billTotal
+        };
+        if (!state.purchaseBills) state.purchaseBills = [];
+        await saveRecord("purchaseBills", billRec);
+        itcSaved = true;
+      }
+
       e.target.reset();
-      showToast(`Added +${qty} units to ${rawProd.name}`);
+      const box = document.getElementById("inwardItcPreview");
+      if (box) box.style.display = "none";
+      showToast(itcSaved
+        ? `✅ Added +${qty} units to ${rawProd.name} & recorded Purchase ITC bill!`
+        : `✅ Added +${qty} units to ${rawProd.name}`);
+    }
+
+    async function deletePurchaseBill(billId) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can delete Purchase ITC bills."); return; }
+      const bill = (state.purchaseBills || []).find(b => b.id === billId);
+      if (!bill) return;
+      if (!confirm(`Delete Purchase ITC Bill #${bill.billNo} (${bill.supplierName} - ${fmtINR(bill.totalAmt)})?\n\nNote: This removes the ITC record only; warehouse stock count will remain unchanged.`)) {
+        return;
+      }
+      state.purchaseBills = (state.purchaseBills || []).filter(b => b.id !== billId);
+      persistLocal();
+      refreshAll();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "purchaseBills").doc(billId).delete().catch(e => console.warn(e));
+      }
+      showToast(`🗑️ Deleted Purchase ITC Bill #${bill.billNo}`);
     }
 
     
@@ -9145,18 +9580,44 @@ Thank you! Your payment has been received successfully.`;
     async function handleAddParty(e) {
       e.preventDefault();
       if (!isAdminLoggedIn) { alert("Only Owner can add parties."); return; }
+      const gstin = (document.getElementById("mPartyGstin").value || "").trim().toUpperCase();
+      if (gstin && !isValidGstin(gstin)) {
+        alert("Invalid 15-character Party GSTIN format! Example: 27ABCDE1234F1Z5 (or leave blank for B2C).");
+        document.getElementById("mPartyGstin")?.focus();
+        return;
+      }
       const newParty = {
         id: "P" + Date.now(),
         name: document.getElementById("mPartyName").value.trim(),
         mobile: document.getElementById("mPartyMobile").value.trim(),
         area: document.getElementById("mPartyArea").value.trim(),
-        gstin: document.getElementById("mPartyGstin").value.trim(),
+        gstin: gstin,
         openingBalance: Number(document.getElementById("mPartyOpen").value),
-        lastPaymentDate: "2026-11-16"
+        lastPaymentDate: new Date().toISOString().split("T")[0]
       };
       await saveRecord("parties", newParty);
       e.target.reset();
-      showToast(`Added party ${newParty.name}`);
+      showToast(`Added party ${newParty.name}${gstin ? " (B2B GSTIN)" : ""}`);
+    }
+
+    async function editPartyGstin(partyId) {
+      const canEdit = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canEdit) { alert("Only Owner or Manager can edit Party GSTIN."); return; }
+      const party = state.parties.find(p => p.id === partyId);
+      if (!party) return;
+      const entered = prompt(
+        `Enter 15-character GSTIN for "${party.name}"\n(Leave blank to mark as Unregistered / B2C):`,
+        party.gstin || ""
+      );
+      if (entered === null) return;
+      const clean = entered.trim().toUpperCase();
+      if (clean && !isValidGstin(clean)) {
+        alert("Invalid 15-character GSTIN format!\nExample: 27ABCDE1234F1Z5");
+        return;
+      }
+      party.gstin = clean;
+      await saveRecord("parties", party);
+      showToast(clean ? `✅ Saved GSTIN ${clean} for ${party.name}` : `✅ Cleared GSTIN (marked B2C) for ${party.name}`);
     }
 
     // ==================== OFFICIAL GST TAX INVOICE ====================
@@ -9186,22 +9647,287 @@ Thank you! Your payment has been received successfully.`;
       return str.trim() + " Rupees Only";
     }
 
+    // ==================== INDIAN GST ENGINE (MULTI-RATE, IGST/CGST/SGST, GSTR-1 & ITC) ====================
+    const GST_STATE_CODES = {
+      "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
+      "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan",
+      "09": "Uttar Pradesh", "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh",
+      "13": "Nagaland", "14": "Manipur", "15": "Mizoram", "16": "Tripura",
+      "17": "Meghalaya", "18": "Assam", "19": "West Bengal", "20": "Jharkhand",
+      "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh", "24": "Gujarat",
+      "26": "Dadra & Nagar Haveli and Daman & Diu", "27": "Maharashtra", "28": "Andhra Pradesh (Old)",
+      "29": "Karnataka", "30": "Goa", "31": "Lakshadweep", "32": "Kerala",
+      "33": "Tamil Nadu", "34": "Puducherry", "35": "Andaman & Nicobar Islands",
+      "36": "Telangana", "37": "Andhra Pradesh", "38": "Ladakh", "97": "Other Territory"
+    };
+
+    function isValidGstin(gstin) {
+      const s = String(gstin || "").trim().toUpperCase();
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(s)) return false;
+      return Boolean(GST_STATE_CODES[s.slice(0, 2)]);
+    }
+
+    function getPartySupplyInfo(party) {
+      const sellerStateCode = (COMPANIES[activeCompany] && COMPANIES[activeCompany].stateCode) || "27";
+      const rawGstin = String((party && party.gstin) || "").trim().toUpperCase();
+      const valid = isValidGstin(rawGstin);
+      const stateCode = valid ? rawGstin.slice(0, 2) : sellerStateCode;
+      const stateName = GST_STATE_CODES[stateCode] || "Maharashtra";
+      const isInterState = valid && stateCode !== sellerStateCode;
+      return {
+        gstin: valid ? rawGstin : "",
+        rawGstin: rawGstin,
+        isB2B: valid,
+        stateCode: stateCode,
+        stateName: stateName,
+        placeOfSupply: `${stateCode}-${stateName}`,
+        isInterState: isInterState,
+        supplyType: isInterState ? "Inter-State (IGST)" : "Intra-State (CGST + SGST)"
+      };
+    }
+
+    function formatOfficialGstInvoiceNo(ord, companyKey) {
+      if (ord && ord.gstInvoiceNo) return ord.gstInvoiceNo;
+      const co = COMPANIES[companyKey || activeCompany] || COMPANIES.MADHAV;
+      const prefix = co.invPrefix || "ME";
+      const d = (ord && ord.date && /^\d{4}-\d{2}/.test(ord.date)) ? ord.date : new Date().toISOString().split("T")[0];
+      const parts = d.split("-");
+      const yr = Number(parts[0]) || new Date().getFullYear();
+      const mo = Number(parts[1]) || (new Date().getMonth() + 1);
+      const fyStart = mo >= 4 ? yr : (yr - 1);
+      const fyLabel = `${String(fyStart).slice(-2)}-${String(fyStart + 1).slice(-2)}`;
+      const num = String((ord && (ord.orderNo || (ord.memoNo || "").replace(/\D/g, ""))) || "001").padStart(3, "0");
+      return `${prefix}/${fyLabel}/${num}`;
+    }
+
+    function computeOrderGstBreakdown(ord) {
+      const party = state.parties.find(p => p.id === ord.partyId) ||
+        state.parties.find(p => (p.name || "").toLowerCase() === (ord.partyName || "").toLowerCase()) ||
+        { name: ord.partyName || "Customer", area: "Nagpur", mobile: "", gstin: "" };
+      const supply = getPartySupplyInfo(party);
+      const pricingMode = ord.gstPricingMode || "inclusive";
+      const rawItems = (Array.isArray(ord.items) && ord.items.length > 0)
+        ? ord.items
+        : [{
+            productId: ord.productId,
+            productName: ord.productName || "Appliances",
+            code: "",
+            hsn: ord.hsn || "85166000",
+            gst: ord.gst != null ? Number(ord.gst) : 18,
+            qty: Number(ord.orderQty || 1),
+            rate: Number(ord.rate || 0),
+            isFoc: Number(ord.rate || 0) === 0
+          }];
+
+      const lines = [];
+      const hsnMap = {};
+      let totalQty = 0;
+      let totalTaxable = 0;
+      let totalCgst = 0;
+      let totalSgst = 0;
+      let totalIgst = 0;
+      let totalTax = 0;
+      let exactGrandTotal = 0;
+
+      rawItems.forEach((it, idx) => {
+        const prod = state.products.find(p => p.id === it.productId || (it.code && p.code === it.code));
+        const hsn = String(it.hsn || (prod && prod.hsn) || ord.hsn || "85166000").trim();
+        const gstPct = Number(it.gst != null ? it.gst : (prod && prod.gst != null ? prod.gst : (ord.gst != null ? ord.gst : 18)));
+        const qty = Number(it.qty || 0);
+        const rate = Number(it.rate || 0);
+        const isFoc = Boolean(it.isFoc || rate === 0);
+
+        let taxable = 0, gstAmt = 0, lineTotal = 0, unitTaxable = 0;
+        if (!isFoc && qty > 0) {
+          if (pricingMode === "exclusive") {
+            taxable = qty * rate;
+            gstAmt = taxable * (gstPct / 100);
+            lineTotal = taxable + gstAmt;
+            unitTaxable = rate;
+          } else {
+            lineTotal = qty * rate;
+            taxable = gstPct > 0 ? (lineTotal / (1 + gstPct / 100)) : lineTotal;
+            gstAmt = lineTotal - taxable;
+            unitTaxable = taxable / qty;
+          }
+        }
+
+        const igst = supply.isInterState ? gstAmt : 0;
+        const cgst = supply.isInterState ? 0 : (gstAmt / 2);
+        const sgst = supply.isInterState ? 0 : (gstAmt / 2);
+
+        lines.push({
+          sr: idx + 1,
+          productName: it.productName || (prod && prod.name) || "Item",
+          code: it.code || (prod && prod.code) || "",
+          hsn,
+          gstPct,
+          qty,
+          enteredRate: rate,
+          unitTaxable,
+          taxable,
+          cgst,
+          sgst,
+          igst,
+          gstAmt,
+          lineTotal,
+          isFoc
+        });
+
+        totalQty += qty;
+        totalTaxable += taxable;
+        totalCgst += cgst;
+        totalSgst += sgst;
+        totalIgst += igst;
+        totalTax += gstAmt;
+        exactGrandTotal += lineTotal;
+
+        const key = `${hsn}|${gstPct}`;
+        if (!hsnMap[key]) {
+          hsnMap[key] = {
+            hsn,
+            gstPct,
+            description: it.productName || "Appliances",
+            qty: 0,
+            taxable: 0,
+            cgst: 0,
+            sgst: 0,
+            igst: 0,
+            totalTax: 0,
+            totalValue: 0
+          };
+        }
+        hsnMap[key].qty += qty;
+        hsnMap[key].taxable += taxable;
+        hsnMap[key].cgst += cgst;
+        hsnMap[key].sgst += sgst;
+        hsnMap[key].igst += igst;
+        hsnMap[key].totalTax += gstAmt;
+        hsnMap[key].totalValue += lineTotal;
+      });
+
+      const roundedGrandTotal = Math.round(exactGrandTotal);
+      const roundOff = roundedGrandTotal - exactGrandTotal;
+      const officialInvNo = formatOfficialGstInvoiceNo(ord, activeCompany);
+
+      return {
+        ord,
+        party,
+        supply,
+        pricingMode,
+        officialInvNo,
+        lines,
+        hsnSummary: Object.values(hsnMap).sort((a, b) => a.hsn.localeCompare(b.hsn) || a.gstPct - b.gstPct),
+        totalQty,
+        totalTaxable,
+        totalCgst,
+        totalSgst,
+        totalIgst,
+        totalTax,
+        exactGrandTotal,
+        roundOff,
+        roundedGrandTotal,
+        ewayRequired: roundedGrandTotal >= 50000
+      };
+    }
+
     function openTaxInvoice(orderId) {
       const ord = state.orders.find(o => o.id === orderId);
-      const party = state.parties.find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "", gstin: "" };
+      if (!ord) return;
       const co = COMPANIES[activeCompany];
-      const gstPct = Number(ord.gst || 18);
-      const halfGst = gstPct / 2;
-      const totalAmt = Number(ord.orderQty) * Number(ord.rate);
-      const taxableAmt = totalAmt / (1 + gstPct / 100);
-      const totalTax = totalAmt - taxableAmt;
-      const cgstAmt = totalTax / 2;
-      const sgstAmt = totalTax / 2;
-      const unitTaxable = taxableAmt / Number(ord.orderQty);
+      const gst = computeOrderGstBreakdown(ord);
+      const { party, supply, lines, hsnSummary } = gst;
 
       const logoHtml = co.hasLogo
         ? '<img src="' + SHOP_LOGO + '" alt="Logo" />'
         : '<div style="font-size:2.4rem;">⚡</div>';
+
+      const ewayBanner = gst.ewayRequired
+        ? `<div style="background:#fef2f2;border:1.5px solid #dc2626;color:#991b1b;padding:6px 10px;border-radius:5px;font-size:11px;font-weight:700;margin-bottom:8px;">
+             ⚠️ E-WAY BILL MANDATORY: Invoice value is ₹${gst.roundedGrandTotal.toFixed(2)} (≥ ₹50,000). Generate E-Way Bill on ewaybillgst.gov.in before dispatch.
+           </div>`
+        : "";
+
+      const itemRowsHtml = lines.map(ln => `
+        <tr>
+          <td class="text-center">${ln.sr}</td>
+          <td>
+            <strong>${ln.productName}</strong>
+            ${ln.isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">FOC</span>' : ""}
+            ${ln.code ? `<div style="font-size:9.5px;color:#64748b;">Code: ${ln.code}</div>` : ""}
+          </td>
+          <td>${ln.hsn}</td>
+          <td class="text-center">${ln.qty}</td>
+          <td class="text-right">${ln.isFoc ? "0.00" : ln.unitTaxable.toFixed(2)}</td>
+          <td class="text-right">${ln.taxable.toFixed(2)}</td>
+          <td class="text-center">${ln.gstPct}%</td>
+          <td class="text-right">${ln.gstAmt.toFixed(2)}</td>
+          <td class="text-right"><strong>${ln.lineTotal.toFixed(2)}</strong></td>
+        </tr>
+      `).join("");
+
+      const hsnHeadHtml = supply.isInterState
+        ? `<tr>
+            <th>HSN/SAC</th>
+            <th class="text-center">Qty</th>
+            <th class="text-right">Taxable Value (₹)</th>
+            <th class="text-center">IGST Rate</th>
+            <th class="text-right">IGST Amt (₹)</th>
+            <th class="text-right">Total Tax (₹)</th>
+          </tr>`
+        : `<tr>
+            <th>HSN/SAC</th>
+            <th class="text-center">Qty</th>
+            <th class="text-right">Taxable Value (₹)</th>
+            <th class="text-center">CGST %</th>
+            <th class="text-right">CGST Amt (₹)</th>
+            <th class="text-center">SGST %</th>
+            <th class="text-right">SGST Amt (₹)</th>
+            <th class="text-right">Total Tax (₹)</th>
+          </tr>`;
+
+      const hsnRowsHtml = hsnSummary.map(h => supply.isInterState
+        ? `<tr>
+            <td>${h.hsn}</td>
+            <td class="text-center">${h.qty}</td>
+            <td class="text-right">${h.taxable.toFixed(2)}</td>
+            <td class="text-center">${h.gstPct.toFixed(1)}%</td>
+            <td class="text-right">${h.igst.toFixed(2)}</td>
+            <td class="text-right"><strong>${h.totalTax.toFixed(2)}</strong></td>
+          </tr>`
+        : `<tr>
+            <td>${h.hsn}</td>
+            <td class="text-center">${h.qty}</td>
+            <td class="text-right">${h.taxable.toFixed(2)}</td>
+            <td class="text-center">${(h.gstPct / 2).toFixed(1)}%</td>
+            <td class="text-right">${h.cgst.toFixed(2)}</td>
+            <td class="text-center">${(h.gstPct / 2).toFixed(1)}%</td>
+            <td class="text-right">${h.sgst.toFixed(2)}</td>
+            <td class="text-right"><strong>${h.totalTax.toFixed(2)}</strong></td>
+          </tr>`
+      ).join("");
+
+      const hsnTotalRowHtml = supply.isInterState
+        ? `<tr style="background:#f8fafc;font-weight:700;">
+            <td>Total</td>
+            <td class="text-center">${gst.totalQty}</td>
+            <td class="text-right">${gst.totalTaxable.toFixed(2)}</td>
+            <td></td>
+            <td class="text-right">${gst.totalIgst.toFixed(2)}</td>
+            <td class="text-right">₹${gst.totalTax.toFixed(2)}</td>
+          </tr>`
+        : `<tr style="background:#f8fafc;font-weight:700;">
+            <td>Total</td>
+            <td class="text-center">${gst.totalQty}</td>
+            <td class="text-right">${gst.totalTaxable.toFixed(2)}</td>
+            <td></td>
+            <td class="text-right">${gst.totalCgst.toFixed(2)}</td>
+            <td></td>
+            <td class="text-right">${gst.totalSgst.toFixed(2)}</td>
+            <td class="text-right">₹${gst.totalTax.toFixed(2)}</td>
+          </tr>`;
+
+      const roundOffSign = gst.roundOff >= 0 ? "+" : "";
 
       document.getElementById("invoicePrintArea").innerHTML = `
         <div class="inv-top">
@@ -9209,88 +9935,78 @@ Thank you! Your payment has been received successfully.`;
           <div class="inv-company">
             <h2>${co.name}</h2>
             <div>${co.sub}</div>
-            <div>State: 27-Maharashtra</div>
+            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
           </div>
         </div>
-        <div class="inv-title-bar">OFFICIAL TAX INVOICE</div>
+        <div class="inv-title-bar">
+          TAX INVOICE (${supply.isB2B ? "B2B" : "B2C"} — ${supply.supplyType})
+        </div>
+        ${ewayBanner}
         <div class="inv-meta-grid">
           <div class="inv-meta-box">
-            <strong>Bill To:</strong><br/>
+            <strong>Bill To (${supply.isB2B ? "Registered B2B" : "Unregistered B2C"}):</strong><br/>
             <span style="font-size:13px;font-weight:700;">${party.name}</span><br/>
             Address: ${party.area || "Nagpur"}<br/>
             Contact No: ${party.mobile || "-"}<br/>
-            ${party.gstin ? `Party GSTIN: <strong>${party.gstin}</strong>` : ""}
+            Party GSTIN: <strong>${supply.gstin || "Unregistered (B2C)"}</strong><br/>
+            Place of Supply: <strong>${supply.placeOfSupply}</strong>
           </div>
           <div class="inv-meta-box">
             <strong>Invoice Details:</strong><br/>
-            Invoice No: <strong>#${ord.orderNo}</strong><br/>
-            Date: <strong>${fmtDate(ord.date)}</strong><br/>
-            Booked By: ${ord.salespersonName}<br/>
-            Dispatch Status: ${ord.dispatchedQty}/${ord.orderQty} Units
+            Invoice No: <strong>${gst.officialInvNo}</strong><br/>
+            Order Memo Ref: ${ord.memoNo || ("OB-" + ord.orderNo)}<br/>
+            Invoice Date: <strong>${fmtDate(ord.date)}</strong><br/>
+            Rate Basis: ${gst.pricingMode === "exclusive" ? "Tax Exclusive (GST Extra)" : "Tax Inclusive"}<br/>
+            Booked By: ${ord.salespersonName || "-"} | Dispatch: ${ord.dispatchedQty || 0}/${ord.orderQty || gst.totalQty} Units
           </div>
         </div>
         <table class="inv-table">
           <thead>
             <tr>
-              <th>#</th>
+              <th class="text-center">#</th>
               <th>Item Description</th>
               <th>HSN/SAC</th>
               <th class="text-center">Qty</th>
-              <th class="text-right">Price/Unit (₹)</th>
+              <th class="text-right">Taxable Rate (₹)</th>
               <th class="text-right">Taxable Amt (₹)</th>
-              <th class="text-right">GST (${gstPct}%)</th>
-              <th class="text-right">Total (₹)</th>
+              <th class="text-center">GST %</th>
+              <th class="text-right">GST Amt (₹)</th>
+              <th class="text-right">Line Total (₹)</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td><strong>${ord.productName}</strong></td>
-              <td>${ord.hsn || "85166000"}</td>
-              <td class="text-center">${ord.orderQty}</td>
-              <td class="text-right">${unitTaxable.toFixed(2)}</td>
-              <td class="text-right">${taxableAmt.toFixed(2)}</td>
-              <td class="text-right">${totalTax.toFixed(2)} (${gstPct}%)</td>
-              <td class="text-right"><strong>${totalAmt.toFixed(2)}</strong></td>
-            </tr>
+            ${itemRowsHtml}
             <tr style="background:#f8fafc;font-weight:700;">
-              <td colspan="3">Total</td>
-              <td class="text-center">${ord.orderQty}</td>
+              <td colspan="3">Sub Total</td>
+              <td class="text-center">${gst.totalQty}</td>
               <td></td>
-              <td class="text-right">${taxableAmt.toFixed(2)}</td>
-              <td class="text-right">${totalTax.toFixed(2)}</td>
-              <td class="text-right">₹${totalAmt.toFixed(2)}</td>
+              <td class="text-right">${gst.totalTaxable.toFixed(2)}</td>
+              <td></td>
+              <td class="text-right">${gst.totalTax.toFixed(2)}</td>
+              <td class="text-right">₹${gst.exactGrandTotal.toFixed(2)}</td>
+            </tr>
+            ${Math.abs(gst.roundOff) >= 0.005 ? `
+            <tr>
+              <td colspan="8" class="text-right">Round Off</td>
+              <td class="text-right">${roundOffSign}${gst.roundOff.toFixed(2)}</td>
+            </tr>` : ""}
+            <tr style="background:#ecfdf5;font-weight:800;font-size:12.5px;">
+              <td colspan="8" class="text-right">GRAND TOTAL (Rounded)</td>
+              <td class="text-right">₹${gst.roundedGrandTotal.toFixed(2)}</td>
             </tr>
           </tbody>
         </table>
 
         <table class="inv-table">
-          <thead>
-            <tr>
-              <th>HSN/SAC</th>
-              <th class="text-right">Taxable Amount (₹)</th>
-              <th class="text-center">CGST Rate (%)</th>
-              <th class="text-right">CGST Amt (₹)</th>
-              <th class="text-center">SGST Rate (%)</th>
-              <th class="text-right">SGST Amt (₹)</th>
-              <th class="text-right">Total Tax (₹)</th>
-            </tr>
-          </thead>
+          <thead>${hsnHeadHtml}</thead>
           <tbody>
-            <tr>
-              <td>${ord.hsn || "85166000"}</td>
-              <td class="text-right">${taxableAmt.toFixed(2)}</td>
-              <td class="text-center">${halfGst.toFixed(1)}%</td>
-              <td class="text-right">${cgstAmt.toFixed(2)}</td>
-              <td class="text-center">${halfGst.toFixed(1)}%</td>
-              <td class="text-right">${sgstAmt.toFixed(2)}</td>
-              <td class="text-right"><strong>${totalTax.toFixed(2)}</strong></td>
-            </tr>
+            ${hsnRowsHtml}
+            ${hsnTotalRowHtml}
           </tbody>
         </table>
 
         <div style="border:1px solid #94a3b8;padding:7px 10px;margin-bottom:8px;font-size:11.5px;">
-          <strong>Invoice Amount In Words:</strong> ${numberToWordsINR(totalAmt)}
+          <strong>Invoice Amount In Words:</strong> ${numberToWordsINR(gst.roundedGrandTotal)}
         </div>
 
         <div class="inv-footer-grid">
@@ -9299,11 +10015,14 @@ Thank you! Your payment has been received successfully.`;
             Bank Name: <strong>INDIAN OVERSEAS BANK, BHADRAVATI</strong><br/>
             Account No.: <strong>308202000000378</strong><br/>
             IFSC Code: <strong>IOBA0003082</strong><br/>
-            Terms: Thanks for doing business with ${co.name}!
+            Terms: Subject to Nagpur Jurisdiction. Thanks for doing business with ${co.name}!
           </div>
           <div class="inv-footer-box" style="display:flex;flex-direction:column;justify-content:space-between;text-align:right;">
-            <div><strong>Grand Total: ₹${totalAmt.toFixed(2)}</strong></div>
-            <div style="margin-top:28px;">
+            <div>
+              <div style="font-size:10.5px;color:#475569;">Taxable: ₹${gst.totalTaxable.toFixed(2)} | Tax: ₹${gst.totalTax.toFixed(2)}</div>
+              <strong style="font-size:13.5px;">Grand Total: ₹${gst.roundedGrandTotal.toFixed(2)}</strong>
+            </div>
+            <div style="margin-top:24px;">
               <strong>For ${co.name}</strong><br/>
               <span style="font-size:10px;color:#475569;">Authorized Signatory (Roshan Thakre / Prashik Hajare)</span>
             </div>
@@ -9311,6 +10030,427 @@ Thank you! Your payment has been received successfully.`;
         </div>
       `;
       openModal("invoiceModal");
+    }
+
+    // ==================== OWNER GST & GSTR-1 HUB RENDERING + CA EXCEL EXPORT ====================
+    function getFilteredGstPeriodData() {
+      const monthInp = document.getElementById("gstReportMonth");
+      const allTime = Boolean(document.getElementById("gstAllTimeChk")?.checked);
+      if (monthInp && !monthInp.value) {
+        const now = new Date();
+        monthInp.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+      const selectedMonth = monthInp ? monthInp.value : "";
+
+      const orders = (state.orders || []).filter(o => {
+        if (allTime || !selectedMonth) return true;
+        return String(o.date || "").startsWith(selectedMonth);
+      }).map(o => computeOrderGstBreakdown(o));
+
+      const purchases = (state.purchaseBills || []).filter(b => {
+        if (allTime || !selectedMonth) return true;
+        return String(b.date || "").startsWith(selectedMonth);
+      });
+
+      return { allTime, selectedMonth, orders, purchases };
+    }
+
+    function renderGstHub() {
+      const salesBody = document.getElementById("gstSalesTableBody");
+      if (!salesBody) return;
+
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const hdr = document.getElementById("gstHubHeaderInfo");
+      if (hdr) {
+        hdr.innerHTML = co.gstin
+          ? `<strong>${co.name}</strong> | GSTIN: <strong>${co.gstin}</strong> | Home State: <strong>${co.stateCode}-${co.stateName}</strong>`
+          : `<strong>${co.name}</strong> | <span style="color:#b45309;font-weight:700;">No GSTIN configured for SHIVOM (Switch to MADHAV ENTERPRISES for official 27BQIPP3836Q1ZZ filing)</span>`;
+      }
+
+      const { orders, purchases } = getFilteredGstPeriodData();
+
+      let totalTaxable = 0, outCgst = 0, outSgst = 0, outIgst = 0, outTotal = 0;
+      let b2bCount = 0, b2cCount = 0;
+      const hsnAgg = {};
+
+      orders.forEach(g => {
+        totalTaxable += g.totalTaxable;
+        outCgst += g.totalCgst;
+        outSgst += g.totalSgst;
+        outIgst += g.totalIgst;
+        outTotal += g.totalTax;
+        if (g.supply.isB2B) b2bCount++; else b2cCount++;
+
+        g.hsnSummary.forEach(h => {
+          const key = `${h.hsn}|${h.gstPct}`;
+          if (!hsnAgg[key]) {
+            hsnAgg[key] = { ...h };
+          } else {
+            hsnAgg[key].qty += h.qty;
+            hsnAgg[key].taxable += h.taxable;
+            hsnAgg[key].cgst += h.cgst;
+            hsnAgg[key].sgst += h.sgst;
+            hsnAgg[key].igst += h.igst;
+            hsnAgg[key].totalTax += h.totalTax;
+            hsnAgg[key].totalValue += h.totalValue;
+          }
+        });
+      });
+
+      let inTaxable = 0, inCgst = 0, inSgst = 0, inIgst = 0, inTotal = 0;
+      purchases.forEach(b => {
+        inTaxable += Number(b.taxableAmt || 0);
+        inCgst += Number(b.cgstAmt || 0);
+        inSgst += Number(b.sgstAmt || 0);
+        inIgst += Number(b.igstAmt || 0);
+        inTotal += Number(b.totalGst || 0);
+      });
+
+      const netGst = outTotal - inTotal;
+
+      const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setTxt("gstKpiTaxable", fmtINR(totalTaxable));
+      setTxt("gstKpiTaxableSub", `${b2bCount} B2B | ${b2cCount} B2C (${orders.length} Total Invoices)`);
+      setTxt("gstKpiOutput", fmtINR(outTotal));
+      setTxt("gstKpiOutputSub", `CGST: ${fmtINR(outCgst)} | SGST: ${fmtINR(outSgst)} | IGST: ${fmtINR(outIgst)}`);
+      setTxt("gstKpiInputItc", fmtINR(inTotal));
+      setTxt("gstKpiInputSub", `${purchases.length} Purchase Bills | Taxable: ${fmtINR(inTaxable)}`);
+      setTxt("gstKpiNetPayable", fmtINR(Math.abs(netGst)));
+      setTxt("gstKpiNetSub", netGst >= 0 ? "Net GST Payable to Govt." : "Excess ITC Credit Carry Forward");
+
+      const netCard = document.getElementById("gstKpiNetCard");
+      if (netCard) {
+        netCard.classList.remove("red", "green");
+        netCard.classList.add(netGst > 0 ? "red" : "green");
+      }
+
+      // 1. Outward Sales Register
+      const filterVal = document.getElementById("gstSalesFilter")?.value || "ALL";
+      const filteredOrders = orders.filter(g => {
+        if (filterVal === "B2B") return g.supply.isB2B;
+        if (filterVal === "B2C") return !g.supply.isB2B;
+        if (filterVal === "EWAY") return g.ewayRequired;
+        return true;
+      });
+
+      if (filteredOrders.length === 0) {
+        salesBody.innerHTML = `<tr><td colspan="10" class="text-center" style="padding:20px;color:var(--muted);">No invoices found for the selected period &amp; filter.</td></tr>`;
+      } else {
+        salesBody.innerHTML = filteredOrders.map(g => `
+          <tr>
+            <td>
+              <strong>${g.officialInvNo}</strong>
+              ${g.ewayRequired ? '<div><span class="pill pill-red" style="font-size:0.68rem;">⚠️ E-Way ≥₹50k</span></div>' : ""}
+            </td>
+            <td>${fmtDate(g.ord.date)}</td>
+            <td>
+              <strong>${g.party.name}</strong>
+              <div style="font-size:0.73rem;color:${g.supply.isB2B ? '#0f766e' : 'var(--muted)'};font-weight:${g.supply.isB2B ? '700' : '400'};">
+                ${g.supply.isB2B ? `GSTIN: ${g.supply.gstin}` : "Unregistered (B2C)"}
+              </div>
+            </td>
+            <td>
+              <span class="pill ${g.supply.isB2B ? 'pill-green' : 'pill-gray'}" style="font-size:0.7rem;">${g.supply.isB2B ? "B2B" : "B2C"}</span>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${g.supply.placeOfSupply}</div>
+            </td>
+            <td class="text-right">${fmtINR(g.totalTaxable)}</td>
+            <td class="text-right">${fmtINR(g.totalCgst)}</td>
+            <td class="text-right">${fmtINR(g.totalSgst)}</td>
+            <td class="text-right">${fmtINR(g.totalIgst)}</td>
+            <td class="text-right font-bold">${fmtINR(g.roundedGrandTotal)}</td>
+            <td class="text-center">
+              <button type="button" class="btn btn-primary btn-sm" onclick="openTaxInvoice('${g.ord.id}')">🧾 Tax Invoice</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      // 2. HSN-Wise Summary
+      const hsnBody = document.getElementById("gstHsnTableBody");
+      const hsnRows = Object.values(hsnAgg).sort((a, b) => a.hsn.localeCompare(b.hsn) || a.gstPct - b.gstPct);
+      if (hsnBody) {
+        if (hsnRows.length === 0) {
+          hsnBody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:18px;color:var(--muted);">No HSN tax summary data for this period.</td></tr>`;
+        } else {
+          hsnBody.innerHTML = hsnRows.map(h => `
+            <tr>
+              <td class="font-bold">${h.hsn}</td>
+              <td class="text-center"><span class="pill pill-gray">${h.gstPct}%</span></td>
+              <td class="text-right font-bold">${h.qty}</td>
+              <td class="text-right">${fmtINR(h.taxable)}</td>
+              <td class="text-right">${fmtINR(h.cgst)}</td>
+              <td class="text-right">${fmtINR(h.sgst)}</td>
+              <td class="text-right">${fmtINR(h.igst)}</td>
+              <td class="text-right font-bold">${fmtINR(h.totalTax)}</td>
+            </tr>
+          `).join("");
+        }
+      }
+
+      // 3. Purchase ITC Register
+      const purBody = document.getElementById("gstPurchaseTableBody");
+      if (purBody) {
+        if (purchases.length === 0) {
+          purBody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:18px;color:var(--muted);">No Purchase GST / ITC bills recorded for this period. Add purchase rate &amp; supplier details in the Stock tab to track ITC.</td></tr>`;
+        } else {
+          purBody.innerHTML = purchases.map(b => `
+            <tr>
+              <td>${fmtDate(b.date)}</td>
+              <td class="font-bold">${b.billNo || "-"}</td>
+              <td>
+                <strong>${b.supplierName || "-"}</strong>
+                <div style="font-size:0.72rem;color:${b.supplierGstin ? '#0f766e' : 'var(--muted)'};">${b.supplierGstin || "No GSTIN"} | ${b.supplyType || "Intra-State"}</div>
+              </td>
+              <td>
+                <strong>${b.productName || "-"}</strong>
+                <div style="font-size:0.72rem;color:var(--muted);">Qty: ${b.qty || 0} × ${fmtINR(b.rate || 0)} | HSN: ${b.hsn || "-"}</div>
+              </td>
+              <td class="text-right">${fmtINR(b.taxableAmt || 0)}</td>
+              <td class="text-center"><span class="pill pill-gray">${b.gstPct || 0}%</span></td>
+              <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(b.totalGst || 0)}</td>
+              <td class="text-right font-bold">${fmtINR(b.totalAmt || 0)}</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm" onclick="deletePurchaseBill('${b.id}')" title="Delete ITC Bill">🗑️</button>
+              </td>
+            </tr>
+          `).join("");
+        }
+      }
+
+      // 4. Party GSTIN Directory
+      renderGstPartyDirectory();
+    }
+
+    function renderGstPartyDirectory() {
+      const tbody = document.getElementById("gstPartyDirectoryBody");
+      if (!tbody) return;
+      const q = (document.getElementById("gstPartySearch")?.value || "").trim().toLowerCase();
+      const filter = document.getElementById("gstPartyFilter")?.value || "ALL";
+
+      const list = (state.parties || []).filter(p => {
+        const info = getPartySupplyInfo(p);
+        if (filter === "B2B" && !info.isB2B) return false;
+        if (filter === "B2C" && info.isB2B) return false;
+        if (q) {
+          const hay = `${p.name || ""} ${p.area || ""} ${p.mobile || ""} ${p.gstin || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding:18px;color:var(--muted);">No matching parties found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => {
+        const info = getPartySupplyInfo(p);
+        return `
+          <tr>
+            <td class="font-bold">${p.name}</td>
+            <td>${p.area || "Nagpur"}${p.mobile ? ` | ${p.mobile}` : ""}</td>
+            <td style="font-family:monospace;font-weight:700;color:${info.isB2B ? '#0f766e' : 'var(--muted)'};">
+              ${info.isB2B ? info.gstin : (info.rawGstin ? `${info.rawGstin} (Invalid)` : "— Not Set —")}
+            </td>
+            <td>
+              <span class="pill ${info.isB2B ? 'pill-green' : 'pill-gray'}" style="font-size:0.72rem;">${info.isB2B ? "B2B Registered" : "B2C Unregistered"}</span>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${info.placeOfSupply} (${info.isInterState ? "IGST" : "CGST+SGST"})</div>
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="editPartyGstin('${p.id}')">
+                ✏️ ${info.isB2B ? "Edit GSTIN" : "Set GSTIN"}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function exportGstr1Excel() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can export GSTR-1 Excel."); return; }
+      if (typeof XLSX === "undefined") {
+        alert("Excel library (SheetJS) is still loading. Please check internet connection and try again.");
+        return;
+      }
+
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const { allTime, selectedMonth, orders, purchases } = getFilteredGstPeriodData();
+      const periodLabel = allTime ? "ALL_TIME" : (selectedMonth || new Date().toISOString().slice(0, 7));
+
+      const wb = XLSX.utils.book_new();
+      const r2 = n => Number((Number(n) || 0).toFixed(2));
+
+      // Aggregates for GSTR-3B Summary, B2B, B2CS, HSN
+      let outTaxable = 0, outCgst = 0, outSgst = 0, outIgst = 0, outTotalTax = 0, outGrand = 0;
+      const b2bRows = [];
+      const b2csMap = {};
+      const hsnMap = {};
+
+      orders.forEach(g => {
+        outTaxable += g.totalTaxable;
+        outCgst += g.totalCgst;
+        outSgst += g.totalSgst;
+        outIgst += g.totalIgst;
+        outTotalTax += g.totalTax;
+        outGrand += g.roundedGrandTotal;
+
+        // Group invoice lines by GST rate for GSTR-1 B2B / B2CS filing
+        const byRate = {};
+        g.lines.forEach(ln => {
+          const rk = String(ln.gstPct);
+          if (!byRate[rk]) byRate[rk] = { rate: ln.gstPct, taxable: 0, cgst: 0, sgst: 0, igst: 0, total: 0 };
+          byRate[rk].taxable += ln.taxable;
+          byRate[rk].cgst += ln.cgst;
+          byRate[rk].sgst += ln.sgst;
+          byRate[rk].igst += ln.igst;
+          byRate[rk].total += ln.lineTotal;
+        });
+
+        Object.values(byRate).forEach(r => {
+          if (g.supply.isB2B) {
+            b2bRows.push({
+              "GSTIN/UIN of Recipient": g.supply.gstin,
+              "Receiver Name": g.party.name,
+              "Invoice Number": g.officialInvNo,
+              "Invoice Date": g.ord.date || "",
+              "Invoice Value": r2(g.roundedGrandTotal),
+              "Place Of Supply": g.supply.placeOfSupply,
+              "Reverse Charge": "N",
+              "Invoice Type": "Regular B2B",
+              "Rate (%)": r.rate,
+              "Taxable Value": r2(r.taxable),
+              "CGST": r2(r.cgst),
+              "SGST": r2(r.sgst),
+              "IGST": r2(r.igst),
+              "Cess Amount": 0,
+              "E-Way Bill Required": g.ewayRequired ? "YES (>=50k)" : "NO"
+            });
+          } else {
+            const bk = `${g.supply.placeOfSupply}|${r.rate}`;
+            if (!b2csMap[bk]) {
+              b2csMap[bk] = {
+                "Type": "OE",
+                "Place Of Supply": g.supply.placeOfSupply,
+                "Rate (%)": r.rate,
+                "Taxable Value": 0,
+                "CGST": 0,
+                "SGST": 0,
+                "IGST": 0,
+                "Total Value": 0
+              };
+            }
+            b2csMap[bk]["Taxable Value"] += r.taxable;
+            b2csMap[bk]["CGST"] += r.cgst;
+            b2csMap[bk]["SGST"] += r.sgst;
+            b2csMap[bk]["IGST"] += r.igst;
+            b2csMap[bk]["Total Value"] += r.total;
+          }
+        });
+
+        g.hsnSummary.forEach(h => {
+          const hk = `${h.hsn}|${h.gstPct}`;
+          if (!hsnMap[hk]) {
+            hsnMap[hk] = {
+              "HSN": h.hsn,
+              "Description": h.description,
+              "UQC": "NOS-NUMBERS",
+              "Total Quantity": 0,
+              "Total Value": 0,
+              "Rate (%)": h.gstPct,
+              "Taxable Value": 0,
+              "Integrated Tax Amount": 0,
+              "Central Tax Amount": 0,
+              "State/UT Tax Amount": 0,
+              "Cess Amount": 0
+            };
+          }
+          hsnMap[hk]["Total Quantity"] += h.qty;
+          hsnMap[hk]["Total Value"] += h.totalValue;
+          hsnMap[hk]["Taxable Value"] += h.taxable;
+          hsnMap[hk]["Integrated Tax Amount"] += h.igst;
+          hsnMap[hk]["Central Tax Amount"] += h.cgst;
+          hsnMap[hk]["State/UT Tax Amount"] += h.sgst;
+        });
+      });
+
+      const b2csRows = Object.values(b2csMap).map(x => ({
+        ...x,
+        "Taxable Value": r2(x["Taxable Value"]),
+        "CGST": r2(x["CGST"]),
+        "SGST": r2(x["SGST"]),
+        "IGST": r2(x["IGST"]),
+        "Total Value": r2(x["Total Value"])
+      }));
+
+      const hsnRows = Object.values(hsnMap).map(x => ({
+        ...x,
+        "Total Value": r2(x["Total Value"]),
+        "Taxable Value": r2(x["Taxable Value"]),
+        "Integrated Tax Amount": r2(x["Integrated Tax Amount"]),
+        "Central Tax Amount": r2(x["Central Tax Amount"]),
+        "State/UT Tax Amount": r2(x["State/UT Tax Amount"])
+      }));
+
+      let inTaxable = 0, inCgst = 0, inSgst = 0, inIgst = 0, inTotalGst = 0;
+      const purchaseRows = purchases.map(b => {
+        inTaxable += Number(b.taxableAmt || 0);
+        inCgst += Number(b.cgstAmt || 0);
+        inSgst += Number(b.sgstAmt || 0);
+        inIgst += Number(b.igstAmt || 0);
+        inTotalGst += Number(b.totalGst || 0);
+        return {
+          "Bill Date": b.date || "",
+          "Bill No": b.billNo || "",
+          "Supplier Name": b.supplierName || "",
+          "Supplier GSTIN": b.supplierGstin || "",
+          "Supply Type": b.supplyType || "",
+          "Product": b.productName || "",
+          "HSN": b.hsn || "",
+          "Qty": Number(b.qty || 0),
+          "Taxable Rate": r2(b.rate),
+          "Taxable Value": r2(b.taxableAmt),
+          "GST (%)": Number(b.gstPct || 0),
+          "Input CGST": r2(b.cgstAmt),
+          "Input SGST": r2(b.sgstAmt),
+          "Input IGST": r2(b.igstAmt),
+          "Total ITC": r2(b.totalGst),
+          "Bill Total": r2(b.totalAmt)
+        };
+      });
+
+      const summaryRows = [
+        { "Particular": "Company Name", "Value": co.name },
+        { "Particular": "Company GSTIN", "Value": co.gstin || "Unregistered" },
+        { "Particular": "Filing Period", "Value": periodLabel },
+        { "Particular": "Total Outward Invoices", "Value": orders.length },
+        { "Particular": "Total Taxable Outward Sales (₹)", "Value": r2(outTaxable) },
+        { "Particular": "Output CGST (₹)", "Value": r2(outCgst) },
+        { "Particular": "Output SGST (₹)", "Value": r2(outSgst) },
+        { "Particular": "Output IGST (₹)", "Value": r2(outIgst) },
+        { "Particular": "Total Output GST Liability (₹)", "Value": r2(outTotalTax) },
+        { "Particular": "Total Outward Invoice Value (₹)", "Value": r2(outGrand) },
+        { "Particular": "Total Purchase Bills (ITC)", "Value": purchases.length },
+        { "Particular": "Total Taxable Purchases (₹)", "Value": r2(inTaxable) },
+        { "Particular": "Input ITC - CGST (₹)", "Value": r2(inCgst) },
+        { "Particular": "Input ITC - SGST (₹)", "Value": r2(inSgst) },
+        { "Particular": "Input ITC - IGST (₹)", "Value": r2(inIgst) },
+        { "Particular": "Total Input Tax Credit / ITC (₹)", "Value": r2(inTotalGst) },
+        { "Particular": "Net GST Payable (+) / ITC Carry Forward (-) (₹)", "Value": r2(outTotalTax - inTotalGst) }
+      ];
+
+      const emptyB2B = [{ "GSTIN/UIN of Recipient": "", "Receiver Name": "No B2B Invoices in Period", "Invoice Number": "", "Invoice Date": "", "Invoice Value": 0, "Place Of Supply": "", "Reverse Charge": "N", "Invoice Type": "Regular B2B", "Rate (%)": 0, "Taxable Value": 0, "CGST": 0, "SGST": 0, "IGST": 0, "Cess Amount": 0, "E-Way Bill Required": "NO" }];
+      const emptyB2CS = [{ "Type": "OE", "Place Of Supply": "27-Maharashtra", "Rate (%)": 0, "Taxable Value": 0, "CGST": 0, "SGST": 0, "IGST": 0, "Total Value": 0 }];
+      const emptyHSN = [{ "HSN": "", "Description": "No HSN data in Period", "UQC": "NOS-NUMBERS", "Total Quantity": 0, "Total Value": 0, "Rate (%)": 0, "Taxable Value": 0, "Integrated Tax Amount": 0, "Central Tax Amount": 0, "State/UT Tax Amount": 0, "Cess Amount": 0 }];
+      const emptyPur = [{ "Bill Date": "", "Bill No": "", "Supplier Name": "No Purchase ITC Bills in Period", "Supplier GSTIN": "", "Supply Type": "", "Product": "", "HSN": "", "Qty": 0, "Taxable Rate": 0, "Taxable Value": 0, "GST (%)": 0, "Input CGST": 0, "Input SGST": 0, "Input IGST": 0, "Total ITC": 0, "Bill Total": 0 }];
+
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "GSTR3B_Net_Summary");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(b2bRows.length ? b2bRows : emptyB2B), "B2B_Invoices");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(b2csRows.length ? b2csRows : emptyB2CS), "B2CS_Summary");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hsnRows.length ? hsnRows : emptyHSN), "HSN_Summary");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchaseRows.length ? purchaseRows : emptyPur), "Purchase_ITC_Register");
+
+      const filename = `${activeCompany}_GSTR1_CA_REPORT_${periodLabel}.xlsx`;
+      saveWorkbookAsXlsx(wb, filename, `✅ CA GSTR-1 Excel exported: ${filename}`);
     }
 
     // ==================== EXCEL EXPORT, TEMPLATE, IMPORT & CLEAR ALL DATA (OWNER ADMIN) ====================
@@ -10314,8 +11454,8 @@ Thank you! Your payment has been received successfully.`;
         isResetInProgress = true;
         const resetTimestamp = Date.now();
         const colsToClear = scope === "all"
-          ? ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits"]
-          : ["orders", "collections", "cashHandovers", "bankDeposits"];
+          ? ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"]
+          : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"];
 
         // Step 2: Clear local state & legacy localStorage keys so old data never resurrects
         colsToClear.forEach(c => { state[c] = []; });
