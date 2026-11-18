@@ -1271,15 +1271,15 @@
         <div class="card" style="border-left:4px solid var(--primary);margin-bottom:18px;">
           <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:10px;">
             <div>
-              <span class="card-title" style="display:flex;align-items:center;gap:6px;">📊 Excel Data &amp; Database Control Center</span>
-              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Export complete transaction ledger, download entry template, bulk upload Excel data, or reset database (Owner Admin Only)</div>
+              <span class="card-title" style="display:flex;align-items:center;gap:6px;">📊 Excel Data &amp; Database Control Center (All-in-One Single Sheet)</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Export MADHAV + SHIVOM Parties, Orders, Collections, Outstanding &amp; Stock in ONE single sheet, download single-sheet template, upload data, or clear database (Owner Admin Only)</div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
               <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()" style="font-weight:700;">
-                📥 Export All Data Excel
+                📥 Export Single-Sheet Excel
               </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-weight:700;">
-                📄 Download Entry Template
+                📄 Download Single-Sheet Template
               </button>
               <button type="button" class="btn btn-teal btn-sm" onclick="openExcelImportModal()" style="font-weight:700;">
                 📤 Upload / Import Excel
@@ -2296,15 +2296,15 @@
     <div class="modal" style="max-width:560px;text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
         <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
-          <span>📤</span> Upload / Import Excel Data (<span id="importModalCompanyLabel">MADHAV</span>)
+          <span>📤</span> Upload / Import Single-Sheet Excel (<span id="importModalCompanyLabel">MADHAV &amp; SHIVOM</span>)
         </h3>
         <button type="button" class="modal-close" onclick="closeModal('excelImportModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
       </div>
 
       <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:0.8rem;color:#115e59;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <span>Use the official Excel template so all columns match accurately.</span>
+        <span>Enter <strong>MADHAV</strong> &amp; <strong>SHIVOM</strong> Parties, Stock, Orders, Collections &amp; Deposits in ONE sheet and upload!</span>
         <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-size:0.75rem;padding:4px 10px;">
-          📄 Download Template
+          📄 Download Single-Sheet Template
         </button>
       </div>
 
@@ -9325,333 +9325,465 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
+    const SINGLE_SHEET_HEADERS = [
+      "Company",
+      "Record_Type",
+      "Date",
+      "Ref_Bill_Receipt_Code",
+      "Party_Name",
+      "Mobile",
+      "Area",
+      "Product_Name",
+      "Category_HSN",
+      "Qty_or_Avail_Stock",
+      "Dispatched_or_Total_Stock",
+      "Rate",
+      "MRP",
+      "Order_Bill_Amt",
+      "Collection_Paid_Amt",
+      "Outstanding_Due",
+      "Mode_or_Account",
+      "Salesperson_Staff",
+      "Status",
+      "Remark_Details"
+    ];
+
     function makeFormattedSheet(rows, emptyHeaders) {
+      const headers = emptyHeaders || SINGLE_SHEET_HEADERS;
       const data = (rows && rows.length > 0)
         ? rows
-        : [emptyHeaders.reduce((obj, h) => { obj[h] = ""; return obj; }, {})];
-      const ws = XLSX.utils.json_to_sheet(data);
-      const keys = Object.keys(data[0] || {});
-      ws["!cols"] = keys.map(k => {
+        : [headers.reduce((obj, h) => { obj[h] = ""; return obj; }, {})];
+      const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+      ws["!cols"] = headers.map(k => {
         let maxLen = String(k).length;
-        data.slice(0, 200).forEach(r => {
+        data.slice(0, 300).forEach(r => {
           const val = r[k] !== undefined && r[k] !== null ? String(r[k]) : "";
           if (val.length > maxLen) maxLen = val.length;
         });
-        return { wch: Math.min(Math.max(maxLen + 3, 12), 45) };
+        return { wch: Math.min(Math.max(maxLen + 3, 12), 42) };
       });
+      if (ws["!ref"]) {
+        ws["!autofilter"] = { ref: ws["!ref"] };
+      }
       return ws;
     }
 
-    function exportToExcel(customFilename) {
-      if (!isAdminLoggedIn) { alert("Only Owner Admin can export Excel data."); return; }
-      const co = COMPANIES[activeCompany] || { name: activeCompany };
-      const todayStr = new Date().toISOString().split("T")[0];
-      const computedStock = getComputedStock();
-      const computedParties = getComputedParties();
-      const cs = getCashSummary();
-
-      const totalOrderVal = (state.orders || []).reduce((s, o) => s + Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0))), 0);
-      const totalDispatchedVal = (state.orders || []).reduce((s, o) => s + (Number(o.dispatchedQty || 0) * Number(o.rate || 0)), 0);
-      const totalCashCol = (state.collections || []).filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
-      const totalBankCol = (state.collections || []).filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
-      const totalChequeCleared = (state.collections || []).filter(c => c.mode === "Cheque" && (c.chequeStatus || "Pending") === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
-      const totalChequePending = (state.collections || []).filter(c => c.mode === "Cheque" && (c.chequeStatus || "Pending") === "Pending").reduce((s, c) => s + Number(c.amount || 0), 0);
-      const totalReceivable = computedParties.reduce((s, p) => s + Math.max(0, Number(p.netBalance || 0)), 0);
-
-      // 1. Summary Dashboard Sheet
-      const summaryRows = [
-        { Metric: "Company", Value: co.name },
-        { Metric: "Report Export Date", Value: todayStr },
-        { Metric: "Active Products", Value: computedStock.length },
-        { Metric: "Active Parties / Dealers", Value: computedParties.length },
-        { Metric: "Total Orders / Bills Count", Value: (state.orders || []).length },
-        { Metric: "Total Order Booking Value (₹)", Value: Number(totalOrderVal.toFixed(2)) },
-        { Metric: "Total Dispatched Value (₹)", Value: Number(totalDispatchedVal.toFixed(2)) },
-        { Metric: "Pending Dispatch Value (₹)", Value: Number(Math.max(0, totalOrderVal - totalDispatchedVal).toFixed(2)) },
-        { Metric: "Total Cash Collections (₹)", Value: Number(totalCashCol.toFixed(2)) },
-        { Metric: "Total Bank / UPI Collections (₹)", Value: Number(totalBankCol.toFixed(2)) },
-        { Metric: "Cleared Cheques Total (₹)", Value: Number(totalChequeCleared.toFixed(2)) },
-        { Metric: "Pending Cheques In Hand (₹)", Value: Number(totalChequePending.toFixed(2)) },
-        { Metric: "Net Party Receivable Due (₹)", Value: Number(totalReceivable.toFixed(2)) },
-        { Metric: "Cash with Manager Prashik (₹)", Value: Number((cs.prashikInHand || 0).toFixed(2)) },
-        { Metric: "Cash with Gopal (In Pocket) (₹)", Value: Number((cs.gopalPocket || 0).toFixed(2)) },
-        { Metric: "Total Cash Deposited to Banks (₹)", Value: Number((cs.totalBankDeposits || 0).toFixed(2)) }
-      ];
-
-      // 2. Unified All Transactions Ledger Sheet
-      const allTxns = [];
-      (state.orders || []).forEach(o => {
-        const amt = Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0)));
-        const pending = Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0));
-        const st = Number(o.dispatchedQty || 0) === 0 ? "Pending Dispatch" : (pending > 0 ? "Partial Dispatch" : "Dispatched");
-        allTxns.push({
-          Date: o.date || "",
-          Transaction_Type: "Order / Bill",
-          Reference_No: o.memoNo || ("#" + (o.orderNo || "")),
-          Party_or_Staff: o.partyName || "",
-          Handled_By: o.salespersonName || "",
-          Mode_or_Account: "Credit / Billing",
-          Debit_Bill_Amt: Number(amt.toFixed(2)),
-          Credit_Paid_Amt: 0,
-          Status: st,
-          Details_Remark: `${o.productName || ""} | Qty: ${o.orderQty || 0} (Disp: ${o.dispatchedQty || 0})`
-        });
+    function computeStockForState(st) {
+      const products = (st && st.products) || [];
+      const orders = (st && st.orders) || [];
+      return products.map(p => {
+        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0);
+        const dispatched = orders.filter(o => o.productId === p.id).reduce((s, o) => s + Number(o.dispatchedQty || 0), 0);
+        const totalStock = Math.max(0, totalIn - dispatched);
+        const bookedStock = orders.filter(o => o.productId === p.id).reduce((s, o) => s + Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)), 0);
+        const available = Math.max(0, totalStock - bookedStock);
+        return { ...p, totalIn, totalStock, bookedStock, dispatched, available };
       });
-      (state.collections || []).forEach(c => {
-        const modeAcc = c.mode === "Bank"
-          ? `Bank - ${getAccShortName(c.depositAccount)}`
-          : (c.mode === "Cheque" ? `Cheque - ${c.chequeBank || "Bank"} (#${c.chequeNo || "-"})` : "Cash");
-        const st = c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "Received";
-        allTxns.push({
-          Date: c.date || "",
-          Transaction_Type: "Payment Collection",
-          Reference_No: c.receiptNo || "",
-          Party_or_Staff: c.partyName || "",
-          Handled_By: c.salespersonName || "",
-          Mode_or_Account: modeAcc,
-          Debit_Bill_Amt: 0,
-          Credit_Paid_Amt: Number(Number(c.amount || 0).toFixed(2)),
-          Status: st,
-          Details_Remark: c.bankRef || ""
-        });
-      });
-      (state.cashHandovers || []).forEach(h => {
-        allTxns.push({
-          Date: h.date || "",
-          Transaction_Type: "Cash Handover",
-          Reference_No: h.id || "",
-          Party_or_Staff: h.fromStaffName || "",
-          Handled_By: h.toStaffName || "PRASHIK HAJARE",
-          Mode_or_Account: "Staff Cash Transfer",
-          Debit_Bill_Amt: 0,
-          Credit_Paid_Amt: Number(Number(h.amount || 0).toFixed(2)),
-          Status: h.status || "Pending",
-          Details_Remark: h.note || h.rejectReason || ""
-        });
-      });
-      (state.bankDeposits || []).forEach(b => {
-        allTxns.push({
-          Date: b.date || "",
-          Transaction_Type: "Bank Deposit",
-          Reference_No: b.challanNo || b.id || "",
-          Party_or_Staff: b.depositedBy || "",
-          Handled_By: b.depositedBy || "",
-          Mode_or_Account: b.bankName || getAccShortName(b.depositAccount),
-          Debit_Bill_Amt: 0,
-          Credit_Paid_Amt: Number(Number(b.amount || 0).toFixed(2)),
-          Status: "Deposited",
-          Details_Remark: `Challan: ${b.challanNo || "-"}`
-        });
-      });
-      allTxns.sort((a, b) => String(b.Date).localeCompare(String(a.Date)));
+    }
 
-      // 3. Orders & Bills Sheet
-      const orderRows = (state.orders || []).map(o => {
-        const qty = Number(o.orderQty || 0);
-        const disp = Number(o.dispatchedQty || 0);
-        const pending = Math.max(0, qty - disp);
-        const amt = Number(o.totalAmt || (qty * Number(o.rate || 0)));
+    function computePartiesForState(st) {
+      const refDate = new Date();
+      const parties = (st && st.parties) || [];
+      const orders = (st && st.orders) || [];
+      const collections = (st && st.collections) || [];
+      return parties.map(party => {
+        const partyOrders = orders.filter(o => o.partyId === party.id || (o.partyName && party.name && o.partyName.toUpperCase() === party.name.toUpperCase()));
+        const dispatchedSales = partyOrders.reduce((s, o) => s + Number(o.dispatchedQty || 0) * Number(o.rate || 0), 0);
+        const partyCols = collections.filter(c => c.partyId === party.id || (c.partyName && party.name && c.partyName.toUpperCase() === party.name.toUpperCase()));
+        const cashPaid = partyCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+        const bankPaid = partyCols.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
+        const chequeCleared = partyCols.filter(c => c.mode === "Cheque" && c.chequeStatus === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
+        const totalPaid = cashPaid + bankPaid + chequeCleared;
+        const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid;
+
+        let lastDateStr = party.lastPaymentDate || "";
+        partyCols.forEach(c => { if (c.date && c.date > lastDateStr) lastDateStr = c.date; });
+        let pendingDays = 0;
+        if (netBalance > 0 && lastDateStr) {
+          const d1 = new Date(lastDateStr + "T00:00:00");
+          if (!isNaN(d1.getTime())) pendingDays = Math.max(0, Math.floor((refDate - d1) / 86400000));
+        }
+
+        let category = "Settled";
+        if (netBalance > 0) {
+          if (pendingDays >= 60 || netBalance >= 20000) category = "Red Alert";
+          else if (pendingDays >= 30 || netBalance >= 10000) category = "Yellow Alert";
+          else category = "Green / Active";
+        }
+        return { ...party, dispatchedSales, totalPaid, netBalance, pendingDays, category };
+      });
+    }
+
+    async function loadCompanySnapshotForExcel(coCode) {
+      if (coCode === activeCompany) {
         return {
-          OrderNo: o.orderNo || "",
-          MemoNo: o.memoNo || "",
-          Date: o.date || "",
-          PartyName: o.partyName || "",
-          Salesperson: o.salespersonName || "",
-          ProductName: o.productName || "",
-          Qty: qty,
-          DispatchedQty: disp,
-          PendingQty: pending,
-          Rate: Number(Number(o.rate || 0).toFixed(2)),
-          TotalAmount: Number(amt.toFixed(2)),
-          Status: disp === 0 ? "Pending" : (pending > 0 ? "Partial" : "Completed")
+          products: state.products || [],
+          parties: state.parties || [],
+          orders: state.orders || [],
+          collections: state.collections || [],
+          cashHandovers: state.cashHandovers || [],
+          bankDeposits: state.bankDeposits || []
         };
-      });
+      }
+      const key = STORAGE_KEY + "_" + coCode.toLowerCase();
+      let coState = null;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try { coState = JSON.parse(raw); } catch (e) {}
+      }
+      if (!coState) {
+        coState = JSON.parse(JSON.stringify(SEED_DATA[coCode.toLowerCase()] || { products: [], parties: [], orders: [], collections: [], cashHandovers: [], bankDeposits: [] }));
+      }
+      if (!coState.products) coState.products = [];
+      if (!coState.parties) coState.parties = [];
+      if (!coState.orders) coState.orders = [];
+      if (!coState.collections) coState.collections = [];
+      if (!coState.cashHandovers) coState.cashHandovers = [];
+      if (!coState.bankDeposits) coState.bankDeposits = [];
 
-      // 4. Collections & Cheques Sheet
-      const colRows = (state.collections || []).map(c => ({
-        ReceiptNo: c.receiptNo || "",
-        Date: c.date || "",
-        PartyName: c.partyName || "",
-        Salesperson: c.salespersonName || "",
-        Amount: Number(Number(c.amount || 0).toFixed(2)),
-        Mode: c.mode || "Cash",
-        DepositAccount: c.depositAccount || "",
-        AccountName: c.depositAccount ? getAccShortName(c.depositAccount) : "",
-        ChequeNo: c.chequeNo || "",
-        ChequeBank: c.chequeBank || "",
-        ChequeDate: c.chequeDate || "",
-        ChequeStatus: c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "",
-        Remark: c.bankRef || ""
-      }));
+      // Pull live Firebase data for the other company as well so BOTH companies are 100% up-to-date
+      if (isFirebaseLive && db) {
+        const prefix = coCode.toLowerCase() + "_";
+        const cols = ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits"];
+        await Promise.all(cols.map(async col => {
+          try {
+            const snap = await db.collection(prefix + col).get();
+            if (!snap.empty) {
+              coState[col] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            }
+          } catch (e) {
+            console.warn("Export fetch notice for", coCode, col, e);
+          }
+        }));
+      }
+      return coState;
+    }
 
-      // 5. Cash Handovers Sheet
-      const hoRows = (state.cashHandovers || []).map(h => ({
-        Date: h.date || "",
-        Time: h.time || "",
-        FromStaff: h.fromStaffName || "",
-        ToManager: h.toStaffName || "PRASHIK HAJARE",
-        Amount: Number(Number(h.amount || 0).toFixed(2)),
-        Status: h.status || "Pending",
-        AcceptedBy: h.acceptedBy || "",
-        NoteOrReason: h.note || h.rejectReason || ""
-      }));
+    async function exportToExcel(customFilename) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can export Excel data."); return; }
+      const todayStr = new Date().toISOString().split("T")[0];
+      showToast("⏳ Preparing All-in-One Excel (MADHAV + SHIVOM)...");
 
-      // 6. Bank Deposits Sheet
-      const depRows = (state.bankDeposits || []).map(b => ({
-        Date: b.date || "",
-        DepositAccount: b.depositAccount || "",
-        BankName: b.bankName || getAccShortName(b.depositAccount),
-        ChallanNo: b.challanNo || "",
-        Amount: Number(Number(b.amount || 0).toFixed(2)),
-        DepositedBy: b.depositedBy || ""
-      }));
+      const rows = [];
+      const companyList = ["MADHAV", "SHIVOM"];
 
-      // 7. Parties & Balances Sheet
-      const partyRows = computedParties.map(p => ({
-        Name: p.name || "",
-        Mobile: p.mobile || "",
-        Area: p.area || "",
-        GSTIN: p.gstin || "",
-        OpeningBalance: Number(Number(p.openingBalance || 0).toFixed(2)),
-        TotalBilled: Number(Number(p.totalBilled || 0).toFixed(2)),
-        TotalPaid: Number(Number(p.totalPaid || 0).toFixed(2)),
-        NetBalanceDue: Number(Number(p.netBalance || 0).toFixed(2)),
-        AgeingDays: Number(p.maxOverdueDays || 0),
-        AlertCategory: p.category || "Clear"
-      }));
+      for (const coCode of companyList) {
+        const coState = await loadCompanySnapshotForExcel(coCode);
+        const computedParties = computePartiesForState(coState);
+        const computedStock = computeStockForState(coState);
 
-      // 8. Stock Inventory Sheet
-      const stockRows = computedStock.map(p => ({
-        Code: p.code || "",
-        Name: p.name || "",
-        Category: p.group || "General",
-        HSN: p.hsn || "",
-        GST_Percent: Number(p.gst || 0),
-        OpeningStock: Number(p.openingStock || 0),
-        InwardStock: Number(p.inwardStock || 0),
-        Dispatched: Number(p.dispatched || 0),
-        BookedPending: Number(p.bookedStock || 0),
-        AvailableStock: Number(p.available || 0),
-        Rate: Number(p.rate || 0),
-        MRP: Number(p.mrp || 0),
-        Scheme: p.scheme || ""
-      }));
+        // 1. OUTSTANDING PARTY ROWS (Party Master + Live Outstanding Due)
+        computedParties.forEach(p => {
+          rows.push({
+            Company: coCode,
+            Record_Type: "OUTSTANDING_PARTY",
+            Date: todayStr,
+            Ref_Bill_Receipt_Code: p.id || "",
+            Party_Name: p.name || "",
+            Mobile: p.mobile || "",
+            Area: p.area || "",
+            Product_Name: "",
+            Category_HSN: p.gstin ? ("GSTIN: " + p.gstin) : "",
+            Qty_or_Avail_Stock: "",
+            Dispatched_or_Total_Stock: "",
+            Rate: "",
+            MRP: "",
+            Order_Bill_Amt: Number(Number(p.dispatchedSales || 0).toFixed(2)),
+            Collection_Paid_Amt: Number(Number(p.totalPaid || 0).toFixed(2)),
+            Outstanding_Due: Number(Number(p.netBalance || 0).toFixed(2)),
+            Mode_or_Account: "",
+            Salesperson_Staff: "",
+            Status: p.category || "Settled",
+            Remark_Details: `Opening Bal: ₹${Number(p.openingBalance || 0)} | Overdue: ${p.pendingDays || 0} Days`
+          });
+        });
 
-      // 9. Sales Team Sheet
-      const teamRows = (state.salespersons || []).map(s => ({
-        Name: s.name || "",
-        Role: s.role || "",
-        Mobile: s.mobile || "",
-        Area: s.area || ""
-      }));
+        // 2. ORDER / BILL ROWS
+        (coState.orders || []).forEach(o => {
+          const qty = Number(o.orderQty || 0);
+          const disp = Number(o.dispatchedQty || 0);
+          const pending = Math.max(0, qty - disp);
+          const amt = Number(o.totalAmt || (qty * Number(o.rate || 0)));
+          const st = disp === 0 ? "Pending Dispatch" : (pending > 0 ? "Partial Dispatch" : "Dispatched");
+          const partyObj = computedParties.find(p => p.id === o.partyId || (o.partyName && p.name && p.name.toUpperCase() === o.partyName.toUpperCase()));
+          rows.push({
+            Company: coCode,
+            Record_Type: "ORDER",
+            Date: o.date || "",
+            Ref_Bill_Receipt_Code: o.memoNo || ("#" + (o.orderNo || "")),
+            Party_Name: o.partyName || "",
+            Mobile: partyObj ? (partyObj.mobile || "") : "",
+            Area: partyObj ? (partyObj.area || "") : "",
+            Product_Name: o.productName || "",
+            Category_HSN: o.hsn ? ("HSN: " + o.hsn) : "",
+            Qty_or_Avail_Stock: qty,
+            Dispatched_or_Total_Stock: disp,
+            Rate: Number(Number(o.rate || 0).toFixed(2)),
+            MRP: "",
+            Order_Bill_Amt: Number(amt.toFixed(2)),
+            Collection_Paid_Amt: 0,
+            Outstanding_Due: "",
+            Mode_or_Account: "Order / Credit Billing",
+            Salesperson_Staff: o.salespersonName || "",
+            Status: st,
+            Remark_Details: pending > 0 ? ("Pending Dispatch Qty: " + pending) : "Fully Dispatched"
+          });
+        });
+
+        // 3. PAYMENT COLLECTION & CHEQUE ROWS
+        (coState.collections || []).forEach(c => {
+          const modeAcc = c.mode === "Bank"
+            ? ("Bank - " + (c.depositAccount || "IOB"))
+            : (c.mode === "Cheque" ? ("Cheque - " + (c.depositAccount || "IOB")) : "Cash");
+          const st = c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "Received";
+          const partyObj = computedParties.find(p => p.id === c.partyId || (c.partyName && p.name && p.name.toUpperCase() === c.partyName.toUpperCase()));
+          const chqDetails = c.mode === "Cheque"
+            ? `Chq #${c.chequeNo || "-"} | ${c.chequeBank || "Bank"} | Chq Date: ${c.chequeDate || c.date || ""} | ${c.bankRef || ""}`
+            : (c.bankRef || "");
+          rows.push({
+            Company: coCode,
+            Record_Type: "COLLECTION",
+            Date: c.date || "",
+            Ref_Bill_Receipt_Code: c.receiptNo || "",
+            Party_Name: c.partyName || "",
+            Mobile: partyObj ? (partyObj.mobile || "") : "",
+            Area: partyObj ? (partyObj.area || "") : "",
+            Product_Name: "",
+            Category_HSN: "",
+            Qty_or_Avail_Stock: "",
+            Dispatched_or_Total_Stock: "",
+            Rate: "",
+            MRP: "",
+            Order_Bill_Amt: 0,
+            Collection_Paid_Amt: Number(Number(c.amount || 0).toFixed(2)),
+            Outstanding_Due: "",
+            Mode_or_Account: modeAcc,
+            Salesperson_Staff: c.salespersonName || "",
+            Status: st,
+            Remark_Details: chqDetails
+          });
+        });
+
+        // 4. STOCK INVENTORY ROWS
+        computedStock.forEach(p => {
+          const st = p.available <= 0 ? "Out of Stock" : (p.available <= (p.lowStockLimit || 3) ? "Low Stock" : "In Stock");
+          rows.push({
+            Company: coCode,
+            Record_Type: "STOCK",
+            Date: todayStr,
+            Ref_Bill_Receipt_Code: p.code || p.id || "",
+            Party_Name: "",
+            Mobile: "",
+            Area: "",
+            Product_Name: p.name || "",
+            Category_HSN: `${p.group || "General"} | HSN: ${p.hsn || ""} | GST: ${Number(p.gst || 0)}%`,
+            Qty_or_Avail_Stock: Number(p.available || 0),
+            Dispatched_or_Total_Stock: Number(p.totalIn || 0),
+            Rate: Number(Number(p.rate || 0).toFixed(2)),
+            MRP: Number(Number(p.mrp || 0).toFixed(2)),
+            Order_Bill_Amt: "",
+            Collection_Paid_Amt: "",
+            Outstanding_Due: "",
+            Mode_or_Account: "",
+            Salesperson_Staff: "",
+            Status: st,
+            Remark_Details: `Dispatched: ${p.dispatched || 0} | Booked: ${p.bookedStock || 0}${p.scheme ? (" | Scheme: " + p.scheme) : ""}`
+          });
+        });
+
+        // 5. CASH HANDOVER ROWS
+        (coState.cashHandovers || []).forEach(h => {
+          rows.push({
+            Company: coCode,
+            Record_Type: "HANDOVER",
+            Date: h.date || "",
+            Ref_Bill_Receipt_Code: h.id || "",
+            Party_Name: h.fromStaffName || "",
+            Mobile: "",
+            Area: "",
+            Product_Name: "",
+            Category_HSN: "",
+            Qty_or_Avail_Stock: "",
+            Dispatched_or_Total_Stock: "",
+            Rate: "",
+            MRP: "",
+            Order_Bill_Amt: 0,
+            Collection_Paid_Amt: Number(Number(h.amount || 0).toFixed(2)),
+            Outstanding_Due: "",
+            Mode_or_Account: "Cash Handover -> " + (h.toStaffName || "PRASHIK HAJARE"),
+            Salesperson_Staff: h.fromStaffName || "",
+            Status: h.status || "Pending",
+            Remark_Details: h.note || h.rejectReason || ""
+          });
+        });
+
+        // 6. BANK DEPOSIT ROWS
+        (coState.bankDeposits || []).forEach(b => {
+          rows.push({
+            Company: coCode,
+            Record_Type: "BANK_DEPOSIT",
+            Date: b.date || "",
+            Ref_Bill_Receipt_Code: b.challanNo || b.id || "",
+            Party_Name: "",
+            Mobile: "",
+            Area: "",
+            Product_Name: "",
+            Category_HSN: "",
+            Qty_or_Avail_Stock: "",
+            Dispatched_or_Total_Stock: "",
+            Rate: "",
+            MRP: "",
+            Order_Bill_Amt: 0,
+            Collection_Paid_Amt: Number(Number(b.amount || 0).toFixed(2)),
+            Outstanding_Due: "",
+            Mode_or_Account: b.depositAccount || "IOB",
+            Salesperson_Staff: b.depositedBy || "PRASHIK HAJARE",
+            Status: "Deposited",
+            Remark_Details: b.bankName || getAccShortName(b.depositAccount)
+          });
+        });
+      }
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(summaryRows, ["Metric", "Value"]), "Summary_Dashboard");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(allTxns, ["Date", "Transaction_Type", "Reference_No", "Party_or_Staff", "Handled_By", "Mode_or_Account", "Debit_Bill_Amt", "Credit_Paid_Amt", "Status", "Details_Remark"]), "All_Transactions_Ledger");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(orderRows, ["OrderNo", "MemoNo", "Date", "PartyName", "Salesperson", "ProductName", "Qty", "DispatchedQty", "PendingQty", "Rate", "TotalAmount", "Status"]), "Orders_&_Bills");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(colRows, ["ReceiptNo", "Date", "PartyName", "Salesperson", "Amount", "Mode", "DepositAccount", "AccountName", "ChequeNo", "ChequeBank", "ChequeDate", "ChequeStatus", "Remark"]), "Collections_&_Cheques");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(hoRows, ["Date", "Time", "FromStaff", "ToManager", "Amount", "Status", "AcceptedBy", "NoteOrReason"]), "Cash_Handovers");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(depRows, ["Date", "DepositAccount", "BankName", "ChallanNo", "Amount", "DepositedBy"]), "Bank_Deposits");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(partyRows, ["Name", "Mobile", "Area", "GSTIN", "OpeningBalance", "TotalBilled", "TotalPaid", "NetBalanceDue", "AgeingDays", "AlertCategory"]), "Parties_&_Balances");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(stockRows, ["Code", "Name", "Category", "HSN", "GST_Percent", "OpeningStock", "InwardStock", "Dispatched", "BookedPending", "AvailableStock", "Rate", "MRP", "Scheme"]), "Stock_Inventory");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(teamRows, ["Name", "Role", "Mobile", "Area"]), "Sales_Team");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(rows, SINGLE_SHEET_HEADERS), "Madhav_Shivom_All_Data");
 
-      const filename = customFilename || `${activeCompany}_ERP_Full_Report_${todayStr}.xlsx`;
-      saveWorkbookAsXlsx(wb, filename, `✅ Exported ${filename}!`);
+      const filename = customFilename || `MADHAV_SHIVOM_ALL_IN_ONE_${todayStr}.xlsx`;
+      saveWorkbookAsXlsx(wb, filename, `✅ Exported 1 Single Sheet (${rows.length} rows — MADHAV & SHIVOM)!`);
     }
 
     function downloadExcelTemplate() {
       if (!isAdminLoggedIn) { alert("Only Owner Admin can download the data entry template."); return; }
       const todayStr = new Date().toISOString().split("T")[0];
-      const wb = XLSX.utils.book_new();
 
-      const instructions = [
-        { Step: "1", Guide: "Do NOT rename the sheet tabs (Products, Parties, Orders, Collections, BankDeposits) or column headers." },
-        { Step: "2", Guide: "Row 2 in each sheet has a [SAMPLE] example row. Delete or overwrite it before uploading (rows containing [SAMPLE] are ignored automatically)." },
-        { Step: "3", Guide: "You can fill ONLY the sheets you want (e.g. only Parties or only Orders) and leave other sheets empty." },
-        { Step: "4", Guide: "Date format should be YYYY-MM-DD (e.g. 2026-11-18). Standard Excel dates are also supported." },
-        { Step: "5", Guide: "Collection Mode values: Cash, Bank, or Cheque." },
-        { Step: "6", Guide: "DepositAccount values (for Bank/Cheque/BankDeposits): IOB, ROSHAN, PRASHIK, or SAVITA." },
-        { Step: "7", Guide: "ChequeStatus values (for Cheque mode): Pending, Cleared, or Bounced." },
-        { Step: "8", Guide: "After filling data, open Admin Panel -> Upload / Import Excel, check the preview, and click Confirm & Import." }
+      // ONE SINGLE SHEET with 5 clear [SAMPLE] example rows (one per Record_Type)
+      const templateRows = [
+        {
+          Company: "MADHAV",
+          Record_Type: "PARTY",
+          Date: todayStr,
+          Ref_Bill_Receipt_Code: "",
+          Party_Name: "[SAMPLE] VIJAY ELECTRICALS",
+          Mobile: "9876543210",
+          Area: "ITWARI",
+          Product_Name: "",
+          Category_HSN: "",
+          Qty_or_Avail_Stock: "",
+          Dispatched_or_Total_Stock: "",
+          Rate: "",
+          MRP: "",
+          Order_Bill_Amt: "",
+          Collection_Paid_Amt: "",
+          Outstanding_Due: 5000,
+          Mode_or_Account: "",
+          Salesperson_Staff: "",
+          Status: "",
+          Remark_Details: "Delete or overwrite [SAMPLE] rows. Put Party Opening Balance in Outstanding_Due."
+        },
+        {
+          Company: "MADHAV",
+          Record_Type: "STOCK",
+          Date: todayStr,
+          Ref_Bill_Receipt_Code: "5060",
+          Party_Name: "",
+          Mobile: "",
+          Area: "",
+          Product_Name: "[SAMPLE] Greenchef SS Cooker 3L",
+          Category_HSN: "Pressure Cookers | HSN: 73239310 | GST: 5%",
+          Qty_or_Avail_Stock: 20,
+          Dispatched_or_Total_Stock: 20,
+          Rate: 1250,
+          MRP: 2499,
+          Order_Bill_Amt: "",
+          Collection_Paid_Amt: "",
+          Outstanding_Due: "",
+          Mode_or_Account: "",
+          Salesperson_Staff: "",
+          Status: "In Stock",
+          Remark_Details: "Scheme: Nett Billing"
+        },
+        {
+          Company: "MADHAV",
+          Record_Type: "ORDER",
+          Date: todayStr,
+          Ref_Bill_Receipt_Code: "501",
+          Party_Name: "[SAMPLE] VIJAY ELECTRICALS",
+          Mobile: "",
+          Area: "",
+          Product_Name: "Greenchef SS Cooker 3L",
+          Category_HSN: "",
+          Qty_or_Avail_Stock: 5,
+          Dispatched_or_Total_Stock: 5,
+          Rate: 1250,
+          MRP: "",
+          Order_Bill_Amt: 6250,
+          Collection_Paid_Amt: 0,
+          Outstanding_Due: "",
+          Mode_or_Account: "",
+          Salesperson_Staff: "PRASHIK HAJARE",
+          Status: "Dispatched",
+          Remark_Details: "Qty_or_Avail_Stock = Order Qty | Dispatched_or_Total_Stock = Dispatched Qty"
+        },
+        {
+          Company: "SHIVOM",
+          Record_Type: "COLLECTION",
+          Date: todayStr,
+          Ref_Bill_Receipt_Code: "RCP-501",
+          Party_Name: "[SAMPLE] SHREE RAM TRADERS",
+          Mobile: "",
+          Area: "",
+          Product_Name: "",
+          Category_HSN: "",
+          Qty_or_Avail_Stock: "",
+          Dispatched_or_Total_Stock: "",
+          Rate: "",
+          MRP: "",
+          Order_Bill_Amt: 0,
+          Collection_Paid_Amt: 2500,
+          Outstanding_Due: "",
+          Mode_or_Account: "Bank - IOB",
+          Salesperson_Staff: "PRASHIK HAJARE",
+          Status: "Received",
+          Remark_Details: "Mode_or_Account: Cash / Bank - IOB / Bank - ROSHAN / Bank - PRASHIK / Bank - SAVITA / Cheque - IOB"
+        },
+        {
+          Company: "MADHAV",
+          Record_Type: "BANK_DEPOSIT",
+          Date: todayStr,
+          Ref_Bill_Receipt_Code: "[SAMPLE] CHL-101",
+          Party_Name: "",
+          Mobile: "",
+          Area: "",
+          Product_Name: "",
+          Category_HSN: "",
+          Qty_or_Avail_Stock: "",
+          Dispatched_or_Total_Stock: "",
+          Rate: "",
+          MRP: "",
+          Order_Bill_Amt: 0,
+          Collection_Paid_Amt: 10000,
+          Outstanding_Due: "",
+          Mode_or_Account: "IOB",
+          Salesperson_Staff: "PRASHIK HAJARE",
+          Status: "Deposited",
+          Remark_Details: "IOB / ROSHAN / PRASHIK / SAVITA"
+        }
       ];
 
-      const sampleProducts = [{
-        Code: "5060",
-        Name: "[SAMPLE] Greenchef SS Cooker 3L",
-        Category: "Pressure Cookers",
-        HSN: "73239310",
-        GST_Percent: 5,
-        OpeningStock: 20,
-        InwardStock: 0,
-        Rate: 1250,
-        MRP: 2499,
-        Scheme: "Nett Billing",
-        LowStockLimit: 3
-      }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(templateRows, SINGLE_SHEET_HEADERS), "All_In_One_Template");
 
-      const sampleParties = [{
-        Name: "[SAMPLE] VIJAY ELECTRICALS",
-        Mobile: "9876543210",
-        Area: "ITWARI",
-        GSTIN: "",
-        OpeningBalance: 5000
-      }];
-
-      const sampleOrders = [{
-        OrderNo: "501",
-        Date: todayStr,
-        PartyName: "[SAMPLE] VIJAY ELECTRICALS",
-        Salesperson: "PRASHIK HAJARE",
-        ProductName: "Greenchef SS Cooker 3L",
-        Qty: 5,
-        DispatchedQty: 5,
-        Rate: 1250
-      }];
-
-      const sampleCollections = [{
-        ReceiptNo: "RCP-501",
-        Date: todayStr,
-        PartyName: "[SAMPLE] VIJAY ELECTRICALS",
-        Salesperson: "PRASHIK HAJARE",
-        Amount: 2500,
-        Mode: "Bank",
-        DepositAccount: "IOB",
-        ChequeNo: "",
-        ChequeBank: "",
-        ChequeDate: "",
-        ChequeStatus: "",
-        Remark: "UPI Ref 123456"
-      }];
-
-      const sampleBankDeposits = [{
-        Date: todayStr,
-        DepositAccount: "IOB",
-        ChallanNo: "[SAMPLE] CHL-101",
-        Amount: 10000,
-        DepositedBy: "PRASHIK HAJARE"
-      }];
-
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(instructions, ["Step", "Guide"]), "Instructions");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleProducts, Object.keys(sampleProducts[0])), "Products");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleParties, Object.keys(sampleParties[0])), "Parties");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleOrders, Object.keys(sampleOrders[0])), "Orders");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleCollections, Object.keys(sampleCollections[0])), "Collections");
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleBankDeposits, Object.keys(sampleBankDeposits[0])), "BankDeposits");
-
-      const filename = `${activeCompany}_ERP_Data_Entry_Template.xlsx`;
-      saveWorkbookAsXlsx(wb, filename, `📄 Template ${filename} downloaded!`);
+      const filename = "MADHAV_SHIVOM_SINGLE_SHEET_TEMPLATE.xlsx";
+      saveWorkbookAsXlsx(wb, filename, "📄 Single-Sheet Template downloaded!");
     }
 
-    // ==================== BULK EXCEL UPLOAD / IMPORT ====================
+    // ==================== SINGLE-SHEET BULK EXCEL UPLOAD / IMPORT (MADHAV + SHIVOM) ====================
     let pendingExcelImportData = null;
 
     function openExcelImportModal() {
       if (!isAdminLoggedIn) { alert("Only Owner Admin can upload / import Excel data."); return; }
       pendingExcelImportData = null;
-      const co = COMPANIES[activeCompany] || { name: activeCompany };
       const lbl = document.getElementById("importModalCompanyLabel");
-      if (lbl) lbl.textContent = co.name;
+      if (lbl) lbl.textContent = "MADHAV & SHIVOM";
       const fileInp = document.getElementById("excelImportFileInput");
       if (fileInp) fileInp.value = "";
       const previewBox = document.getElementById("excelImportPreviewBox");
@@ -9708,6 +9840,21 @@ Thank you! Your payment has been received successfully.`;
       return fallback;
     }
 
+    function parseCompanyBucket(rawVal) {
+      const s = String(rawVal || "").trim().toUpperCase();
+      if (s.includes("SHIV")) return "SHIVOM";
+      if (s.includes("MADH")) return "MADHAV";
+      return activeCompany || "MADHAV";
+    }
+
+    function parseAccountCode(str) {
+      const s = String(str || "").toUpperCase();
+      if (s.includes("ROSHAN")) return "ROSHAN";
+      if (s.includes("PRASHIK")) return "PRASHIK";
+      if (s.includes("SAVITA")) return "SAVITA";
+      return "IOB";
+    }
+
     function handleExcelImportFileSelect(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -9721,156 +9868,184 @@ Thank you! Your payment has been received successfully.`;
           const data = new Uint8Array(evt.target.result);
           const wb = XLSX.read(data, { type: "array" });
 
-          const findSheet = (candidates) => {
-            for (const name of wb.SheetNames) {
-              const norm = normalizeColKey(name);
-              if (candidates.some(c => norm === normalizeColKey(c) || norm.includes(normalizeColKey(c)))) {
-                return XLSX.utils.sheet_to_json(wb.Sheets[name], { defval: "" });
-              }
-            }
-            return [];
+          const buckets = {
+            MADHAV: { products: [], parties: [], orders: [], collections: [], bankDeposits: [], cashHandovers: [] },
+            SHIVOM: { products: [], parties: [], orders: [], collections: [], bankDeposits: [], cashHandovers: [] }
           };
 
-          const rawProducts = findSheet(["Products", "Stock_Inventory", "Stock"]).filter(r => !isSampleOrBlankRow(r));
-          const rawParties = findSheet(["Parties", "Parties_&_Balances", "Party_Balance_Ageing", "Dealers"]).filter(r => !isSampleOrBlankRow(r));
-          const rawOrders = findSheet(["Orders", "Orders_&_Bills", "Orders_Dispatch"]).filter(r => !isSampleOrBlankRow(r));
-          const rawCollections = findSheet(["Collections", "Collections_&_Cheques", "Cash_Bank_Collection"]).filter(r => !isSampleOrBlankRow(r));
-          const rawDeposits = findSheet(["BankDeposits", "Bank_Deposits"]).filter(r => !isSampleOrBlankRow(r));
-
           const nowBase = Date.now();
+          let rowIdx = 0;
 
-          const products = rawProducts.map((r, i) => {
-            const name = String(pickExcelVal(r, ["Name", "ProductName", "Product"])).trim();
-            if (!name) return null;
-            return {
-              id: "PR_IMP_" + nowBase + "_" + i,
-              code: String(pickExcelVal(r, ["Code", "ProductCode"], "PR" + (i + 1))).trim(),
-              name: name,
-              group: String(pickExcelVal(r, ["Category", "Group"], "General")).trim(),
-              hsn: String(pickExcelVal(r, ["HSN", "HSNCode"], "85166000")).trim(),
-              gst: Number(pickExcelVal(r, ["GST_Percent", "GST", "GST%"], 18)) || 0,
-              openingStock: Number(pickExcelVal(r, ["OpeningStock", "Opening"], 0)) || 0,
-              inwardStock: Number(pickExcelVal(r, ["InwardStock", "Inward"], 0)) || 0,
-              rate: Number(pickExcelVal(r, ["Rate", "DealerRate"], 0)) || 0,
-              mrp: Number(pickExcelVal(r, ["MRP"], 0)) || 0,
-              scheme: String(pickExcelVal(r, ["Scheme"], "")).trim(),
-              lowStockLimit: Number(pickExcelVal(r, ["LowStockLimit"], 3)) || 3
-            };
-          }).filter(Boolean);
+          const firstSheetName = wb.SheetNames[0];
+          const firstRows = XLSX.utils.sheet_to_json(wb.Sheets[firstSheetName], { defval: "" }).filter(r => !isSampleOrBlankRow(r));
+          const hasRecordTypeCol = firstRows.some(r => String(pickExcelVal(r, ["Record_Type", "RecordType", "Type"], "")).trim() !== "");
 
-          const parties = rawParties.map((r, i) => {
-            const name = String(pickExcelVal(r, ["Name", "PartyName", "StoreName", "Dealer"])).trim().toUpperCase();
-            if (!name) return null;
-            return {
-              id: "P_IMP_" + nowBase + "_" + i,
-              name: name,
-              mobile: String(pickExcelVal(r, ["Mobile", "MobileNumber", "Phone"], "")).replace(/\D/g, "").slice(-10),
-              area: String(pickExcelVal(r, ["Area", "Market", "City"], "NAGPUR")).trim().toUpperCase(),
-              gstin: String(pickExcelVal(r, ["GSTIN", "GSTNo"], "")).trim().toUpperCase(),
-              openingBalance: Number(pickExcelVal(r, ["OpeningBalance", "OpeningDue", "Opening"], 0)) || 0
-            };
-          }).filter(Boolean);
+          if (hasRecordTypeCol) {
+            firstRows.forEach(r => {
+              rowIdx++;
+              const co = parseCompanyBucket(pickExcelVal(r, ["Company", "Firm", "Unit"], activeCompany));
+              const rType = String(pickExcelVal(r, ["Record_Type", "RecordType", "Type"], "")).trim().toUpperCase();
+              const bucket = buckets[co];
 
-          const orders = rawOrders.map((r, i) => {
-            const partyName = String(pickExcelVal(r, ["PartyName", "Party", "Dealer"])).trim().toUpperCase();
-            const productName = String(pickExcelVal(r, ["ProductName", "Product", "Item"])).trim();
-            const qty = Number(pickExcelVal(r, ["Qty", "OrderQty", "Quantity"], 0)) || 0;
-            if (!partyName || !productName || qty <= 0) return null;
-            const rate = Number(pickExcelVal(r, ["Rate", "UnitRate"], 0)) || 0;
-            const dispQty = Math.min(qty, Math.max(0, Number(pickExcelVal(r, ["DispatchedQty", "Dispatched"], 0)) || 0));
-            const orderNo = String(pickExcelVal(r, ["OrderNo", "BillNo", "MemoNo"], String(1000 + i + 1))).trim();
-            const totalAmt = Number(pickExcelVal(r, ["TotalAmount", "TotalAmt", "Amount"], qty * rate)) || (qty * rate);
-            return {
-              id: "ORD_IMP_" + nowBase + "_" + i,
-              orderNo: orderNo.replace(/^#/, ""),
-              memoNo: String(pickExcelVal(r, ["MemoNo"], "")).trim() || undefined,
-              date: normalizeExcelDate(pickExcelVal(r, ["Date", "OrderDate", "BillDate"])),
-              partyId: "",
-              partyName: partyName,
-              salespersonName: String(pickExcelVal(r, ["Salesperson", "BookedBy", "SalespersonName"], "PRASHIK HAJARE")).trim().toUpperCase(),
-              productId: "",
-              productName: productName,
-              orderQty: qty,
-              dispatchedQty: dispQty,
-              rate: rate,
-              totalAmt: totalAmt
-            };
-          }).filter(Boolean);
+              if (rType.includes("PARTY") || rType.includes("DEALER") || rType.includes("OUTSTANDING")) {
+                const name = String(pickExcelVal(r, ["Party_Name", "PartyName", "Name"], "")).trim().toUpperCase();
+                if (!name) return;
+                const catHsn = String(pickExcelVal(r, ["Category_HSN", "GSTIN"], ""));
+                const gstMatch = catHsn.match(/GSTIN:\s*([A-Z0-9]+)/i);
+                const remark = String(pickExcelVal(r, ["Remark_Details", "Remark"], ""));
+                const openMatch = remark.match(/Opening\s*Bal:\s*₹?\s*([0-9.]+)/i);
+                const openBalVal = pickExcelVal(r, ["OpeningBalance", "Outstanding_Due"], "");
+                const openingBalance = openMatch ? Number(openMatch[1]) : (Number(openBalVal) || 0);
+                bucket.parties.push({
+                  id: "P_IMP_" + nowBase + "_" + rowIdx,
+                  name: name,
+                  mobile: String(pickExcelVal(r, ["Mobile", "Phone"], "")).replace(/\D/g, "").slice(-10),
+                  area: String(pickExcelVal(r, ["Area", "Market"], "NAGPUR")).trim().toUpperCase(),
+                  gstin: gstMatch ? gstMatch[1].toUpperCase() : "",
+                  openingBalance: openingBalance
+                });
+              } else if (rType.includes("STOCK") || rType.includes("PRODUCT") || rType.includes("ITEM")) {
+                const name = String(pickExcelVal(r, ["Product_Name", "ProductName", "Name"], "")).trim();
+                if (!name) return;
+                const catHsn = String(pickExcelVal(r, ["Category_HSN", "Category"], ""));
+                const parts = catHsn.split("|").map(x => x.trim());
+                const category = parts[0] && !parts[0].toUpperCase().startsWith("HSN") ? parts[0] : "General";
+                const hsnMatch = catHsn.match(/HSN:\s*([0-9]+)/i);
+                const gstMatch = catHsn.match(/GST:\s*([0-9.]+)/i);
+                const remark = String(pickExcelVal(r, ["Remark_Details", "Scheme"], ""));
+                const schemeMatch = remark.match(/Scheme:\s*(.+)$/i);
+                const openStk = Number(pickExcelVal(r, ["Dispatched_or_Total_Stock", "OpeningStock", "Qty_or_Avail_Stock"], 0)) || 0;
+                bucket.products.push({
+                  id: "PR_IMP_" + nowBase + "_" + rowIdx,
+                  code: String(pickExcelVal(r, ["Ref_Bill_Receipt_Code", "Code"], "PR" + rowIdx)).trim(),
+                  name: name,
+                  group: category,
+                  hsn: hsnMatch ? hsnMatch[1] : "85166000",
+                  gst: gstMatch ? Number(gstMatch[1]) : 18,
+                  openingStock: openStk,
+                  inwardStock: 0,
+                  rate: Number(pickExcelVal(r, ["Rate"], 0)) || 0,
+                  mrp: Number(pickExcelVal(r, ["MRP"], 0)) || 0,
+                  scheme: schemeMatch ? schemeMatch[1].trim() : "",
+                  lowStockLimit: 3
+                });
+              } else if (rType.includes("ORDER") || rType.includes("BILL")) {
+                const partyName = String(pickExcelVal(r, ["Party_Name", "PartyName"], "")).trim().toUpperCase();
+                const productName = String(pickExcelVal(r, ["Product_Name", "ProductName"], "")).trim();
+                const qty = Number(pickExcelVal(r, ["Qty_or_Avail_Stock", "Qty", "OrderQty"], 0)) || 0;
+                if (!partyName || !productName || qty <= 0) return;
+                const disp = Math.min(qty, Math.max(0, Number(pickExcelVal(r, ["Dispatched_or_Total_Stock", "DispatchedQty"], 0)) || 0));
+                const rate = Number(pickExcelVal(r, ["Rate"], 0)) || 0;
+                const amt = Number(pickExcelVal(r, ["Order_Bill_Amt", "TotalAmount"], qty * rate)) || (qty * rate);
+                const refNo = String(pickExcelVal(r, ["Ref_Bill_Receipt_Code", "OrderNo"], String(1000 + rowIdx))).trim();
+                bucket.orders.push({
+                  id: "ORD_IMP_" + nowBase + "_" + rowIdx,
+                  orderNo: refNo.replace(/^#/, ""),
+                  date: normalizeExcelDate(pickExcelVal(r, ["Date"])),
+                  partyId: "",
+                  partyName: partyName,
+                  salespersonName: String(pickExcelVal(r, ["Salesperson_Staff", "Salesperson"], "PRASHIK HAJARE")).trim().toUpperCase(),
+                  productId: "",
+                  productName: productName,
+                  orderQty: qty,
+                  dispatchedQty: disp,
+                  rate: rate,
+                  totalAmt: amt
+                });
+              } else if (rType.includes("COLLECTION") || rType.includes("PAYMENT") || rType.includes("RECEIPT")) {
+                const partyName = String(pickExcelVal(r, ["Party_Name", "PartyName"], "")).trim().toUpperCase();
+                const amount = Number(pickExcelVal(r, ["Collection_Paid_Amt", "Amount"], 0)) || 0;
+                if (!partyName || amount <= 0) return;
+                const modeRaw = String(pickExcelVal(r, ["Mode_or_Account", "Mode"], "Cash")).trim();
+                let mode = "Cash";
+                if (/cheq|chq/i.test(modeRaw)) mode = "Cheque";
+                else if (/bank|upi|online|iob|roshan|prashik|savita/i.test(modeRaw)) mode = "Bank";
+                const depAcc = mode === "Cash" ? null : parseAccountCode(modeRaw);
+                const statusRaw = String(pickExcelVal(r, ["Status"], "")).trim();
+                const chqStatus = mode === "Cheque"
+                  ? (/clear|pass/i.test(statusRaw) ? "Cleared" : (/bounc/i.test(statusRaw) ? "Bounced" : "Pending"))
+                  : null;
+                const remark = String(pickExcelVal(r, ["Remark_Details", "Remark"], "")).trim();
+                const chqNoMatch = remark.match(/Chq\s*#([A-Za-z0-9-]+)/i);
+                bucket.collections.push({
+                  id: "COL_IMP_" + nowBase + "_" + rowIdx,
+                  receiptNo: String(pickExcelVal(r, ["Ref_Bill_Receipt_Code", "ReceiptNo"], "RCP-IMP-" + rowIdx)).trim(),
+                  date: normalizeExcelDate(pickExcelVal(r, ["Date"])),
+                  partyId: "",
+                  partyName: partyName,
+                  salespersonName: String(pickExcelVal(r, ["Salesperson_Staff", "Salesperson"], "PRASHIK HAJARE")).trim().toUpperCase(),
+                  amount: amount,
+                  mode: mode,
+                  depositAccount: depAcc,
+                  chequeNo: mode === "Cheque" ? (chqNoMatch ? chqNoMatch[1] : ("CHQ-" + rowIdx)) : null,
+                  chequeBank: mode === "Cheque" ? "Bank" : null,
+                  chequeDate: mode === "Cheque" ? normalizeExcelDate(pickExcelVal(r, ["Date"])) : null,
+                  chequeStatus: chqStatus,
+                  bankRef: remark
+                });
+              } else if (rType.includes("DEPOSIT")) {
+                const amount = Number(pickExcelVal(r, ["Collection_Paid_Amt", "Amount"], 0)) || 0;
+                if (amount <= 0) return;
+                const acc = parseAccountCode(pickExcelVal(r, ["Mode_or_Account", "DepositAccount"], "IOB"));
+                bucket.bankDeposits.push({
+                  id: "DEP_IMP_" + nowBase + "_" + rowIdx,
+                  date: normalizeExcelDate(pickExcelVal(r, ["Date"])),
+                  depositAccount: acc,
+                  bankName: getAccShortName(acc),
+                  challanNo: String(pickExcelVal(r, ["Ref_Bill_Receipt_Code", "ChallanNo"], "IMP-" + rowIdx)).trim(),
+                  amount: amount,
+                  depositedBy: String(pickExcelVal(r, ["Salesperson_Staff", "DepositedBy"], "PRASHIK HAJARE")).trim().toUpperCase()
+                });
+              } else if (rType.includes("HANDOVER")) {
+                const amount = Number(pickExcelVal(r, ["Collection_Paid_Amt", "Amount"], 0)) || 0;
+                if (amount <= 0) return;
+                const stRaw = String(pickExcelVal(r, ["Status"], "Accepted")).trim();
+                const st = /pend/i.test(stRaw) ? "Pending" : (/rej/i.test(stRaw) ? "Rejected" : "Accepted");
+                bucket.cashHandovers.push({
+                  id: "HO_IMP_" + nowBase + "_" + rowIdx,
+                  date: normalizeExcelDate(pickExcelVal(r, ["Date"])),
+                  time: "",
+                  fromStaffName: String(pickExcelVal(r, ["Salesperson_Staff", "Party_Name"], "GOPAL AMBAGADE")).trim().toUpperCase(),
+                  toStaffName: "PRASHIK HAJARE",
+                  amount: amount,
+                  status: st,
+                  note: String(pickExcelVal(r, ["Remark_Details"], "Imported via Excel")).trim()
+                });
+              }
+            });
+          }
 
-          const collections = rawCollections.map((r, i) => {
-            const partyName = String(pickExcelVal(r, ["PartyName", "Party", "Dealer"])).trim().toUpperCase();
-            const amount = Number(pickExcelVal(r, ["Amount", "AmountReceived"], 0)) || 0;
-            if (!partyName || amount <= 0) return null;
-            let mode = String(pickExcelVal(r, ["Mode", "PaymentMode"], "Cash")).trim();
-            if (/bank|upi|online|neft|rtgs/i.test(mode)) mode = "Bank";
-            else if (/cheq|chq/i.test(mode)) mode = "Cheque";
-            else mode = "Cash";
+          const countCo = (b) => b.products.length + b.parties.length + b.orders.length + b.collections.length + b.bankDeposits.length + b.cashHandovers.length;
+          const mCount = countCo(buckets.MADHAV);
+          const sCount = countCo(buckets.SHIVOM);
+          const totalCount = mCount + sCount;
 
-            let depAcc = String(pickExcelVal(r, ["DepositAccount", "Account"], "")).trim().toUpperCase();
-            if (mode !== "Cash" && !["IOB", "ROSHAN", "PRASHIK", "SAVITA"].includes(depAcc)) {
-              depAcc = "IOB";
-            }
-
-            const chqStatusRaw = String(pickExcelVal(r, ["ChequeStatus"], "")).trim();
-            const chqStatus = mode === "Cheque"
-              ? (/clear|pass/i.test(chqStatusRaw) ? "Cleared" : (/bounc/i.test(chqStatusRaw) ? "Bounced" : "Pending"))
-              : null;
-
-            return {
-              id: "COL_IMP_" + nowBase + "_" + i,
-              receiptNo: String(pickExcelVal(r, ["ReceiptNo", "Receipt"], "RCP-IMP-" + (i + 1))).trim(),
-              date: normalizeExcelDate(pickExcelVal(r, ["Date", "PaymentDate"])),
-              partyId: "",
-              partyName: partyName,
-              salespersonName: String(pickExcelVal(r, ["Salesperson", "CollectedBy", "SalespersonName"], "PRASHIK HAJARE")).trim().toUpperCase(),
-              amount: amount,
-              mode: mode,
-              depositAccount: mode === "Cash" ? null : depAcc,
-              chequeNo: mode === "Cheque" ? String(pickExcelVal(r, ["ChequeNo", "ChqNo"], "")).trim() : null,
-              chequeBank: mode === "Cheque" ? String(pickExcelVal(r, ["ChequeBank", "BankName"], "")).trim() : null,
-              chequeDate: mode === "Cheque" ? normalizeExcelDate(pickExcelVal(r, ["ChequeDate", "Date"])) : null,
-              chequeStatus: chqStatus,
-              bankRef: String(pickExcelVal(r, ["Remark", "BankRef", "Reference", "Ref"], "")).trim()
-            };
-          }).filter(Boolean);
-
-          const bankDeposits = rawDeposits.map((r, i) => {
-            const amount = Number(pickExcelVal(r, ["Amount"], 0)) || 0;
-            if (amount <= 0) return null;
-            let acc = String(pickExcelVal(r, ["DepositAccount", "Account"], "IOB")).trim().toUpperCase();
-            if (!["IOB", "ROSHAN", "PRASHIK", "SAVITA"].includes(acc)) acc = "IOB";
-            return {
-              id: "DEP_IMP_" + nowBase + "_" + i,
-              date: normalizeExcelDate(pickExcelVal(r, ["Date", "DepositDate"])),
-              depositAccount: acc,
-              bankName: getAccShortName(acc),
-              challanNo: String(pickExcelVal(r, ["ChallanNo", "Challan", "Ref"], "IMP-" + (i + 1))).trim(),
-              amount: amount,
-              depositedBy: String(pickExcelVal(r, ["DepositedBy", "By"], "PRASHIK HAJARE")).trim().toUpperCase()
-            };
-          }).filter(Boolean);
-
-          const totalCount = products.length + parties.length + orders.length + collections.length + bankDeposits.length;
           if (totalCount === 0) {
             pendingExcelImportData = null;
             previewBox.style.display = "block";
-            previewBox.innerHTML = `<div style="color:#b91c1c;font-weight:700;">⚠️ No valid data rows found in this Excel file.</div><div style="color:#64748b;margin-top:4px;">Make sure you used the official template sheets (<code>Products</code>, <code>Parties</code>, <code>Orders</code>, <code>Collections</code>, <code>BankDeposits</code>) and removed <code>[SAMPLE]</code> tags.</div>`;
+            previewBox.innerHTML = `<div style="color:#b91c1c;font-weight:700;">⚠️ No valid data rows found in this Excel file.</div><div style="color:#64748b;margin-top:4px;">Use the Single-Sheet Template, keep <code>Company</code> (<code>MADHAV</code>/<code>SHIVOM</code>) and <code>Record_Type</code> (<code>PARTY</code>, <code>STOCK</code>, <code>ORDER</code>, <code>COLLECTION</code>, <code>BANK_DEPOSIT</code>), and remove <code>[SAMPLE]</code> tags.</div>`;
             modeWrap.style.display = "none";
             btn.disabled = true;
             return;
           }
 
-          pendingExcelImportData = { products, parties, orders, collections, bankDeposits };
+          pendingExcelImportData = buckets;
           previewBox.style.display = "block";
           previewBox.innerHTML = `
-            <div style="font-weight:700;color:#0f766e;margin-bottom:6px;">✅ File Parsed Successfully: ${file.name}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;">
-              <div>📦 Products: <strong>${products.length}</strong></div>
-              <div>🏪 Parties: <strong>${parties.length}</strong></div>
-              <div>🛒 Orders / Bills: <strong>${orders.length}</strong></div>
-              <div>💵 Collections: <strong>${collections.length}</strong></div>
-              <div>🏦 Bank Deposits: <strong>${bankDeposits.length}</strong></div>
-              <div><strong>Total Valid Rows: ${totalCount}</strong></div>
+            <div style="font-weight:700;color:#0f766e;margin-bottom:8px;">✅ Single-Sheet File Parsed: ${file.name} (${totalCount} rows)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem;">
+              <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px;">
+                <div style="font-weight:800;color:var(--primary);margin-bottom:4px;">🏢 MADHAV (${mCount})</div>
+                <div>Parties: <strong>${buckets.MADHAV.parties.length}</strong> | Stock: <strong>${buckets.MADHAV.products.length}</strong></div>
+                <div>Orders: <strong>${buckets.MADHAV.orders.length}</strong> | Col.: <strong>${buckets.MADHAV.collections.length}</strong></div>
+                <div>Deposits: <strong>${buckets.MADHAV.bankDeposits.length}</strong> | Handovers: <strong>${buckets.MADHAV.cashHandovers.length}</strong></div>
+              </div>
+              <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px;">
+                <div style="font-weight:800;color:#0f766e;margin-bottom:4px;">⚡ SHIVOM (${sCount})</div>
+                <div>Parties: <strong>${buckets.SHIVOM.parties.length}</strong> | Stock: <strong>${buckets.SHIVOM.products.length}</strong></div>
+                <div>Orders: <strong>${buckets.SHIVOM.orders.length}</strong> | Col.: <strong>${buckets.SHIVOM.collections.length}</strong></div>
+                <div>Deposits: <strong>${buckets.SHIVOM.bankDeposits.length}</strong> | Handovers: <strong>${buckets.SHIVOM.cashHandovers.length}</strong></div>
+              </div>
             </div>
           `;
           modeWrap.style.display = "block";
@@ -9926,120 +10101,142 @@ Thank you! Your payment has been received successfully.`;
       btn.textContent = "⏳ Importing & Syncing...";
       if (statusMsg) {
         statusMsg.style.display = "block";
-        statusMsg.textContent = "Processing records and syncing to Firebase cloud...";
+        statusMsg.textContent = "Importing single-sheet data for MADHAV & SHIVOM and syncing to Firebase...";
       }
 
       try {
         isResetInProgress = true;
-        const prefix = activeCompany.toLowerCase() + "_";
-        const d = pendingExcelImportData;
-        const touchedCols = [];
 
-        // 1. Products
-        if (d.products.length > 0) {
-          touchedCols.push("products");
-          if (importMode === "replace") {
-            state.products = d.products;
-            await deleteFirestoreCollectionDocs(prefix, "products");
-          } else {
-            d.products.forEach(np => {
-              const existing = state.products.find(p =>
-                (np.code && p.code && p.code.toLowerCase() === np.code.toLowerCase()) ||
-                p.name.toLowerCase() === np.name.toLowerCase()
-              );
-              if (existing) {
-                Object.assign(existing, { ...np, id: existing.id });
-              } else {
-                state.products.push(np);
-              }
+        for (const coCode of ["MADHAV", "SHIVOM"]) {
+          const d = pendingExcelImportData[coCode];
+          const coTotal = d.products.length + d.parties.length + d.orders.length + d.collections.length + d.bankDeposits.length + d.cashHandovers.length;
+          if (coTotal === 0) continue;
+
+          const isCurrent = (coCode === activeCompany);
+          const targetState = isCurrent ? state : await loadCompanySnapshotForExcel(coCode);
+          if (!targetState.products) targetState.products = [];
+          if (!targetState.parties) targetState.parties = [];
+          if (!targetState.orders) targetState.orders = [];
+          if (!targetState.collections) targetState.collections = [];
+          if (!targetState.bankDeposits) targetState.bankDeposits = [];
+          if (!targetState.cashHandovers) targetState.cashHandovers = [];
+
+          const prefix = coCode.toLowerCase() + "_";
+          const touchedCols = [];
+
+          // 1. Products
+          if (d.products.length > 0) {
+            touchedCols.push("products");
+            if (importMode === "replace") {
+              targetState.products = d.products;
+              await deleteFirestoreCollectionDocs(prefix, "products");
+            } else {
+              d.products.forEach(np => {
+                const existing = targetState.products.find(p =>
+                  (np.code && p.code && p.code.toLowerCase() === np.code.toLowerCase()) ||
+                  p.name.toLowerCase() === np.name.toLowerCase()
+                );
+                if (existing) Object.assign(existing, { ...np, id: existing.id });
+                else targetState.products.push(np);
+              });
+            }
+          }
+
+          // 2. Parties
+          if (d.parties.length > 0) {
+            touchedCols.push("parties");
+            if (importMode === "replace") {
+              targetState.parties = d.parties;
+              await deleteFirestoreCollectionDocs(prefix, "parties");
+            } else {
+              d.parties.forEach(np => {
+                const existing = targetState.parties.find(p => p.name.toUpperCase() === np.name.toUpperCase());
+                if (existing) {
+                  if (np.mobile) existing.mobile = np.mobile;
+                  if (np.area) existing.area = np.area;
+                  if (np.gstin) existing.gstin = np.gstin;
+                  existing.openingBalance = np.openingBalance;
+                } else {
+                  targetState.parties.push(np);
+                }
+              });
+            }
+          }
+
+          const resolvePartyId = (pName) => {
+            const upper = pName.toUpperCase();
+            let p = targetState.parties.find(x => x.name.toUpperCase() === upper);
+            if (!p) {
+              p = { id: "P_AUTO_" + Date.now() + "_" + Math.floor(Math.random() * 10000), name: upper, mobile: "", area: "NAGPUR", gstin: "", openingBalance: 0 };
+              targetState.parties.push(p);
+              if (!touchedCols.includes("parties")) touchedCols.push("parties");
+            }
+            return p.id;
+          };
+
+          // 3. Orders
+          if (d.orders.length > 0) {
+            touchedCols.push("orders");
+            const linkedOrders = d.orders.map(o => {
+              const pId = resolvePartyId(o.partyName);
+              const prod = targetState.products.find(pr => pr.name.toLowerCase() === o.productName.toLowerCase() || (pr.code && pr.code.toLowerCase() === o.productName.toLowerCase()));
+              return { ...o, partyId: pId, productId: prod ? prod.id : "" };
             });
+            if (importMode === "replace") {
+              targetState.orders = linkedOrders;
+              await deleteFirestoreCollectionDocs(prefix, "orders");
+            } else {
+              linkedOrders.forEach(no => targetState.orders.unshift(no));
+            }
+            targetState.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
           }
-        }
 
-        // 2. Parties
-        if (d.parties.length > 0) {
-          touchedCols.push("parties");
-          if (importMode === "replace") {
-            state.parties = d.parties;
-            await deleteFirestoreCollectionDocs(prefix, "parties");
-          } else {
-            d.parties.forEach(np => {
-              const existing = state.parties.find(p => p.name.toUpperCase() === np.name.toUpperCase());
-              if (existing) {
-                if (np.mobile) existing.mobile = np.mobile;
-                if (np.area) existing.area = np.area;
-                if (np.gstin) existing.gstin = np.gstin;
-                existing.openingBalance = np.openingBalance;
-              } else {
-                state.parties.push(np);
-              }
-            });
+          // 4. Collections
+          if (d.collections.length > 0) {
+            touchedCols.push("collections");
+            const linkedCols = d.collections.map(c => ({ ...c, partyId: resolvePartyId(c.partyName) }));
+            if (importMode === "replace") {
+              targetState.collections = linkedCols;
+              await deleteFirestoreCollectionDocs(prefix, "collections");
+            } else {
+              linkedCols.forEach(nc => targetState.collections.unshift(nc));
+            }
           }
-        }
 
-        // Helper to ensure party exists and get partyId
-        const resolvePartyId = (pName) => {
-          const upper = pName.toUpperCase();
-          let p = state.parties.find(x => x.name.toUpperCase() === upper);
-          if (!p) {
-            p = { id: "P_AUTO_" + Date.now() + "_" + Math.floor(Math.random() * 1000), name: upper, mobile: "", area: "NAGPUR", gstin: "", openingBalance: 0 };
-            state.parties.push(p);
-            if (!touchedCols.includes("parties")) touchedCols.push("parties");
+          // 5. Bank Deposits
+          if (d.bankDeposits.length > 0) {
+            touchedCols.push("bankDeposits");
+            if (importMode === "replace") {
+              targetState.bankDeposits = d.bankDeposits;
+              await deleteFirestoreCollectionDocs(prefix, "bankDeposits");
+            } else {
+              d.bankDeposits.forEach(nb => targetState.bankDeposits.unshift(nb));
+            }
           }
-          return p.id;
-        };
 
-        // 3. Orders
-        if (d.orders.length > 0) {
-          touchedCols.push("orders");
-          const linkedOrders = d.orders.map(o => {
-            const pId = resolvePartyId(o.partyName);
-            const prod = state.products.find(pr => pr.name.toLowerCase() === o.productName.toLowerCase() || (pr.code && pr.code.toLowerCase() === o.productName.toLowerCase()));
-            return { ...o, partyId: pId, productId: prod ? prod.id : "" };
-          });
-          if (importMode === "replace") {
-            state.orders = linkedOrders;
-            await deleteFirestoreCollectionDocs(prefix, "orders");
-          } else {
-            linkedOrders.forEach(no => state.orders.unshift(no));
+          // 6. Cash Handovers
+          if (d.cashHandovers.length > 0) {
+            touchedCols.push("cashHandovers");
+            if (importMode === "replace") {
+              targetState.cashHandovers = d.cashHandovers;
+              await deleteFirestoreCollectionDocs(prefix, "cashHandovers");
+            } else {
+              d.cashHandovers.forEach(nh => targetState.cashHandovers.unshift(nh));
+            }
           }
-          state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
-        }
 
-        // 4. Collections
-        if (d.collections.length > 0) {
-          touchedCols.push("collections");
-          const linkedCols = d.collections.map(c => ({ ...c, partyId: resolvePartyId(c.partyName) }));
-          if (importMode === "replace") {
-            state.collections = linkedCols;
-            await deleteFirestoreCollectionDocs(prefix, "collections");
-          } else {
-            linkedCols.forEach(nc => state.collections.unshift(nc));
+          const coKey = STORAGE_KEY + "_" + coCode.toLowerCase();
+          localStorage.setItem(coKey, JSON.stringify(targetState));
+
+          for (const col of touchedCols) {
+            await uploadFirestoreCollectionDocs(prefix, col, targetState[col]);
           }
-        }
-
-        // 5. Bank Deposits
-        if (d.bankDeposits.length > 0) {
-          touchedCols.push("bankDeposits");
-          if (importMode === "replace") {
-            state.bankDeposits = d.bankDeposits;
-            await deleteFirestoreCollectionDocs(prefix, "bankDeposits");
-          } else {
-            d.bankDeposits.forEach(nb => state.bankDeposits.unshift(nb));
-          }
-        }
-
-        persistLocal();
-
-        // Sync touched collections to Firebase
-        for (const col of touchedCols) {
-          await uploadFirestoreCollectionDocs(prefix, col, state[col]);
         }
 
         isResetInProgress = false;
         refreshAll();
         closeModal("excelImportModal");
-        showToast(`✅ Excel data imported successfully into ${activeCompany}!`);
+        showToast("✅ Single-Sheet Excel data imported & synced successfully!");
       } catch (err) {
         isResetInProgress = false;
         console.error("Import error:", err);
@@ -10111,7 +10308,7 @@ Thank you! Your payment has been received successfully.`;
         // Step 1: Safety Backup Excel
         if (autoBackup) {
           const ts = new Date().toISOString().split("T")[0];
-          exportToExcel(`${activeCompany}_PRE_CLEAR_BACKUP_${ts}.xlsx`);
+          await exportToExcel(`${activeCompany}_PRE_CLEAR_BACKUP_${ts}.xlsx`);
         }
 
         isResetInProgress = true;
