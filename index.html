@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     :root {
       --primary: #1e3a5f;
@@ -1147,6 +1148,7 @@
       <!-- Admin Only Tabs -->
       <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
       <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
+      <button class="nav-tab admin-only-item" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
       <button class="nav-tab admin-only-item" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
       <button class="nav-tab admin-only-item" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
     </nav>
@@ -1294,19 +1296,27 @@
 
         <div class="grid-2">
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Team Performance (Roshan Thakre &amp; Prashik Hajare)</span>
+            <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+              <div>
+                <span class="card-title">Salesperson Performance &amp; Target Scorecard</span>
+                <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Click 🎯 Target to set/update monthly booking target</div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <input type="month" id="dashPerfMonth" class="form-control" style="width:145px;padding:4px 8px;font-size:0.78rem;" onchange="renderDashboard()" />
+                <label style="font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                  <input type="checkbox" id="dashPerfAllTime" checked onchange="renderDashboard()" /> All Time
+                </label>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Team Member &amp; Role</th>
-                    <th class="text-right">Orders Booked</th>
+                    <th class="text-right">Booked</th>
                     <th class="text-right">Dispatched</th>
-                    <th class="text-right">Cash Col.</th>
-                    <th class="text-right">Bank Col.</th>
                     <th class="text-right">Total Col.</th>
+                    <th class="text-center">Target %</th>
                   </tr>
                 </thead>
                 <tbody id="dashSalespersonBody"></tbody>
@@ -1316,14 +1326,17 @@
 
           <div class="card">
             <div class="card-header">
-              <span class="card-title">Receivables Ageing Alert Summary</span>
+              <div>
+                <span class="card-title">Receivables 30 / 60 / 90+ Days Ageing Summary</span>
+                <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Live aging calculated against today's date + Credit Limit alerts</div>
+              </div>
               <button class="btn btn-primary btn-sm" onclick="switchTab('open-dues', document.querySelector('[data-tab=open-dues]'))">View All Parties</button>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Alert Category</th>
+                    <th>Ageing Bucket / Alert</th>
                     <th class="text-center">Parties</th>
                     <th class="text-right">Pending Amount</th>
                   </tr>
@@ -1850,6 +1863,147 @@
         </div>
       </section>
 
+      <!-- ==================== ADMIN TAB: EXPENSES & PROFIT ==================== -->
+      <section id="tab-admin-expenses" class="tab-panel">
+        <div class="card" style="border-left:4px solid #b45309;margin-bottom:16px;">
+          <div class="card-header" style="background:#fffbeb;flex-wrap:wrap;gap:10px;">
+            <div>
+              <span class="card-title" style="color:#92400e;">💸 Daily Business Expenses, Cash-in-Hand &amp; Profit Tracker</span>
+              <div style="font-size:0.76rem;color:#78350f;margin-top:2px;">Track petrol, tempo freight, hamali, godown rent, salary &amp; daily expenses to know real Cash-in-Hand and Net Profit</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <label style="font-size:0.78rem;font-weight:700;color:#78350f;">Month:</label>
+              <input type="month" id="expReportMonth" class="form-control" style="width:160px;font-weight:600;" onchange="renderExpensesTab()" />
+              <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:700;color:#78350f;background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;">
+                <input type="checkbox" id="expAllTimeChk" onchange="renderExpensesTab()" /> All Time
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" style="margin-bottom:16px;">
+          <div class="kpi-card red">
+            <div class="kpi-label">Total Expenses</div>
+            <div class="kpi-val" id="expKpiTotal">₹0</div>
+            <div class="kpi-sub" id="expKpiSplit">Cash: ₹0 | Bank/UPI: ₹0</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Cash Collections</div>
+            <div class="kpi-val" id="expKpiCashCol">₹0</div>
+            <div class="kpi-sub" id="expKpiBankDep">Bank Deposited: ₹0</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Real Cash-in-Hand</div>
+            <div class="kpi-val" id="expKpiCashInHand">₹0</div>
+            <div class="kpi-sub">Cash Col. − Cash Exp. − Bank Dep.</div>
+          </div>
+          <div class="kpi-card" id="expKpiProfitCard">
+            <div class="kpi-label">Net Surplus (Sales − Pur. − Exp.)</div>
+            <div class="kpi-val" id="expKpiNetProfit">₹0</div>
+            <div class="kpi-sub" id="expKpiProfitSub">Dispatched Sales − Purchases − Expenses</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">+ Record New Daily Expense</span>
+          </div>
+          <form class="form-grid" onsubmit="handleAddExpense(event)">
+            <div class="form-group">
+              <label>Expense Date *</label>
+              <input type="date" id="expDate" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Category *</label>
+              <select id="expCategory" class="form-control" required>
+                <option value="Petrol / Conveyance">⛽ Petrol / Conveyance</option>
+                <option value="Transport / Tempo Freight">🚚 Transport / Tempo Freight</option>
+                <option value="Hamali / Loading">📦 Hamali / Loading</option>
+                <option value="Staff Salary / Advance">👤 Staff Salary / Advance</option>
+                <option value="Godown Rent & Electricity">🏭 Godown Rent &amp; Electricity</option>
+                <option value="Tea / Office Misc">☕ Tea / Office Misc</option>
+                <option value="Repair / Warranty">🔧 Repair / Warranty</option>
+                <option value="Other">📝 Other Expense</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Payment Mode *</label>
+              <select id="expMode" class="form-control" required>
+                <option value="Cash">💵 Cash (From Counter/Hand)</option>
+                <option value="Bank">🏦 Bank / UPI</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Amount (₹) *</label>
+              <input type="number" id="expAmount" class="form-control font-bold" min="1" step="0.01" placeholder="e.g. 500" required />
+            </div>
+            <div class="form-group">
+              <label>Paid By / Staff</label>
+              <input type="text" id="expStaff" class="form-control" placeholder="e.g. Roshan / Prashik / Gopal" value="Roshan Thakre" />
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Description / Bill Note *</label>
+              <input type="text" id="expNote" class="form-control" placeholder="e.g. Tempo bhada Hingna delivery / Gopal bike petrol" required />
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-primary" style="width:100%;font-weight:700;">💾 Save Expense</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+              <span class="card-title">Expense Register</span>
+              <select id="expCatFilter" class="form-control" style="width:190px;" onchange="renderExpensesTab()">
+                <option value="ALL">All Categories</option>
+                <option value="Petrol / Conveyance">Petrol / Conveyance</option>
+                <option value="Transport / Tempo Freight">Transport / Tempo Freight</option>
+                <option value="Hamali / Loading">Hamali / Loading</option>
+                <option value="Staff Salary / Advance">Staff Salary / Advance</option>
+                <option value="Godown Rent & Electricity">Godown Rent &amp; Electricity</option>
+                <option value="Tea / Office Misc">Tea / Office Misc</option>
+                <option value="Repair / Warranty">Repair / Warranty</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category &amp; Note</th>
+                    <th>Mode / Staff</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Category-Wise Expense Summary</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Expense Category</th>
+                    <th class="text-center">Entries</th>
+                    <th class="text-right">Total Spent</th>
+                  </tr>
+                </thead>
+                <tbody id="expenseCategorySummaryBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ==================== ADMIN TAB: GST & GSTR-1 HUB ==================== -->
       <section id="tab-admin-gst" class="tab-panel">
         <div class="card" style="border-left:4px solid #0f766e;margin-bottom:16px;">
@@ -1989,12 +2143,80 @@
           </div>
         </div>
 
-        <!-- Party GSTIN Directory -->
+        <!-- Sales Returns / Damage Goods & GST Credit Notes -->
+        <div class="card" style="border-left:4px solid #7c3aed;">
+          <div class="card-header" style="background:#f5f3ff;">
+            <div>
+              <span class="card-title" style="color:#5b21b6;">🔄 Sales Returns, Damage Goods &amp; GST Credit Notes (CDNR)</span>
+              <div style="font-size:0.74rem;color:#6d28d9;margin-top:2px;">Reduces Party Balance &amp; Output GST automatically; Good stock returns to godown inventory, Damaged stock is logged separately</div>
+            </div>
+          </div>
+          <form class="form-grid" onsubmit="handleAddSalesReturn(event)" style="border-bottom:1px solid var(--border);margin-bottom:12px;padding-bottom:14px;">
+            <div class="form-group">
+              <label>Return Date *</label>
+              <input type="date" id="srDate" class="form-control" required />
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Party / Dealer *</label>
+              <input type="text" list="partyDatalist" id="srPartyInput" class="form-control" placeholder="Select dealer returning goods..." required />
+            </div>
+            <div class="form-group">
+              <label>Original Inv. No (Optional)</label>
+              <input type="text" id="srOrigInvNo" class="form-control" placeholder="e.g. ME/26-27/205" />
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Returned Product *</label>
+              <input type="text" list="productDatalist" id="srProductInput" class="form-control" placeholder="Select returned item..." onchange="handleSrProdSelected()" required />
+            </div>
+            <div class="form-group">
+              <label>Return Qty *</label>
+              <input type="number" id="srQty" class="form-control font-bold" min="1" value="1" required />
+            </div>
+            <div class="form-group">
+              <label>Unit Credit Rate (Incl. GST ₹) *</label>
+              <input type="number" id="srRate" class="form-control font-bold" min="1" step="0.01" placeholder="e.g. 1589" required />
+            </div>
+            <div class="form-group">
+              <label>Stock Condition *</label>
+              <select id="srCondition" class="form-control" required>
+                <option value="Good">✅ Good (Add Back to Stock)</option>
+                <option value="Damaged">⚠️ Damaged / Defective (Do Not Re-Stock)</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Return Reason / Remarks</label>
+              <input type="text" id="srReason" class="form-control" placeholder="e.g. Transit dent / customer exchange / warranty defect" />
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-primary" style="width:100%;font-weight:700;background:#6d28d9;">+ Issue Credit Note</button>
+            </div>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Credit Note No</th>
+                  <th>Date</th>
+                  <th>Party</th>
+                  <th>Product &amp; Condition</th>
+                  <th class="text-right">Taxable (₹)</th>
+                  <th class="text-right">GST Reversed</th>
+                  <th class="text-right">Credit Amt</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="gstReturnsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Party GSTIN & Credit Limit Directory -->
         <div class="card">
           <div class="card-header" style="flex-wrap:wrap;gap:8px;">
             <div>
-              <span class="card-title">Party GSTIN Directory (Quick B2B Setup)</span>
-              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Add or update 15-character dealer GSTIN to auto-enable B2B invoicing &amp; IGST/CGST detection</div>
+              <span class="card-title">Party GSTIN &amp; Credit Limit Directory (Quick B2B Setup)</span>
+              <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Set 15-character dealer GSTIN (B2B/IGST) and Party Credit Limit (auto order-booking alert)</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <select id="gstPartyFilter" class="form-control" style="width:160px;" onchange="renderGstPartyDirectory()">
@@ -2012,8 +2234,8 @@
                   <th>Party Name</th>
                   <th>Area / Mobile</th>
                   <th>GSTIN</th>
-                  <th>Category / State</th>
-                  <th class="text-center">Action</th>
+                  <th>Category / Credit Limit</th>
+                  <th class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody id="gstPartyDirectoryBody"></tbody>
@@ -2086,10 +2308,27 @@
                 <label>Opening Balance (₹)</label>
                 <input type="number" id="mPartyOpen" class="form-control" min="0" value="0" required />
               </div>
+              <div class="form-group">
+                <label>Credit Limit (₹, Optional)</label>
+                <input type="number" id="mPartyCreditLimit" class="form-control" min="0" value="0" placeholder="e.g. 50000 (0 = No Limit)" />
+              </div>
               <div class="form-group" style="grid-column: span 2;">
                 <button type="submit" class="btn btn-primary" style="width:100%">+ Save Party</button>
               </div>
             </form>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #0f766e;">
+          <div class="card-header" style="background:#f0fdfa;flex-wrap:wrap;gap:10px;">
+            <div>
+              <span class="card-title" style="color:#0f766e;">📲 Dynamic UPI Payment QR Code Settings (Printed on Tax Invoices)</span>
+              <div style="font-size:0.75rem;color:#334155;margin-top:2px;">Set your official Company UPI ID so every Tax Invoice automatically prints a Scan &amp; Pay QR code with the exact bill amount</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="text" id="masterUpiIdInput" class="form-control" style="width:230px;font-weight:700;" placeholder="e.g. 7499477581@ybl or madhav@iob" />
+              <button type="button" class="btn btn-success btn-sm" onclick="saveCompanyUpiId()" style="font-weight:700;">💾 Save UPI ID</button>
+            </div>
           </div>
         </div>
 
@@ -2463,20 +2702,21 @@
     </div>
   </div>
 
-  <!-- Dispatch Modal -->
+  <!-- Dispatch Modal (Supports Multi-Item Per-Product Dispatch) -->
   <div class="modal-backdrop" id="dispatchModal">
-    <div class="modal">
-      <h3 style="margin-bottom:8px;">Dispatch Order</h3>
+    <div class="modal" style="max-width:560px;">
+      <h3 style="margin-bottom:8px;">📦 Dispatch Order (Item-Wise Warehouse Deduction)</h3>
       <p id="dispatchModalInfo" style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;"></p>
       <form onsubmit="submitDispatch(event)">
         <input type="hidden" id="dispatchOrderId" />
-        <div class="form-group" style="margin-bottom:14px;">
+        <div id="dispatchItemsContainer" style="margin-bottom:14px;display:none;"></div>
+        <div class="form-group" id="dispatchSingleWrap" style="margin-bottom:14px;">
           <label>Quantity to Dispatch Now</label>
-          <input type="number" id="dispatchQtyInput" class="form-control" min="1" required />
+          <input type="number" id="dispatchQtyInput" class="form-control" min="1" />
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;">
           <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('dispatchModal')">Cancel</button>
-          <button type="submit" class="btn btn-success btn-sm">Confirm Dispatch</button>
+          <button type="submit" class="btn btn-success btn-sm" style="font-weight:700;">✓ Confirm Dispatch</button>
         </div>
       </form>
     </div>
@@ -2487,7 +2727,8 @@
     <div class="modal modal-lg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;">Official GST Tax Invoice Preview</h3>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="display:none;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share on WhatsApp</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">Print / Save PDF</button>
           <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('invoiceModal')">Close</button>
         </div>
@@ -5741,6 +5982,7 @@
         stateCode: "27",
         stateName: "Maharashtra",
         invPrefix: "ME",
+        upiId: "7499477581@ybl",
         hasLogo: true
       },
       SHIVOM: {
@@ -5750,6 +5992,7 @@
         stateCode: "27",
         stateName: "Maharashtra",
         invPrefix: "SS",
+        upiId: "7499477581@ybl",
         hasLogo: false
       }
     };
@@ -5942,6 +6185,9 @@
       if (!state.cashHandovers) state.cashHandovers = [];
       if (!state.bankDeposits) state.bankDeposits = [];
       if (!state.purchaseBills) state.purchaseBills = [];
+      if (!state.salesReturns) state.salesReturns = [];
+      if (!state.expenses) state.expenses = [];
+      if (!state.settings) state.settings = {};
 
       // Auto-merge orders, parties, collections from any previous version storages (skip if Owner explicitly cleared data)
       if (!state._clearedAt) {
@@ -6332,7 +6578,7 @@
           if (remoteResetAt > localResetAt) {
             const colsToClear = Array.isArray(meta.clearedCollections)
               ? meta.clearedCollections
-              : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"];
+              : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills", "salesReturns", "expenses"];
             colsToClear.forEach(c => { state[c] = []; });
             if (meta.resetPartyOpening && Array.isArray(state.parties)) {
               state.parties.forEach(p => { p.openingBalance = 0; });
@@ -6346,12 +6592,23 @@
       }, err => console.log("Firebase meta notice:", err));
       fbUnsubscribers.push(unsubMeta);
 
-      ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"].forEach(col => {
+      // Listen for company settings (UPI ID etc.)
+      const unsubSettings = db.collection(prefix + "meta").doc("settings").onSnapshot(doc => {
+        if (activeCompany !== boundCompany || isResetInProgress) return;
+        if (doc.exists) {
+          state.settings = { ...(state.settings || {}), ...(doc.data() || {}) };
+          persistLocal();
+          if (typeof syncMasterUpiInput === "function") syncMasterUpiInput();
+        }
+      }, err => console.log("Firebase settings notice:", err));
+      fbUnsubscribers.push(unsubSettings);
+
+      ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills", "salesReturns", "expenses"].forEach(col => {
         const unsub = db.collection(prefix + col).onSnapshot(snap => {
           if (activeCompany !== boundCompany || isResetInProgress) return;
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits" || col === "purchaseBills") {
+            if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
               const localList = state[col] || [];
               remoteItems.forEach(r => {
                 const idx = localList.findIndex(x => x.id === r.id);
@@ -6415,53 +6672,149 @@
     }
 
     // ==================== BUSINESS CALCULATIONS ====================
-    function getComputedStock() {
-      return state.products.map(p => {
-        // Total Inward = Opening Stock + Inward Stock added by Owner
-        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0);
+    function getOrderDispatchedAmount(o) {
+      if (!o) return 0;
+      if (Array.isArray(o.items) && o.items.length > 0) {
+        const hasItemDispatch = o.items.some(it => Number(it.dispatchedQty || 0) > 0);
+        if (hasItemDispatch) {
+          return o.items.reduce((sum, it) => {
+            const q = Number(it.qty || 0);
+            const dq = Number(it.dispatchedQty || 0);
+            if (q <= 0 || dq <= 0) return sum;
+            const lineTotal = (it.totalAmt != null) ? Number(it.totalAmt) : (q * Number(it.rate || 0));
+            return sum + (dq / q) * lineTotal;
+          }, 0);
+        }
+        // Legacy multi-item order dispatched before v29
+        const ordQty = Number(o.orderQty || 0);
+        const ordDisp = Number(o.dispatchedQty || 0);
+        if (ordDisp <= 0 || ordQty <= 0) return 0;
+        const ordTot = (o.totalAmt != null) ? Number(o.totalAmt) : (ordQty * Number(o.rate || 0));
+        return (ordDisp / ordQty) * ordTot;
+      }
+      return Number(o.dispatchedQty || 0) * Number(o.rate || 0);
+    }
 
-        // Dispatched = Quantity already sent out of warehouse to stores
-        const dispatched = state.orders
-          .filter(o => o.productId === p.id)
-          .reduce((s, o) => s + Number(o.dispatchedQty || 0), 0);
+    function getOrderTotalAmount(o) {
+      if (!o) return 0;
+      if (o.totalAmt != null && !isNaN(Number(o.totalAmt))) return Number(o.totalAmt);
+      if (Array.isArray(o.items) && o.items.length > 0) {
+        return o.items.reduce((s, it) => s + Number(it.totalAmt != null ? it.totalAmt : (Number(it.qty || 0) * Number(it.rate || 0))), 0);
+      }
+      return Number(o.orderQty || 0) * Number(o.rate || 0);
+    }
+
+    function getComputedStock() {
+      // Pre-aggregate per-product dispatched & pending-booked across ALL multi-item & legacy orders
+      const dispatchedByProd = {};
+      const bookedByProd = {};
+      const goodReturnByProd = {};
+      const damagedReturnByProd = {};
+
+      (state.orders || []).forEach(o => {
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          const anyItemDisp = o.items.some(it => Number(it.dispatchedQty || 0) > 0);
+          const legacyFullDisp = !anyItemDisp && Number(o.dispatchedQty || 0) >= Number(o.orderQty || 0) && Number(o.orderQty || 0) > 0;
+          const legacyRatio = (!anyItemDisp && !legacyFullDisp && Number(o.orderQty || 0) > 0)
+            ? Math.min(1, Number(o.dispatchedQty || 0) / Number(o.orderQty || 1))
+            : 0;
+
+          o.items.forEach(it => {
+            const pid = it.productId;
+            if (!pid) return;
+            const q = Number(it.qty || 0);
+            const dq = anyItemDisp
+              ? Number(it.dispatchedQty || 0)
+              : (legacyFullDisp ? q : Math.round(q * legacyRatio));
+            const pend = Math.max(0, q - dq);
+            dispatchedByProd[pid] = (dispatchedByProd[pid] || 0) + dq;
+            bookedByProd[pid] = (bookedByProd[pid] || 0) + pend;
+          });
+        } else if (o.productId) {
+          const pid = o.productId;
+          const q = Number(o.orderQty || 0);
+          const dq = Number(o.dispatchedQty || 0);
+          dispatchedByProd[pid] = (dispatchedByProd[pid] || 0) + dq;
+          bookedByProd[pid] = (bookedByProd[pid] || 0) + Math.max(0, q - dq);
+        }
+      });
+
+      (state.salesReturns || []).forEach(r => {
+        if (!r.productId) return;
+        const q = Number(r.qty || 0);
+        if (r.returnCondition === "Good") {
+          goodReturnByProd[r.productId] = (goodReturnByProd[r.productId] || 0) + q;
+        } else {
+          damagedReturnByProd[r.productId] = (damagedReturnByProd[r.productId] || 0) + q;
+        }
+      });
+
+      return state.products.map(p => {
+        // Total Inward = Opening Stock + Inward Stock + Good Sales Returns
+        const returnedGood = goodReturnByProd[p.id] || 0;
+        const damagedReturned = damagedReturnByProd[p.id] || 0;
+        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0) + returnedGood;
+
+        // Dispatched = Quantity already sent out of warehouse across all single & multi-item orders
+        const dispatched = dispatchedByProd[p.id] || 0;
 
         // Physical Total Stock currently inside warehouse
         const totalStock = Math.max(0, totalIn - dispatched);
 
-        // Pending Booked = Orders booked by stores but not yet dispatched (orderQty - dispatchedQty)
-        const bookedStock = state.orders
-          .filter(o => o.productId === p.id)
-          .reduce((s, o) => s + Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)), 0);
+        // Pending Booked = Orders booked by stores but not yet dispatched
+        const bookedStock = bookedByProd[p.id] || 0;
 
         // Net Available for booking = totalStock minus bookedStock
         const available = Math.max(0, totalStock - bookedStock);
 
-        return { ...p, totalStock, bookedStock, dispatched, physical: totalStock, available };
+        return { ...p, totalStock, bookedStock, dispatched, returnedGood, damagedReturned, physical: totalStock, available };
       });
     }
 
     function getComputedParties() {
-      const refDate = new Date("2026-11-16T00:00:00");
+      const now = new Date();
+      const refDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return state.parties.map(party => {
         const partyOrders = state.orders.filter(o => o.partyId === party.id);
-        const dispatchedSales = partyOrders.reduce((s, o) => s + Number(o.dispatchedQty || 0) * Number(o.rate || 0), 0);
+        const dispatchedSales = partyOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
 
         const partyCols = state.collections.filter(c => c.partyId === party.id);
         const cashPaid = partyCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
         const bankPaid = partyCols.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
         const chequeCleared = partyCols.filter(c => c.mode === "Cheque" && c.chequeStatus === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
         const totalPaid = cashPaid + bankPaid + chequeCleared;
-        const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid;
+
+        const partyReturns = (state.salesReturns || []).filter(r => r.partyId === party.id);
+        const totalReturns = partyReturns.reduce((s, r) => s + Number(r.totalCreditAmt || 0), 0);
+
+        const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid - totalReturns;
+        const creditLimit = Number(party.creditLimit || 0);
+        const isOverCreditLimit = creditLimit > 0 && netBalance > creditLimit;
 
         let lastDateStr = party.lastPaymentDate || "";
         partyCols.forEach(c => {
           if (c.date && c.date > lastDateStr) lastDateStr = c.date;
         });
+        if (!lastDateStr) {
+          partyOrders.forEach(o => {
+            if (o.date && o.date > lastDateStr) lastDateStr = o.date;
+          });
+        }
 
         let pendingDays = 0;
         if (netBalance > 0 && lastDateStr) {
           const d1 = new Date(lastDateStr + "T00:00:00");
-          pendingDays = Math.max(0, Math.floor((refDate - d1) / (1000 * 60 * 60 * 24)));
+          if (!isNaN(d1.getTime())) {
+            pendingDays = Math.max(0, Math.floor((refDate - d1) / (1000 * 60 * 60 * 24)));
+          }
+        }
+
+        let agingBucket = "Settled";
+        if (netBalance > 0) {
+          if (pendingDays > 90) agingBucket = "90+";
+          else if (pendingDays > 60) agingBucket = "61-90";
+          else if (pendingDays > 30) agingBucket = "31-60";
+          else agingBucket = "0-30";
         }
 
         let category = "Settled";
@@ -6472,9 +6825,11 @@
           category = "Settled";
           alertBadge = "✓ Settled (₹0 Balance)";
           alertClass = "card-settled";
-        } else if (pendingDays >= 60 || netBalance >= 20000) {
+        } else if (pendingDays >= 60 || netBalance >= 20000 || isOverCreditLimit) {
           category = "Red";
-          alertBadge = "🔴 Red Alert (" + pendingDays + " Days Overdue | Urgent)";
+          alertBadge = isOverCreditLimit
+            ? `🔴 Credit Limit Exceeded (${pendingDays}d | Limit ${fmtINR(creditLimit)})`
+            : "🔴 Red Alert (" + pendingDays + " Days Overdue | Urgent)";
           alertClass = "card-alert-red";
         } else if ((pendingDays >= 30 && pendingDays < 60) || (netBalance >= 10000 && netBalance < 20000)) {
           category = "Yellow";
@@ -6490,11 +6845,16 @@
           ...party,
           partyOrders,
           partyCols,
+          partyReturns,
           dispatchedSales,
           cashPaid,
           bankPaid,
           totalPaid,
+          totalReturns,
           netBalance,
+          creditLimit,
+          isOverCreditLimit,
+          agingBucket,
           lastDateStr,
           pendingDays,
           category,
@@ -6610,6 +6970,8 @@
       renderChequeRegister();
       renderMasterSalespersons();
       if (typeof renderGstHub === "function") renderGstHub();
+      if (typeof renderExpensesTab === "function") renderExpensesTab();
+      if (typeof syncMasterUpiInput === "function") syncMasterUpiInput();
     }
 
     function populateDropdowns() {
@@ -6898,7 +7260,7 @@
         : computed.partyOrders.map(o => `
             <div class="ledger-row">
               <div><strong>Bill #${o.orderNo}</strong> (${fmtDate(o.date)})<br/><span style="color:var(--muted);">${o.productName} (${o.orderQty} Units)</span></div>
-              <div class="text-right font-bold" style="color:var(--primary);">+${fmtINR(o.totalAmt)}</div>
+              <div class="text-right font-bold" style="color:var(--primary);">+${fmtINR(getOrderTotalAmount(o))}</div>
             </div>
           `).join("");
 
@@ -6911,16 +7273,43 @@
             </div>
           `).join("");
 
+      let returnsHtml = "";
+      if (computed.partyReturns && computed.partyReturns.length > 0) {
+        returnsHtml = `
+          <div style="margin-top:14px;">
+            <h4 style="font-size:0.85rem;color:#6d28d9;margin-bottom:8px;border-bottom:2px solid #6d28d9;padding-bottom:4px;">🔄 Sales Returns &amp; Credit Notes</h4>
+            ${computed.partyReturns.map(r => `
+              <div class="ledger-row">
+                <div><strong>${r.cnNo}</strong> (${fmtDate(r.date)}) — ${r.productName} (${r.qty} pcs, ${r.returnCondition})<br/><span style="color:var(--muted);">${r.reason || "Goods Returned"}</span></div>
+                <div class="text-right font-bold" style="color:#6d28d9;">-${fmtINR(r.totalCreditAmt)}</div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
       document.getElementById("ledgerModalContent").innerHTML = `
-        <div style="background:#f8fafc;padding:12px;border-radius:10px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="background:#f8fafc;padding:12px;border-radius:10px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
-            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Net Balance Due:</div>
-            <div style="font-size:1.35rem;font-weight:800;color:#dc2626;">${fmtINR(computed.netBalance)}</div>
+            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Net Balance Due (${computed.pendingDays} Days):</div>
+            <div style="font-size:1.35rem;font-weight:800;color:${computed.netBalance > 0 ? '#dc2626' : '#15803d'};">${fmtINR(computed.netBalance)}</div>
+            ${computed.creditLimit > 0 ? `<div style="font-size:0.74rem;color:${computed.isOverCreditLimit ? '#dc2626' : '#475569'};font-weight:700;">Credit Limit: ${fmtINR(computed.creditLimit)}${computed.isOverCreditLimit ? ' (EXCEEDED!)' : ''}</div>` : ''}
           </div>
-          <div style="text-align:right;">
-            <div>Total Sales: <strong>${fmtINR(computed.dispatchedSales)}</strong></div>
-            <div>Total Received: <strong>${fmtINR(computed.totalPaid)}</strong></div>
+          <div style="text-align:right;font-size:0.83rem;">
+            <div>Opening Bal: <strong>${fmtINR(computed.openingBalance || 0)}</strong></div>
+            <div>Dispatched Sales: <strong>${fmtINR(computed.dispatchedSales)}</strong></div>
+            <div>Total Received: <strong style="color:#15803d;">${fmtINR(computed.totalPaid)}</strong></div>
+            ${computed.totalReturns > 0 ? `<div>Credit Notes: <strong style="color:#6d28d9;">-${fmtINR(computed.totalReturns)}</strong></div>` : ''}
           </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareDealerLedgerWhatsApp('${computed.id}')">
+            💬 Share Full Statement on WhatsApp
+          </button>
+          ${(isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager"))
+            ? `<button type="button" class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="editPartyCreditLimit('${computed.id}')">🎯 Set Credit Limit</button>`
+            : ""}
         </div>
 
         <div class="grid-2">
@@ -6933,61 +7322,136 @@
             ${paysHtml}
           </div>
         </div>
+        ${returnsHtml}
       `;
       openModal("dealerLedgerModal");
     }
 
+    function shareDealerLedgerWhatsApp(partyId) {
+      const p = getComputedParties().find(x => x.id === partyId);
+      if (!p) return;
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const upiId = getCompanyUpiId();
+      const recentBills = (p.partyOrders || []).slice(0, 6).map(o =>
+        `• ${formatOfficialGstInvoiceNo(o, activeCompany)} (${fmtDate(o.date)}): ${fmtINR(getOrderTotalAmount(o))}`
+      ).join("\n");
+      const recentPays = (p.partyCols || []).slice(0, 6).map(c =>
+        `• ${c.receiptNo} (${fmtDate(c.date)} - ${c.mode}): -${fmtINR(c.amount)}`
+      ).join("\n");
+      const recentCns = (p.partyReturns || []).slice(0, 4).map(r =>
+        `• ${r.cnNo} (${fmtDate(r.date)}): -${fmtINR(r.totalCreditAmt)}`
+      ).join("\n");
+
+      const lines = [
+        `*ACCOUNT STATEMENT — ${co.name}*`,
+        `Party: *${p.name}* (${p.area || "Nagpur"})`,
+        p.gstin ? `GSTIN: ${p.gstin}` : "",
+        `Date: ${fmtDate(new Date().toISOString().split("T")[0])}`,
+        `--------------------------------`,
+        `Opening Balance: ${fmtINR(p.openingBalance || 0)}`,
+        `Dispatched Sales: +${fmtINR(p.dispatchedSales)}`,
+        `Payments Received: -${fmtINR(p.totalPaid)}`,
+        p.totalReturns > 0 ? `Credit Notes / Returns: -${fmtINR(p.totalReturns)}` : "",
+        `*NET BALANCE DUE: ${fmtINR(p.netBalance)}*`,
+        p.pendingDays > 0 ? `(Pending: ${p.pendingDays} Days)` : "",
+        recentBills ? `\n*Recent Bills:*\n${recentBills}` : "",
+        recentPays ? `\n*Recent Payments:*\n${recentPays}` : "",
+        recentCns ? `\n*Credit Notes:*\n${recentCns}` : "",
+        `\n*Payment Details:*`,
+        `UPI ID: ${upiId}`,
+        `Bank: Indian Overseas Bank, Bhadravati`,
+        `A/c: 308202000000378 | IFSC: IOBA0003082`,
+        `Thank you for your business!`
+      ].filter(Boolean).join("\n");
+
+      const cleanPhone = (p.mobile || "").replace(/\D/g, "");
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(lines)}`
+        : `https://wa.me/?text=${encodeURIComponent(lines)}`;
+      window.open(waUrl, "_blank");
+    }
+
     // ==================== ADMIN PORTAL FUNCTIONS ====================
     function renderDashboard() {
-      const totalOrders = state.orders.reduce((s, o) => s + Number(o.orderQty) * Number(o.rate), 0);
-      const totalDispatched = state.orders.reduce((s, o) => s + Number(o.dispatchedQty) * Number(o.rate), 0);
+      const totalOrders = state.orders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+      const totalDispatched = state.orders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
       const cashCol = state.collections.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount), 0);
-      const bankCol = state.collections.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount), 0);
+      const bankCol = state.collections.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount), 0);
       const parties = getComputedParties();
       const totalReceivable = parties.reduce((s, p) => s + Math.max(0, p.netBalance), 0);
 
       document.getElementById("kpiOrders").textContent = fmtINR(totalOrders);
       document.getElementById("kpiOrdersCount").textContent = `${state.orders.length} Orders / Bills Recorded`;
       document.getElementById("kpiDispatched").textContent = fmtINR(totalDispatched);
-      document.getElementById("kpiPendingDispatch").textContent = `Pending Dispatch: ${fmtINR(totalOrders - totalDispatched)}`;
+      document.getElementById("kpiPendingDispatch").textContent = `Pending Dispatch: ${fmtINR(Math.max(0, totalOrders - totalDispatched))}`;
       document.getElementById("kpiCash").textContent = fmtINR(cashCol);
       document.getElementById("kpiBank").textContent = fmtINR(bankCol);
       document.getElementById("kpiReceivable").textContent = fmtINR(totalReceivable);
       document.getElementById("kpiReceivableSub").textContent = `Across ${parties.length} Registered Parties`;
 
-      // Team Performance
+      // Team Performance Scorecard (with Monthly Target %)
+      const perfMonthEl = document.getElementById("dashPerfMonth");
+      if (perfMonthEl && !perfMonthEl.value) {
+        const now = new Date();
+        perfMonthEl.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+      const perfAllTime = document.getElementById("dashPerfAllTime") ? document.getElementById("dashPerfAllTime").checked : true;
+      const perfMonth = perfMonthEl ? perfMonthEl.value : "";
+
+      const filtOrders = state.orders.filter(o => perfAllTime || !perfMonth || String(o.date || "").startsWith(perfMonth));
+      const filtCols = state.collections.filter(c => perfAllTime || !perfMonth || String(c.date || "").startsWith(perfMonth));
+
       const spBody = document.getElementById("dashSalespersonBody");
       spBody.innerHTML = state.salespersons.map(sp => {
-        const ord = state.orders.filter(o => o.salespersonName === sp.name).reduce((s, o) => s + o.orderQty * o.rate, 0);
-        const disp = state.orders.filter(o => o.salespersonName === sp.name).reduce((s, o) => s + o.dispatchedQty * o.rate, 0);
-        const cCash = state.collections.filter(c => c.salespersonName === sp.name && c.mode === "Cash").reduce((s, c) => s + Number(c.amount), 0);
-        const cBank = state.collections.filter(c => c.salespersonName === sp.name && c.mode === "Bank").reduce((s, c) => s + Number(c.amount), 0);
+        const spOrders = filtOrders.filter(o => (o.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
+        const ord = spOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+        const disp = spOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+        const spCols = filtCols.filter(c => (c.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
+        const cCash = spCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+        const cBank = spCols.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount || 0), 0);
+        const totalCol = cCash + cBank;
+        const target = Number(sp.monthlyTarget || 0);
+        const pct = target > 0 ? Math.min(999, Math.round((ord / target) * 100)) : 0;
+        const barColor = pct >= 100 ? "#16a34a" : (pct >= 60 ? "#d97706" : "#2563eb");
+
         return `
           <tr>
-            <td><strong>${sp.name}</strong> <span class="pill pill-gray" style="margin-left:4px;">${sp.role}</span></td>
-            <td class="text-right">${fmtINR(ord)}</td>
+            <td>
+              <strong>${sp.name}</strong>
+              <span class="pill pill-gray" style="margin-left:4px;font-size:0.68rem;">${sp.role}</span>
+              <div style="font-size:0.7rem;color:var(--muted);">${spOrders.length} Orders | Cash: ${fmtINR(cCash)} | Bank: ${fmtINR(cBank)}</div>
+            </td>
+            <td class="text-right font-bold">${fmtINR(ord)}</td>
             <td class="text-right">${fmtINR(disp)}</td>
-            <td class="text-right">${fmtINR(cCash)}</td>
-            <td class="text-right">${fmtINR(cBank)}</td>
-            <td class="text-right font-bold">${fmtINR(cCash + cBank)}</td>
+            <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(totalCol)}</td>
+            <td class="text-center" style="min-width:115px;">
+              ${target > 0
+                ? `<div style="font-size:0.72rem;font-weight:700;color:${barColor};">${pct}% of ${fmtINR(target)}</div>
+                   <div style="height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:3px 0;">
+                     <div style="height:100%;width:${Math.min(100, pct)}%;background:${barColor};"></div>
+                   </div>`
+                : `<div style="font-size:0.7rem;color:var(--muted);">No Target</div>`}
+              <button type="button" class="btn btn-outline btn-sm" style="font-size:0.68rem;padding:2px 6px;color:var(--primary);border-color:var(--border);" onclick="editSalespersonTarget('${sp.id}')">🎯 Target</button>
+            </td>
           </tr>
         `;
       }).join("");
 
-      // Ageing Summary
-      const tiers = [
-        { key: "Red", label: "Red Alert (≥90 Days or ≥₹20,000)", badge: "pill-red" },
-        { key: "Yellow", label: "Yellow Alert (≥60 Days or ≥₹15,000)", badge: "pill-yellow" },
-        { key: "Green", label: "Green Alert (≥30 Days or ≥₹10,000)", badge: "pill-green" },
-        { key: "Normal", label: "Normal (<30 Days & <₹10,000)", badge: "pill-gray" }
+      // True 30 / 60 / 90+ Days Receivables Ageing Summary + Credit Limit Alert
+      const dueParties = parties.filter(p => p.netBalance > 0);
+      const agingTiers = [
+        { label: "🔴 90+ Days Overdue (Critical)", badge: "pill-red", list: dueParties.filter(p => p.agingBucket === "90+") },
+        { label: "🟠 61–90 Days Overdue (Urgent)", badge: "pill-red", list: dueParties.filter(p => p.agingBucket === "61-90") },
+        { label: "🟡 31–60 Days Overdue (Follow-Up)", badge: "pill-yellow", list: dueParties.filter(p => p.agingBucket === "31-60") },
+        { label: "🟢 0–30 Days Active (Safe)", badge: "pill-green", list: dueParties.filter(p => p.agingBucket === "0-30") },
+        { label: "⚠️ Credit Limit Exceeded", badge: "pill-red", list: dueParties.filter(p => p.isOverCreditLimit) }
       ];
-      document.getElementById("dashAgeingBody").innerHTML = tiers.map(t => {
-        const list = parties.filter(p => p.category === t.key);
-        const sum = list.reduce((s, p) => s + p.netBalance, 0);
+      document.getElementById("dashAgeingBody").innerHTML = agingTiers.map(t => {
+        const sum = t.list.reduce((s, p) => s + p.netBalance, 0);
         return `
           <tr>
             <td><span class="pill ${t.badge}">${t.label}</span></td>
-            <td class="text-center font-bold">${list.length}</td>
+            <td class="text-center font-bold">${t.list.length}</td>
             <td class="text-right font-bold">${fmtINR(sum)}</td>
           </tr>
         `;
@@ -7004,12 +7468,24 @@
             <td>${o.salespersonName}</td>
             <td>${o.productName}</td>
             <td class="text-center">${o.orderQty} / ${o.dispatchedQty}</td>
-            <td class="text-right font-bold">${fmtINR(o.orderQty * o.rate)}</td>
+            <td class="text-right font-bold">${fmtINR(getOrderTotalAmount(o))}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
             <td class="text-center"><button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')">Tax Bill PDF</button></td>
           </tr>
         `;
       }).join("");
+    }
+
+    async function editSalespersonTarget(spId) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can set monthly sales targets."); return; }
+      const sp = state.salespersons.find(s => s.id === spId);
+      if (!sp) return;
+      const val = prompt(`Enter Monthly Order Target (₹) for ${sp.name}:\n(Enter 0 to remove target)`, String(sp.monthlyTarget || 0));
+      if (val === null) return;
+      const num = Math.max(0, Number(val) || 0);
+      sp.monthlyTarget = num;
+      await saveRecord("salespersons", sp);
+      showToast(`🎯 Monthly target for ${sp.name} set to ${fmtINR(num)}`);
     }
 
     function renderStockTable() {
@@ -7171,7 +7647,10 @@
       const p = getComputedParties().find(party => party.name.toLowerCase() === val);
       if (p) {
         const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
-        alertEl.innerHTML = `<span class="pill ${badgeClass}" style="margin-right:6px;">${p.alertBadge}</span> <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Balance Due: <strong>${fmtINR(p.netBalance)}</strong></span>`;
+        const limitTxt = p.creditLimit > 0
+          ? ` | Credit Limit: <strong style="color:${p.isOverCreditLimit ? '#dc2626' : '#0f766e'};">${fmtINR(p.creditLimit)}${p.isOverCreditLimit ? ' (OVER LIMIT!)' : ''}</strong>`
+          : "";
+        alertEl.innerHTML = `<span class="pill ${badgeClass}" style="margin-right:6px;">${p.alertBadge}</span> <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Balance Due: <strong>${fmtINR(p.netBalance)}</strong>${limitTxt}</span>`;
       } else {
         alertEl.innerHTML = '<span style="color:var(--muted);">Party not found in registered list.</span>';
       }
@@ -7519,6 +7998,20 @@
         };
       });
       const totalAmt = Number(savedItems.reduce((s, it) => s + Number(it.totalAmt || 0), 0).toFixed(2));
+      const computedParty = getComputedParties().find(cp => cp.id === party.id);
+      if (computedParty) {
+        const projectedDue = Number(computedParty.netBalance || 0) + totalAmt;
+        const limit = Number(computedParty.creditLimit || 0);
+        if (limit > 0 && projectedDue > limit) {
+          if (!confirm(`⚠️ CREDIT LIMIT ALERT for "${party.name}"!\n\nCurrent Due: ${fmtINR(computedParty.netBalance)}\nThis Order: ${fmtINR(totalAmt)}\nNew Projected Due: ${fmtINR(projectedDue)}\nSet Credit Limit: ${fmtINR(limit)}\n\nDo you still want to book this order?`)) {
+            return;
+          }
+        } else if (computedParty.pendingDays >= 60 && computedParty.netBalance > 0) {
+          if (!confirm(`⚠️ OVERDUE PAYMENT WARNING for "${party.name}"!\n\nBalance Due: ${fmtINR(computedParty.netBalance)} (${computedParty.pendingDays} days overdue).\n\nDo you still want to book this new order (${fmtINR(totalAmt)})?`)) {
+            return;
+          }
+        }
+      }
       const gstInvoiceNo = formatOfficialGstInvoiceNo({ orderNo: String(nextNum), date: ordDate }, activeCompany);
 
       const newOrder = {
@@ -9458,12 +9951,64 @@ Thank you! Your payment has been received successfully.`;
         return;
       }
       const ord = state.orders.find(o => o.id === orderId);
-      const pending = ord.orderQty - ord.dispatchedQty;
+      if (!ord) return;
+      const pending = Math.max(0, Number(ord.orderQty || 0) - Number(ord.dispatchedQty || 0));
       document.getElementById("dispatchOrderId").value = orderId;
-      document.getElementById("dispatchModalInfo").textContent = `Bill #${ord.orderNo} — ${ord.partyName} | ${ord.productName} (Pending: ${pending} units)`;
-      const inp = document.getElementById("dispatchQtyInput");
-      inp.max = pending;
-      inp.value = pending;
+      document.getElementById("dispatchModalInfo").textContent = `Bill #${ord.orderNo} — ${ord.partyName} (Total Pending: ${pending} units)`;
+
+      const itemsContainer = document.getElementById("dispatchItemsContainer");
+      const singleWrap = document.getElementById("dispatchSingleWrap");
+      const singleInp = document.getElementById("dispatchQtyInput");
+
+      if (Array.isArray(ord.items) && ord.items.length > 0 && itemsContainer && singleWrap) {
+        singleWrap.style.display = "none";
+        if (singleInp) singleInp.required = false;
+        itemsContainer.style.display = "block";
+
+        const anyItemDisp = ord.items.some(it => Number(it.dispatchedQty || 0) > 0);
+        const legacyFull = !anyItemDisp && Number(ord.dispatchedQty || 0) >= Number(ord.orderQty || 0);
+
+        itemsContainer.innerHTML = `
+          <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+            <table style="width:100%;font-size:0.82rem;">
+              <thead>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:8px;">Product</th>
+                  <th class="text-center" style="padding:8px;">Ord</th>
+                  <th class="text-center" style="padding:8px;">Sent</th>
+                  <th class="text-center" style="padding:8px;">Dispatch Now</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ord.items.map((it, idx) => {
+                  const q = Number(it.qty || 0);
+                  const sent = anyItemDisp ? Number(it.dispatchedQty || 0) : (legacyFull ? q : 0);
+                  const rem = Math.max(0, q - sent);
+                  return `
+                    <tr>
+                      <td style="padding:8px;"><strong>${it.productName}</strong></td>
+                      <td class="text-center" style="padding:8px;">${q}</td>
+                      <td class="text-center" style="padding:8px;">${sent}</td>
+                      <td class="text-center" style="padding:8px;">
+                        <input type="number" id="dispatchItemQty_${idx}" class="form-control" style="width:82px;text-align:center;margin:0 auto;font-weight:700;" min="0" max="${rem}" value="${rem}" ${rem === 0 ? "disabled" : ""} />
+                      </td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div style="font-size:0.74rem;color:var(--muted);margin-top:6px;">Warehouse stock will be deducted individually for each dispatched product.</div>
+        `;
+      } else {
+        if (itemsContainer) itemsContainer.style.display = "none";
+        if (singleWrap) singleWrap.style.display = "block";
+        if (singleInp) {
+          singleInp.required = true;
+          singleInp.max = pending;
+          singleInp.value = pending;
+        }
+      }
       openModal("dispatchModal");
     }
 
@@ -9475,12 +10020,40 @@ Thank you! Your payment has been received successfully.`;
         return;
       }
       const orderId = document.getElementById("dispatchOrderId").value;
-      const qty = Number(document.getElementById("dispatchQtyInput").value);
       const ord = state.orders.find(o => o.id === orderId);
-      ord.dispatchedQty = Number(ord.dispatchedQty) + qty;
+      if (!ord) return;
+
+      let totalDispatchedNow = 0;
+
+      if (Array.isArray(ord.items) && ord.items.length > 0 && document.getElementById("dispatchItemQty_0")) {
+        ord.items.forEach((it, idx) => {
+          const el = document.getElementById(`dispatchItemQty_${idx}`);
+          if (!el || el.disabled) return;
+          const addQty = Math.max(0, Number(el.value || 0));
+          const maxAdd = Math.max(0, Number(it.qty || 0) - Number(it.dispatchedQty || 0));
+          const safeAdd = Math.min(addQty, maxAdd);
+          it.dispatchedQty = Number(it.dispatchedQty || 0) + safeAdd;
+          totalDispatchedNow += safeAdd;
+        });
+
+        if (totalDispatchedNow <= 0) {
+          alert("Please enter dispatch quantity (> 0) for at least one product.");
+          return;
+        }
+        ord.dispatchedQty = ord.items.reduce((s, it) => s + Number(it.dispatchedQty || 0), 0);
+      } else {
+        const qty = Number(document.getElementById("dispatchQtyInput").value || 0);
+        if (qty <= 0) {
+          alert("Please enter a valid dispatch quantity.");
+          return;
+        }
+        ord.dispatchedQty = Number(ord.dispatchedQty || 0) + qty;
+        totalDispatchedNow = qty;
+      }
+
       await saveRecord("orders", ord);
       closeModal("dispatchModal");
-      showToast(`Dispatched ${qty} units for Bill #${ord.orderNo}`);
+      showToast(`✅ Dispatched ${totalDispatchedNow} units for Bill #${ord.orderNo} (Item-wise stock updated)`);
     }
 
     async function handleCreateCollection(e) {
@@ -9593,11 +10166,60 @@ Thank you! Your payment has been received successfully.`;
         area: document.getElementById("mPartyArea").value.trim(),
         gstin: gstin,
         openingBalance: Number(document.getElementById("mPartyOpen").value),
+        creditLimit: Number(document.getElementById("mPartyCreditLimit")?.value || 0),
         lastPaymentDate: new Date().toISOString().split("T")[0]
       };
       await saveRecord("parties", newParty);
       e.target.reset();
       showToast(`Added party ${newParty.name}${gstin ? " (B2B GSTIN)" : ""}`);
+    }
+
+    async function editPartyCreditLimit(partyId) {
+      const canEdit = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canEdit) { alert("Only Owner or Manager can set Party Credit Limit."); return; }
+      const party = state.parties.find(p => p.id === partyId);
+      if (!party) return;
+      const entered = prompt(
+        `Enter Credit Limit (₹) for "${party.name}"\n(Enter 0 to remove credit limit):`,
+        String(party.creditLimit || 0)
+      );
+      if (entered === null) return;
+      const num = Math.max(0, Number(entered) || 0);
+      party.creditLimit = num;
+      await saveRecord("parties", party);
+      showToast(num > 0 ? `🎯 Credit limit for ${party.name} set to ${fmtINR(num)}` : `✅ Credit limit removed for ${party.name}`);
+    }
+
+    function getCompanyUpiId() {
+      const custom = state && state.settings && state.settings.upiId ? String(state.settings.upiId).trim() : "";
+      if (custom) return custom;
+      return (COMPANIES[activeCompany] && COMPANIES[activeCompany].upiId) || "7499477581@ybl";
+    }
+
+    function syncMasterUpiInput() {
+      const inp = document.getElementById("masterUpiIdInput");
+      if (inp && document.activeElement !== inp) {
+        inp.value = getCompanyUpiId();
+      }
+    }
+
+    async function saveCompanyUpiId() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can update Company UPI ID."); return; }
+      const inp = document.getElementById("masterUpiIdInput");
+      const val = (inp ? inp.value : "").trim();
+      if (!val || !val.includes("@")) {
+        alert("Please enter a valid UPI ID containing '@' (e.g. 7499477581@ybl or madhaventerprises@iob).");
+        if (inp) inp.focus();
+        return;
+      }
+      if (!state.settings) state.settings = {};
+      state.settings.upiId = val;
+      persistLocal();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        await db.collection(prefix + "meta").doc("settings").set({ upiId: val }, { merge: true }).catch(e => console.warn(e));
+      }
+      showToast(`✅ Official UPI ID updated to ${val} — will appear as QR on all Tax Invoices!`);
     }
 
     async function editPartyGstin(partyId) {
@@ -10010,12 +10632,24 @@ Thank you! Your payment has been received successfully.`;
         </div>
 
         <div class="inv-footer-grid">
-          <div class="inv-footer-box">
-            <strong>Bank Details (UPI / NEFT / RTGS):</strong><br/>
-            Bank Name: <strong>INDIAN OVERSEAS BANK, BHADRAVATI</strong><br/>
-            Account No.: <strong>308202000000378</strong><br/>
-            IFSC Code: <strong>IOBA0003082</strong><br/>
-            Terms: Subject to Nagpur Jurisdiction. Thanks for doing business with ${co.name}!
+          <div class="inv-footer-box" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div>
+              <strong>Bank Details (UPI / NEFT / RTGS):</strong><br/>
+              Bank Name: <strong>INDIAN OVERSEAS BANK, BHADRAVATI</strong><br/>
+              Account No.: <strong>308202000000378</strong><br/>
+              IFSC Code: <strong>IOBA0003082</strong><br/>
+              UPI ID: <strong>${getCompanyUpiId()}</strong><br/>
+              <span style="font-size:10px;">Terms: Subject to Nagpur Jurisdiction. Thanks for doing business with ${co.name}!</span>
+            </div>
+            ${(() => {
+              const qrUrl = generateUpiQrDataUrl(gst.roundedGrandTotal, gst.officialInvNo, co.name);
+              return qrUrl
+                ? `<div style="text-align:center;flex-shrink:0;border:1px solid #cbd5e1;padding:4px;border-radius:6px;background:#fff;">
+                     <img src="${qrUrl}" alt="UPI QR" style="width:76px;height:76px;display:block;margin:0 auto;" />
+                     <div style="font-size:8.5px;font-weight:700;color:#0f766e;margin-top:2px;">Scan &amp; Pay ₹${gst.roundedGrandTotal}</div>
+                   </div>`
+                : "";
+            })()}
           </div>
           <div class="inv-footer-box" style="display:flex;flex-direction:column;justify-content:space-between;text-align:right;">
             <div>
@@ -10029,7 +10663,71 @@ Thank you! Your payment has been received successfully.`;
           </div>
         </div>
       `;
+      currentPreviewInvoiceOrderId = orderId;
+      const waBtn = document.getElementById("invoiceWaShareBtn");
+      if (waBtn) waBtn.style.display = "inline-flex";
       openModal("invoiceModal");
+    }
+
+    let currentPreviewInvoiceOrderId = null;
+
+    function generateUpiQrDataUrl(amount, note, payeeName) {
+      const upiId = getCompanyUpiId();
+      if (!upiId) return "";
+      const amt = Number(amount || 0).toFixed(2);
+      const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName || "MADHAV ENTERPRISES")}&am=${encodeURIComponent(amt)}&cu=INR&tn=${encodeURIComponent("Bill " + (note || ""))}`;
+      try {
+        if (typeof qrcode === "function") {
+          const qr = qrcode(0, "M");
+          qr.addData(upiUri);
+          qr.make();
+          return qr.createDataURL(4, 2);
+        }
+      } catch (e) {
+        console.warn("Local QR gen fallback:", e);
+      }
+      return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUri)}`;
+    }
+
+    function shareCurrentInvoiceWhatsApp() {
+      if (!currentPreviewInvoiceOrderId) return;
+      const ord = state.orders.find(o => o.id === currentPreviewInvoiceOrderId);
+      if (!ord) return;
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const gst = computeOrderGstBreakdown(ord);
+      const upiId = getCompanyUpiId();
+      const itemLines = gst.lines.map(ln =>
+        `• ${ln.productName} (${ln.qty} pcs) — ${ln.isFoc ? "FOC Free" : fmtINR(ln.lineTotal)}`
+      ).join("\n");
+
+      const msg = [
+        `*GST TAX INVOICE — ${co.name}*`,
+        co.gstin ? `GSTIN: ${co.gstin}` : "",
+        `Invoice No: *${gst.officialInvNo}*`,
+        `Date: ${fmtDate(ord.date)}`,
+        `Party: *${gst.party.name}* (${gst.party.area || "Nagpur"})`,
+        gst.supply.isB2B ? `Party GSTIN: ${gst.supply.gstin}` : "",
+        `--------------------------------`,
+        itemLines,
+        `--------------------------------`,
+        `Taxable Value: ${fmtINR(gst.totalTaxable)}`,
+        gst.supply.isInterState
+          ? `IGST: ${fmtINR(gst.totalIgst)}`
+          : `CGST: ${fmtINR(gst.totalCgst)} | SGST: ${fmtINR(gst.totalSgst)}`,
+        `*GRAND TOTAL: ${fmtINR(gst.roundedGrandTotal)}*`,
+        gst.ewayRequired ? `⚠️ E-Way Bill Applicable (≥ ₹50,000)` : "",
+        `\n*Pay Easily via UPI / Bank:*`,
+        `UPI ID: ${upiId}`,
+        `Bank: Indian Overseas Bank, Bhadravati`,
+        `A/c: 308202000000378 | IFSC: IOBA0003082`,
+        `Thank you for your business!`
+      ].filter(Boolean).join("\n");
+
+      const cleanPhone = (gst.party.mobile || "").replace(/\D/g, "");
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
     }
 
     // ==================== OWNER GST & GSTR-1 HUB RENDERING + CA EXCEL EXPORT ====================
@@ -10052,7 +10750,12 @@ Thank you! Your payment has been received successfully.`;
         return String(b.date || "").startsWith(selectedMonth);
       });
 
-      return { allTime, selectedMonth, orders, purchases };
+      const returns = (state.salesReturns || []).filter(r => {
+        if (allTime || !selectedMonth) return true;
+        return String(r.date || "").startsWith(selectedMonth);
+      });
+
+      return { allTime, selectedMonth, orders, purchases, returns };
     }
 
     function renderGstHub() {
@@ -10067,7 +10770,11 @@ Thank you! Your payment has been received successfully.`;
           : `<strong>${co.name}</strong> | <span style="color:#b45309;font-weight:700;">No GSTIN configured for SHIVOM (Switch to MADHAV ENTERPRISES for official 27BQIPP3836Q1ZZ filing)</span>`;
       }
 
-      const { orders, purchases } = getFilteredGstPeriodData();
+      const { orders, purchases, returns } = getFilteredGstPeriodData();
+
+      // Default sales return date input to today if blank
+      const srDateEl = document.getElementById("srDate");
+      if (srDateEl && !srDateEl.value) srDateEl.value = new Date().toISOString().split("T")[0];
 
       let totalTaxable = 0, outCgst = 0, outSgst = 0, outIgst = 0, outTotal = 0;
       let b2bCount = 0, b2cCount = 0;
@@ -10097,6 +10804,22 @@ Thank you! Your payment has been received successfully.`;
         });
       });
 
+      // Deduct Credit Notes (Sales Returns) from Net Output Liability
+      let retTaxable = 0, retCgst = 0, retSgst = 0, retIgst = 0, retGst = 0;
+      (returns || []).forEach(r => {
+        retTaxable += Number(r.taxableAmt || 0);
+        retCgst += Number(r.cgstAmt || 0);
+        retSgst += Number(r.sgstAmt || 0);
+        retIgst += Number(r.igstAmt || 0);
+        retGst += Number(r.totalGst || 0);
+      });
+
+      const netTaxable = Math.max(0, totalTaxable - retTaxable);
+      const netOutCgst = Math.max(0, outCgst - retCgst);
+      const netOutSgst = Math.max(0, outSgst - retSgst);
+      const netOutIgst = Math.max(0, outIgst - retIgst);
+      const netOutTotal = Math.max(0, outTotal - retGst);
+
       let inTaxable = 0, inCgst = 0, inSgst = 0, inIgst = 0, inTotal = 0;
       purchases.forEach(b => {
         inTaxable += Number(b.taxableAmt || 0);
@@ -10106,13 +10829,13 @@ Thank you! Your payment has been received successfully.`;
         inTotal += Number(b.totalGst || 0);
       });
 
-      const netGst = outTotal - inTotal;
+      const netGst = netOutTotal - inTotal;
 
       const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-      setTxt("gstKpiTaxable", fmtINR(totalTaxable));
-      setTxt("gstKpiTaxableSub", `${b2bCount} B2B | ${b2cCount} B2C (${orders.length} Total Invoices)`);
-      setTxt("gstKpiOutput", fmtINR(outTotal));
-      setTxt("gstKpiOutputSub", `CGST: ${fmtINR(outCgst)} | SGST: ${fmtINR(outSgst)} | IGST: ${fmtINR(outIgst)}`);
+      setTxt("gstKpiTaxable", fmtINR(netTaxable));
+      setTxt("gstKpiTaxableSub", `${b2bCount} B2B | ${b2cCount} B2C${returns.length ? ` | -${returns.length} CN` : ""}`);
+      setTxt("gstKpiOutput", fmtINR(netOutTotal));
+      setTxt("gstKpiOutputSub", `CGST: ${fmtINR(netOutCgst)} | SGST: ${fmtINR(netOutSgst)} | IGST: ${fmtINR(netOutIgst)}`);
       setTxt("gstKpiInputItc", fmtINR(inTotal));
       setTxt("gstKpiInputSub", `${purchases.length} Purchase Bills | Taxable: ${fmtINR(inTaxable)}`);
       setTxt("gstKpiNetPayable", fmtINR(Math.abs(netGst)));
@@ -10217,7 +10940,42 @@ Thank you! Your payment has been received successfully.`;
         }
       }
 
-      // 4. Party GSTIN Directory
+      // 4. Sales Returns / Credit Notes Register
+      const retBody = document.getElementById("gstReturnsTableBody");
+      if (retBody) {
+        if (!returns || returns.length === 0) {
+          retBody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:18px;color:var(--muted);">No Sales Returns or GST Credit Notes issued in this period.</td></tr>`;
+        } else {
+          retBody.innerHTML = returns.map(r => `
+            <tr>
+              <td class="font-bold" style="color:#5b21b6;">${r.cnNo}</td>
+              <td>${fmtDate(r.date)}</td>
+              <td>
+                <strong>${r.partyName}</strong>
+                ${r.origInvNo ? `<div style="font-size:0.72rem;color:var(--muted);">Ref Inv: ${r.origInvNo}</div>` : ""}
+              </td>
+              <td>
+                <strong>${r.productName}</strong> (${r.qty} pcs)
+                <div>
+                  <span class="pill ${r.returnCondition === 'Good' ? 'pill-green' : 'pill-red'}" style="font-size:0.68rem;">
+                    ${r.returnCondition === 'Good' ? '✅ Re-Stocked (Good)' : '⚠️ Damaged (Not Re-Stocked)'}
+                  </span>
+                  ${r.reason ? `<span style="font-size:0.72rem;color:var(--muted);margin-left:4px;">${r.reason}</span>` : ""}
+                </div>
+              </td>
+              <td class="text-right">${fmtINR(r.taxableAmt || 0)}</td>
+              <td class="text-right" style="color:#6d28d9;">${fmtINR(r.totalGst || 0)} (${r.gstPct || 0}%)</td>
+              <td class="text-right font-bold" style="color:#5b21b6;">${fmtINR(r.totalCreditAmt || 0)}</td>
+              <td class="text-center" style="white-space:nowrap;">
+                <button type="button" class="btn btn-primary btn-sm" style="background:#6d28d9;" onclick="openCreditNote('${r.id}')">🧾 Credit Note</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="deleteSalesReturn('${r.id}')" title="Delete">🗑️</button>
+              </td>
+            </tr>
+          `).join("");
+        }
+      }
+
+      // 5. Party GSTIN & Credit Limit Directory
       renderGstPartyDirectory();
     }
 
@@ -10245,6 +11003,7 @@ Thank you! Your payment has been received successfully.`;
 
       tbody.innerHTML = list.map(p => {
         const info = getPartySupplyInfo(p);
+        const cl = Number(p.creditLimit || 0);
         return `
           <tr>
             <td class="font-bold">${p.name}</td>
@@ -10254,11 +11013,17 @@ Thank you! Your payment has been received successfully.`;
             </td>
             <td>
               <span class="pill ${info.isB2B ? 'pill-green' : 'pill-gray'}" style="font-size:0.72rem;">${info.isB2B ? "B2B Registered" : "B2C Unregistered"}</span>
-              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${info.placeOfSupply} (${info.isInterState ? "IGST" : "CGST+SGST"})</div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">
+                ${info.placeOfSupply} (${info.isInterState ? "IGST" : "CGST+SGST"})
+                ${cl > 0 ? ` | <strong style="color:#0f766e;">Limit: ${fmtINR(cl)}</strong>` : ""}
+              </div>
             </td>
-            <td class="text-center">
+            <td class="text-center" style="white-space:nowrap;">
               <button type="button" class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="editPartyGstin('${p.id}')">
-                ✏️ ${info.isB2B ? "Edit GSTIN" : "Set GSTIN"}
+                ✏️ ${info.isB2B ? "GSTIN" : "Set GSTIN"}
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" style="color:#0f766e;border-color:#99f6e4;margin-left:4px;" onclick="editPartyCreditLimit('${p.id}')">
+                🎯 Limit
               </button>
             </td>
           </tr>
@@ -10274,7 +11039,7 @@ Thank you! Your payment has been received successfully.`;
       }
 
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
-      const { allTime, selectedMonth, orders, purchases } = getFilteredGstPeriodData();
+      const { allTime, selectedMonth, orders, purchases, returns } = getFilteredGstPeriodData();
       const periodLabel = allTime ? "ALL_TIME" : (selectedMonth || new Date().toISOString().slice(0, 7));
 
       const wb = XLSX.utils.book_new();
@@ -10418,39 +11183,408 @@ Thank you! Your payment has been received successfully.`;
         };
       });
 
+      let retTaxable = 0, retCgst = 0, retSgst = 0, retIgst = 0, retTotalGst = 0, retGrand = 0;
+      const cdnrRows = (returns || []).map(r => {
+        const p = state.parties.find(x => x.id === r.partyId) || { gstin: "" };
+        const sup = getPartySupplyInfo(p);
+        retTaxable += Number(r.taxableAmt || 0);
+        retCgst += Number(r.cgstAmt || 0);
+        retSgst += Number(r.sgstAmt || 0);
+        retIgst += Number(r.igstAmt || 0);
+        retTotalGst += Number(r.totalGst || 0);
+        retGrand += Number(r.totalCreditAmt || 0);
+        return {
+          "GSTIN/UIN of Recipient": sup.gstin || "B2C Unregistered",
+          "Receiver Name": r.partyName || "",
+          "Note Number": r.cnNo || "",
+          "Note Date": r.date || "",
+          "Note Type": "C (Credit Note)",
+          "Original Invoice No": r.origInvNo || "",
+          "Place Of Supply": sup.placeOfSupply,
+          "Product": r.productName || "",
+          "HSN": r.hsn || "",
+          "Qty": Number(r.qty || 0),
+          "Condition": r.returnCondition || "Good",
+          "Rate (%)": Number(r.gstPct || 0),
+          "Taxable Value": r2(r.taxableAmt),
+          "CGST": r2(r.cgstAmt),
+          "SGST": r2(r.sgstAmt),
+          "IGST": r2(r.igstAmt),
+          "Credit Note Value": r2(r.totalCreditAmt),
+          "Reason": r.reason || ""
+        };
+      });
+
+      const netOutGst = Math.max(0, outTotalTax - retTotalGst);
+
       const summaryRows = [
         { "Particular": "Company Name", "Value": co.name },
         { "Particular": "Company GSTIN", "Value": co.gstin || "Unregistered" },
         { "Particular": "Filing Period", "Value": periodLabel },
         { "Particular": "Total Outward Invoices", "Value": orders.length },
-        { "Particular": "Total Taxable Outward Sales (₹)", "Value": r2(outTaxable) },
-        { "Particular": "Output CGST (₹)", "Value": r2(outCgst) },
-        { "Particular": "Output SGST (₹)", "Value": r2(outSgst) },
-        { "Particular": "Output IGST (₹)", "Value": r2(outIgst) },
-        { "Particular": "Total Output GST Liability (₹)", "Value": r2(outTotalTax) },
+        { "Particular": "Gross Taxable Outward Sales (₹)", "Value": r2(outTaxable) },
+        { "Particular": "Less: Credit Notes / Sales Returns Taxable (₹)", "Value": r2(retTaxable) },
+        { "Particular": "Net Taxable Outward Sales (₹)", "Value": r2(Math.max(0, outTaxable - retTaxable)) },
+        { "Particular": "Net Output CGST (₹)", "Value": r2(Math.max(0, outCgst - retCgst)) },
+        { "Particular": "Net Output SGST (₹)", "Value": r2(Math.max(0, outSgst - retSgst)) },
+        { "Particular": "Net Output IGST (₹)", "Value": r2(Math.max(0, outIgst - retIgst)) },
+        { "Particular": "Net Output GST Liability after Credit Notes (₹)", "Value": r2(netOutGst) },
         { "Particular": "Total Outward Invoice Value (₹)", "Value": r2(outGrand) },
+        { "Particular": "Total Credit Notes Issued (₹)", "Value": r2(retGrand) },
         { "Particular": "Total Purchase Bills (ITC)", "Value": purchases.length },
         { "Particular": "Total Taxable Purchases (₹)", "Value": r2(inTaxable) },
         { "Particular": "Input ITC - CGST (₹)", "Value": r2(inCgst) },
         { "Particular": "Input ITC - SGST (₹)", "Value": r2(inSgst) },
         { "Particular": "Input ITC - IGST (₹)", "Value": r2(inIgst) },
         { "Particular": "Total Input Tax Credit / ITC (₹)", "Value": r2(inTotalGst) },
-        { "Particular": "Net GST Payable (+) / ITC Carry Forward (-) (₹)", "Value": r2(outTotalTax - inTotalGst) }
+        { "Particular": "Net GST Payable (+) / ITC Carry Forward (-) (₹)", "Value": r2(netOutGst - inTotalGst) }
       ];
 
       const emptyB2B = [{ "GSTIN/UIN of Recipient": "", "Receiver Name": "No B2B Invoices in Period", "Invoice Number": "", "Invoice Date": "", "Invoice Value": 0, "Place Of Supply": "", "Reverse Charge": "N", "Invoice Type": "Regular B2B", "Rate (%)": 0, "Taxable Value": 0, "CGST": 0, "SGST": 0, "IGST": 0, "Cess Amount": 0, "E-Way Bill Required": "NO" }];
       const emptyB2CS = [{ "Type": "OE", "Place Of Supply": "27-Maharashtra", "Rate (%)": 0, "Taxable Value": 0, "CGST": 0, "SGST": 0, "IGST": 0, "Total Value": 0 }];
       const emptyHSN = [{ "HSN": "", "Description": "No HSN data in Period", "UQC": "NOS-NUMBERS", "Total Quantity": 0, "Total Value": 0, "Rate (%)": 0, "Taxable Value": 0, "Integrated Tax Amount": 0, "Central Tax Amount": 0, "State/UT Tax Amount": 0, "Cess Amount": 0 }];
       const emptyPur = [{ "Bill Date": "", "Bill No": "", "Supplier Name": "No Purchase ITC Bills in Period", "Supplier GSTIN": "", "Supply Type": "", "Product": "", "HSN": "", "Qty": 0, "Taxable Rate": 0, "Taxable Value": 0, "GST (%)": 0, "Input CGST": 0, "Input SGST": 0, "Input IGST": 0, "Total ITC": 0, "Bill Total": 0 }];
+      const emptyCdnr = [{ "GSTIN/UIN of Recipient": "", "Receiver Name": "No Credit Notes in Period", "Note Number": "", "Note Date": "", "Note Type": "C", "Original Invoice No": "", "Place Of Supply": "", "Product": "", "HSN": "", "Qty": 0, "Condition": "", "Rate (%)": 0, "Taxable Value": 0, "CGST": 0, "SGST": 0, "IGST": 0, "Credit Note Value": 0, "Reason": "" }];
 
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "GSTR3B_Net_Summary");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(b2bRows.length ? b2bRows : emptyB2B), "B2B_Invoices");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(b2csRows.length ? b2csRows : emptyB2CS), "B2CS_Summary");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hsnRows.length ? hsnRows : emptyHSN), "HSN_Summary");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchaseRows.length ? purchaseRows : emptyPur), "Purchase_ITC_Register");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cdnrRows.length ? cdnrRows : emptyCdnr), "CDNR_Credit_Notes");
 
       const filename = `${activeCompany}_GSTR1_CA_REPORT_${periodLabel}.xlsx`;
       saveWorkbookAsXlsx(wb, filename, `✅ CA GSTR-1 Excel exported: ${filename}`);
+    }
+
+    // ==================== SALES RETURNS / DAMAGE GOODS & GST CREDIT NOTE ====================
+    function handleSrProdSelected() {
+      const prodInp = document.getElementById("srProductInput");
+      const rateInp = document.getElementById("srRate");
+      if (!prodInp || !rateInp) return;
+      const prod = findProductByName(prodInp.value);
+      if (prod && !rateInp.value) {
+        rateInp.value = prod.rate || "";
+      }
+    }
+
+    async function handleAddSalesReturn(e) {
+      e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can issue Sales Returns / Credit Notes."); return; }
+      const dateVal = (document.getElementById("srDate")?.value || "").trim() || new Date().toISOString().split("T")[0];
+      const party = findPartyByName(document.getElementById("srPartyInput")?.value || "");
+      if (!party) {
+        alert("Please select a valid registered Party from the dropdown list.");
+        document.getElementById("srPartyInput")?.focus();
+        return;
+      }
+      const prod = findProductByName(document.getElementById("srProductInput")?.value || "");
+      if (!prod) {
+        alert("Please select a valid Product from the dropdown list.");
+        document.getElementById("srProductInput")?.focus();
+        return;
+      }
+      const qty = Number(document.getElementById("srQty")?.value || 0);
+      const rate = Number(document.getElementById("srRate")?.value || 0);
+      if (qty <= 0 || rate <= 0) {
+        alert("Please enter valid return quantity and unit credit rate.");
+        return;
+      }
+
+      const condition = document.getElementById("srCondition")?.value || "Good";
+      const origInvNo = (document.getElementById("srOrigInvNo")?.value || "").trim();
+      const reason = (document.getElementById("srReason")?.value || "").trim();
+      const gstPct = Number(prod.gst != null ? prod.gst : 18);
+      const supply = getPartySupplyInfo(party);
+
+      const totalCreditAmt = Number((qty * rate).toFixed(2));
+      const taxableAmt = gstPct > 0 ? Number((totalCreditAmt / (1 + gstPct / 100)).toFixed(2)) : totalCreditAmt;
+      const totalGst = Number((totalCreditAmt - taxableAmt).toFixed(2));
+      const igstAmt = supply.isInterState ? totalGst : 0;
+      const cgstAmt = supply.isInterState ? 0 : Number((totalGst / 2).toFixed(2));
+      const sgstAmt = supply.isInterState ? 0 : Number((totalGst - cgstAmt).toFixed(2));
+
+      const parts = dateVal.split("-");
+      const yr = Number(parts[0]) || new Date().getFullYear();
+      const mo = Number(parts[1]) || (new Date().getMonth() + 1);
+      const fyStart = mo >= 4 ? yr : (yr - 1);
+      const fyLabel = `${String(fyStart).slice(-2)}-${String(fyStart + 1).slice(-2)}`;
+      const seq = String((state.salesReturns || []).length + 1).padStart(3, "0");
+      const cnNo = `CN/${fyLabel}/${seq}`;
+
+      const rec = {
+        id: "SR_" + Date.now(),
+        cnNo,
+        date: dateVal,
+        partyId: party.id,
+        partyName: party.name,
+        origInvNo,
+        productId: prod.id,
+        productName: prod.name,
+        code: prod.code || "",
+        hsn: prod.hsn || "85166000",
+        gstPct,
+        qty,
+        rate,
+        returnCondition: condition,
+        taxableAmt,
+        cgstAmt,
+        sgstAmt,
+        igstAmt,
+        totalGst,
+        totalCreditAmt,
+        reason
+      };
+
+      if (!state.salesReturns) state.salesReturns = [];
+      await saveRecord("salesReturns", rec);
+      e.target.reset();
+      const srDateEl = document.getElementById("srDate");
+      if (srDateEl) srDateEl.value = new Date().toISOString().split("T")[0];
+      showToast(`✅ Credit Note ${cnNo} (${fmtINR(totalCreditAmt)}) issued${condition === "Good" ? " & stock re-added" : " (Damaged)"}!`);
+    }
+
+    async function deleteSalesReturn(returnId) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can delete Credit Notes."); return; }
+      const r = (state.salesReturns || []).find(x => x.id === returnId);
+      if (!r) return;
+      if (!confirm(`Delete Credit Note ${r.cnNo} (${r.partyName} - ${fmtINR(r.totalCreditAmt)})?`)) return;
+      state.salesReturns = (state.salesReturns || []).filter(x => x.id !== returnId);
+      persistLocal();
+      refreshAll();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "salesReturns").doc(returnId).delete().catch(e => console.warn(e));
+      }
+      showToast(`🗑️ Deleted Credit Note ${r.cnNo}`);
+    }
+
+    function openCreditNote(returnId) {
+      const r = (state.salesReturns || []).find(x => x.id === returnId);
+      if (!r) return;
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const party = state.parties.find(p => p.id === r.partyId) || { name: r.partyName, area: "Nagpur", mobile: "", gstin: "" };
+      const supply = getPartySupplyInfo(party);
+      const logoHtml = co.hasLogo
+        ? '<img src="' + SHOP_LOGO + '" alt="Logo" />'
+        : '<div style="font-size:2.4rem;">⚡</div>';
+
+      document.getElementById("invoicePrintArea").innerHTML = `
+        <div class="inv-top">
+          ${logoHtml}
+          <div class="inv-company">
+            <h2>${co.name}</h2>
+            <div>${co.sub}</div>
+            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
+          </div>
+        </div>
+        <div class="inv-title-bar" style="background:#5b21b6;color:#fff;">GST CREDIT NOTE / SALES RETURN (${supply.isB2B ? "B2B" : "B2C"})</div>
+        <div class="inv-meta-grid">
+          <div class="inv-meta-box">
+            <strong>Credit Issued To:</strong><br/>
+            <span style="font-size:13px;font-weight:700;">${party.name}</span><br/>
+            Address: ${party.area || "Nagpur"} | Ph: ${party.mobile || "-"}<br/>
+            Party GSTIN: <strong>${supply.gstin || "Unregistered (B2C)"}</strong><br/>
+            Place of Supply: <strong>${supply.placeOfSupply}</strong>
+          </div>
+          <div class="inv-meta-box">
+            <strong>Credit Note Details:</strong><br/>
+            Credit Note No: <strong>${r.cnNo}</strong><br/>
+            Date: <strong>${fmtDate(r.date)}</strong><br/>
+            Original Invoice Ref: ${r.origInvNo || "-"}<br/>
+            Goods Condition: <strong>${r.returnCondition}</strong>
+          </div>
+        </div>
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Returned Item</th>
+              <th>HSN</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Taxable (₹)</th>
+              <th class="text-center">GST %</th>
+              <th class="text-right">${supply.isInterState ? "IGST (₹)" : "CGST + SGST (₹)"}</th>
+              <th class="text-right">Credit Amt (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>${r.productName}</strong>${r.reason ? `<div style="font-size:10px;color:#475569;">Reason: ${r.reason}</div>` : ""}</td>
+              <td>${r.hsn || "85166000"}</td>
+              <td class="text-center">${r.qty}</td>
+              <td class="text-right">${Number(r.taxableAmt || 0).toFixed(2)}</td>
+              <td class="text-center">${r.gstPct || 0}%</td>
+              <td class="text-right">${supply.isInterState ? Number(r.igstAmt || 0).toFixed(2) : `${Number(r.cgstAmt || 0).toFixed(2)} + ${Number(r.sgstAmt || 0).toFixed(2)}`}</td>
+              <td class="text-right"><strong>₹${Number(r.totalCreditAmt || 0).toFixed(2)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="border:1px solid #94a3b8;padding:7px 10px;margin-bottom:8px;font-size:11.5px;">
+          <strong>Credit Amount In Words:</strong> ${numberToWordsINR(r.totalCreditAmt || 0)}
+        </div>
+        <div class="inv-footer-grid">
+          <div class="inv-footer-box">
+            <strong>Adjustment Note:</strong><br/>
+            This Credit Note amount has been credited to the party's account ledger with ${co.name}.
+          </div>
+          <div class="inv-footer-box" style="text-align:right;">
+            <strong>Total Credit: ₹${Number(r.totalCreditAmt || 0).toFixed(2)}</strong>
+            <div style="margin-top:24px;"><strong>For ${co.name}</strong><br/><span style="font-size:10px;color:#475569;">Authorized Signatory</span></div>
+          </div>
+        </div>
+      `;
+      currentPreviewInvoiceOrderId = null;
+      const waBtn = document.getElementById("invoiceWaShareBtn");
+      if (waBtn) waBtn.style.display = "none";
+      openModal("invoiceModal");
+    }
+
+    // ==================== DAILY EXPENSES, CASH-IN-HAND & PROFIT TRACKER ====================
+    async function handleAddExpense(e) {
+      e.preventDefault();
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can record expenses."); return; }
+      const dateVal = (document.getElementById("expDate")?.value || "").trim() || new Date().toISOString().split("T")[0];
+      const category = document.getElementById("expCategory")?.value || "Other";
+      const mode = document.getElementById("expMode")?.value || "Cash";
+      const amount = Number(document.getElementById("expAmount")?.value || 0);
+      const staff = (document.getElementById("expStaff")?.value || "").trim() || "Owner";
+      const note = (document.getElementById("expNote")?.value || "").trim();
+
+      if (amount <= 0) {
+        alert("Please enter a valid expense amount.");
+        return;
+      }
+
+      const expRec = {
+        id: "EXP_" + Date.now(),
+        date: dateVal,
+        category,
+        mode,
+        amount: Number(amount.toFixed(2)),
+        staff,
+        note
+      };
+
+      if (!state.expenses) state.expenses = [];
+      await saveRecord("expenses", expRec);
+      e.target.reset();
+      const dEl = document.getElementById("expDate");
+      if (dEl) dEl.value = new Date().toISOString().split("T")[0];
+      const sEl = document.getElementById("expStaff");
+      if (sEl) sEl.value = "Roshan Thakre";
+      showToast(`💸 Expense saved: ${category} — ${fmtINR(expRec.amount)} (${mode})`);
+    }
+
+    async function deleteExpense(expId) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can delete expenses."); return; }
+      const ex = (state.expenses || []).find(x => x.id === expId);
+      if (!ex) return;
+      if (!confirm(`Delete expense entry: ${ex.category} (${fmtINR(ex.amount)} on ${fmtDate(ex.date)})?`)) return;
+      state.expenses = (state.expenses || []).filter(x => x.id !== expId);
+      persistLocal();
+      refreshAll();
+      if (isFirebaseLive && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "expenses").doc(expId).delete().catch(e => console.warn(e));
+      }
+      showToast(`🗑️ Deleted expense entry`);
+    }
+
+    function renderExpensesTab() {
+      const tbody = document.getElementById("expensesTableBody");
+      if (!tbody) return;
+
+      const dateInp = document.getElementById("expDate");
+      if (dateInp && !dateInp.value) dateInp.value = new Date().toISOString().split("T")[0];
+
+      const monthInp = document.getElementById("expReportMonth");
+      const allTime = Boolean(document.getElementById("expAllTimeChk")?.checked);
+      if (monthInp && !monthInp.value) {
+        const now = new Date();
+        monthInp.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+      const selMonth = monthInp ? monthInp.value : "";
+      const inPeriod = d => allTime || !selMonth || String(d || "").startsWith(selMonth);
+
+      const expenses = (state.expenses || []).filter(x => inPeriod(x.date));
+      const cashExp = expenses.filter(x => x.mode === "Cash").reduce((s, x) => s + Number(x.amount || 0), 0);
+      const bankExp = expenses.filter(x => x.mode !== "Cash").reduce((s, x) => s + Number(x.amount || 0), 0);
+      const totalExp = cashExp + bankExp;
+
+      const cashCol = (state.collections || []).filter(c => c.mode === "Cash" && inPeriod(c.date)).reduce((s, c) => s + Number(c.amount || 0), 0);
+      const bankDep = (state.bankDeposits || []).filter(d => inPeriod(d.date)).reduce((s, d) => s + Number(d.amount || 0), 0);
+      const realCashInHand = cashCol - cashExp - bankDep;
+
+      const dispatchedSales = (state.orders || []).filter(o => inPeriod(o.date)).reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+      const returnTotal = (state.salesReturns || []).filter(r => inPeriod(r.date)).reduce((s, r) => s + Number(r.totalCreditAmt || 0), 0);
+      const purchaseTotal = (state.purchaseBills || []).filter(b => inPeriod(b.date)).reduce((s, b) => s + Number(b.totalAmt || 0), 0);
+      const netSurplus = (dispatchedSales - returnTotal) - purchaseTotal - totalExp;
+
+      const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setTxt("expKpiTotal", fmtINR(totalExp));
+      setTxt("expKpiSplit", `Cash: ${fmtINR(cashExp)} | Bank/UPI: ${fmtINR(bankExp)} (${expenses.length} entries)`);
+      setTxt("expKpiCashCol", fmtINR(cashCol));
+      setTxt("expKpiBankDep", `Bank Deposited: ${fmtINR(bankDep)}`);
+      setTxt("expKpiCashInHand", fmtINR(realCashInHand));
+      setTxt("expKpiNetProfit", fmtINR(netSurplus));
+      setTxt("expKpiProfitSub", `Net Sales ${fmtINR(dispatchedSales - returnTotal)} − Pur. ${fmtINR(purchaseTotal)} − Exp. ${fmtINR(totalExp)}`);
+
+      const pCard = document.getElementById("expKpiProfitCard");
+      if (pCard) {
+        pCard.classList.remove("green", "red");
+        pCard.classList.add(netSurplus >= 0 ? "green" : "red");
+      }
+
+      const catFilter = document.getElementById("expCatFilter")?.value || "ALL";
+      const shown = expenses.filter(x => catFilter === "ALL" || x.category === catFilter);
+
+      if (shown.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding:18px;color:var(--muted);">No expenses recorded for this period.</td></tr>`;
+      } else {
+        tbody.innerHTML = shown.map(x => `
+          <tr>
+            <td>${fmtDate(x.date)}</td>
+            <td>
+              <strong>${x.category}</strong>
+              <div style="font-size:0.74rem;color:var(--muted);">${x.note || "-"}</div>
+            </td>
+            <td>
+              <span class="pill ${x.mode === 'Cash' ? 'pill-yellow' : 'pill-green'}" style="font-size:0.7rem;">${x.mode}</span>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${x.staff || "Owner"}</div>
+            </td>
+            <td class="text-right font-bold" style="color:#dc2626;">${fmtINR(x.amount)}</td>
+            <td class="text-center">
+              <button type="button" class="btn btn-danger btn-sm" onclick="deleteExpense('${x.id}')" title="Delete">🗑️</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      // Category-wise breakdown
+      const catBody = document.getElementById("expenseCategorySummaryBody");
+      if (catBody) {
+        const map = {};
+        expenses.forEach(x => {
+          const k = x.category || "Other";
+          if (!map[k]) map[k] = { category: k, count: 0, total: 0 };
+          map[k].count++;
+          map[k].total += Number(x.amount || 0);
+        });
+        const rows = Object.values(map).sort((a, b) => b.total - a.total);
+        if (rows.length === 0) {
+          catBody.innerHTML = `<tr><td colspan="3" class="text-center" style="padding:18px;color:var(--muted);">No category data for this period.</td></tr>`;
+        } else {
+          catBody.innerHTML = rows.map(r => `
+            <tr>
+              <td class="font-bold">${r.category}</td>
+              <td class="text-center">${r.count}</td>
+              <td class="text-right font-bold" style="color:#b91c1c;">${fmtINR(r.total)}</td>
+            </tr>
+          `).join("");
+        }
+      }
     }
 
     // ==================== EXCEL EXPORT, TEMPLATE, IMPORT & CLEAR ALL DATA (OWNER ADMIN) ====================
@@ -11454,8 +12588,8 @@ Thank you! Your payment has been received successfully.`;
         isResetInProgress = true;
         const resetTimestamp = Date.now();
         const colsToClear = scope === "all"
-          ? ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"]
-          : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills"];
+          ? ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills", "salesReturns", "expenses"]
+          : ["orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills", "salesReturns", "expenses"];
 
         // Step 2: Clear local state & legacy localStorage keys so old data never resurrects
         colsToClear.forEach(c => { state[c] = []; });
