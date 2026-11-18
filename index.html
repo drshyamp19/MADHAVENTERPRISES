@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>MADHAV ENTERPRISES &amp; SHIVOM SALES — ERP Portal</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1e3a5f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Madhav ERP" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -1072,6 +1080,11 @@
         <button class="btn btn-success" style="width:100%;justify-content:center;margin-top:10px;">Open Shivom ERP</button>
       </div>
     </div>
+    <div id="pwaInstallBannerGateway" style="display:none;margin-top:24px;text-align:center;">
+      <button type="button" class="btn btn-white" onclick="triggerPwaInstall()" style="padding:10px 22px;font-weight:700;font-size:0.9rem;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+        📲 Install Madhav ERP App on Mobile
+      </button>
+    </div>
   </div>
 
   <!-- ==================== MAIN APP SHELL ==================== -->
@@ -1106,6 +1119,9 @@
         <span id="staffBadgeWrap" style="display:none;align-items:center;gap:6px;">
           <span class="badge-staff" id="staffUserName">👤 Staff</span>
           <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="staffLogout()">🚪 Logout</button>
+        </span>
+        <span id="pwaInstallBtnWrap" style="display:none;">
+          <button type="button" class="btn btn-white btn-sm" onclick="triggerPwaInstall()" title="Install ERP App">📲 Install App</button>
         </span>
         <span id="staffLoginBtnWrap">
           <button class="btn btn-teal btn-sm" onclick="openStaffLoginModal()">📱 Sales Team Login</button>
@@ -9099,8 +9115,85 @@ Thank you! Your payment has been received successfully.`;
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.collections), "Cash_Bank_Collection");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(getComputedParties()), "Party_Balance_Ageing");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.salespersons), "Team_Masters");
-      XLSX.writeFile(wb, activeCompany + "_ERP_Backup.xlsx");
-      showToast("Excel backup downloaded!");
+      const filename = activeCompany + "_ERP_Backup.xlsx";
+      if (window.AndroidApp && typeof window.AndroidApp.saveExcelBase64 === "function") {
+        const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+        window.AndroidApp.saveExcelBase64(filename, b64);
+        showToast("Excel backup saved to Downloads!");
+      } else {
+        XLSX.writeFile(wb, filename);
+        showToast("Excel backup downloaded!");
+      }
+    }
+
+    // ==================== PWA & ANDROID APK BRIDGE ====================
+    let deferredInstallPrompt = null;
+
+    function isRunningStandaloneOrApk() {
+      return (
+        Boolean(window.AndroidApp) ||
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+      );
+    }
+
+    function updateInstallButtonsVisibility(show) {
+      const topWrap = document.getElementById("pwaInstallBtnWrap");
+      const gwBanner = document.getElementById("pwaInstallBannerGateway");
+      const shouldShow = show && !isRunningStandaloneOrApk();
+      if (topWrap) topWrap.style.display = shouldShow ? "inline-flex" : "none";
+      if (gwBanner) gwBanner.style.display = shouldShow ? "block" : "none";
+    }
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      updateInstallButtonsVisibility(true);
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      updateInstallButtonsVisibility(false);
+      showToast("✅ Madhav ERP App installed successfully!");
+    });
+
+    async function triggerPwaInstall() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          updateInstallButtonsVisibility(false);
+        }
+        deferredInstallPrompt = null;
+        return;
+      }
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIos) {
+        alert("To install on iPhone/iPad:\n1. Tap the Share button (⬆️) in Safari\n2. Scroll down and tap 'Add to Home Screen'");
+      } else {
+        alert("To install on Android:\nTap the browser menu (⋮) at top-right and select 'Install app' or 'Add to Home screen'.");
+      }
+    }
+
+    // Native Android Print Bridge when running inside MadhavShivomERP.apk
+    if (window.AndroidApp && typeof window.AndroidApp.printPage === "function") {
+      window.print = function () {
+        window.AndroidApp.printPage(document.title || "Madhav_ERP_Document");
+      };
+    }
+
+    // Register Service Worker for PWA installability & offline shell
+    if ("serviceWorker" in navigator && !window.AndroidApp) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch((err) => {
+          console.warn("ServiceWorker registration skipped:", err);
+        });
+        // Show install helper on iOS Safari if not already installed
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (isIos && !isRunningStandaloneOrApk()) {
+          updateInstallButtonsVisibility(true);
+        }
+      });
     }
 
     window.addEventListener("DOMContentLoaded", initApp);
