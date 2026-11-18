@@ -1267,6 +1267,30 @@
           </div>
         </div>
 
+        <!-- Owner Excel Data & Database Control Center -->
+        <div class="card" style="border-left:4px solid var(--primary);margin-bottom:18px;">
+          <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:10px;">
+            <div>
+              <span class="card-title" style="display:flex;align-items:center;gap:6px;">📊 Excel Data &amp; Database Control Center</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Export complete transaction ledger, download entry template, bulk upload Excel data, or reset database (Owner Admin Only)</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()" style="font-weight:700;">
+                📥 Export All Data Excel
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-weight:700;">
+                📄 Download Entry Template
+              </button>
+              <button type="button" class="btn btn-teal btn-sm" onclick="openExcelImportModal()" style="font-weight:700;">
+                📤 Upload / Import Excel
+              </button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="openClearDataModal()" style="font-weight:700;">
+                🗑️ Clear All Data
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-2">
           <div class="card">
             <div class="card-header">
@@ -1866,6 +1890,21 @@
             </table>
           </div>
         </div>
+
+        <div class="card" style="border-left:4px solid var(--accent);">
+          <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:10px;">
+            <div>
+              <span class="card-title">📊 Bulk Excel Import / Export &amp; Reset</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Manage all Products, Parties, Orders, Collections &amp; Bank Deposits via Excel</div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">📥 Export All Data</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()">📄 Download Template</button>
+              <button type="button" class="btn btn-teal btn-sm" onclick="openExcelImportModal()">📤 Upload Excel</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="openClearDataModal()">🗑️ Clear All Data</button>
+            </div>
+          </div>
+        </div>
       </section>
 
     </main>
@@ -2248,6 +2287,120 @@
           <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('firebaseModal')">Close</button>
           <button type="button" class="btn btn-primary btn-sm" onclick="saveFirebaseConfig()">Save &amp; Connect</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EXCEL UPLOAD / IMPORT MODAL ==================== -->
+  <div class="modal-backdrop" id="excelImportModal">
+    <div class="modal" style="max-width:560px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+        <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:6px;">
+          <span>📤</span> Upload / Import Excel Data (<span id="importModalCompanyLabel">MADHAV</span>)
+        </h3>
+        <button type="button" class="modal-close" onclick="closeModal('excelImportModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      </div>
+
+      <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:0.8rem;color:#115e59;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span>Use the official Excel template so all columns match accurately.</span>
+        <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-size:0.75rem;padding:4px 10px;">
+          📄 Download Template
+        </button>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:0.82rem;font-weight:700;color:#334155;">Select Filled Excel File (.xlsx / .xls)</label>
+        <input type="file" id="excelImportFileInput" class="form-control" accept=".xlsx,.xls,.csv" onchange="handleExcelImportFileSelect(event)" style="padding:8px;" />
+      </div>
+
+      <div id="excelImportPreviewBox" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.82rem;"></div>
+
+      <div id="excelImportModeWrap" style="display:none;margin-bottom:16px;">
+        <label style="font-size:0.82rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">Import Mode:</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;margin-bottom:8px;cursor:pointer;font-size:0.8rem;">
+          <input type="radio" name="excelImportMode" value="merge" checked style="margin-top:3px;" />
+          <div>
+            <strong>Merge &amp; Update (Recommended)</strong><br/>
+            <span style="color:#475569;">Adds new rows and updates matching records while preserving existing ERP data.</span>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;cursor:pointer;font-size:0.8rem;">
+          <input type="radio" name="excelImportMode" value="replace" style="margin-top:3px;" />
+          <div>
+            <strong>Replace Imported Sheets</strong><br/>
+            <span style="color:#475569;">Replaces existing records only for the non-empty sheets present in your Excel file.</span>
+          </div>
+        </label>
+      </div>
+
+      <div id="excelImportStatusMsg" style="display:none;font-size:0.82rem;font-weight:600;color:#0f766e;margin-bottom:12px;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('excelImportModal')">Cancel</button>
+        <button type="button" id="btnConfirmExcelImport" class="btn btn-success" style="flex:1.6;justify-content:center;font-weight:700;" onclick="confirmExcelImport()" disabled>
+          ✅ Confirm &amp; Import to ERP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CLEAR ALL DATA MODAL (OWNER ONLY) ==================== -->
+  <div class="modal-backdrop" id="clearDataModal">
+    <div class="modal" style="max-width:520px;text-align:left;border-top:5px solid #dc2626;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #fecaca;">
+        <h3 style="margin:0;color:#b91c1c;font-size:1.15rem;display:flex;align-items:center;gap:6px;">
+          <span>⚠️</span> Clear Data — <span id="clearModalCompanyLabel">MADHAV ENTERPRISES</span>
+        </h3>
+        <button type="button" class="modal-close" onclick="closeModal('clearDataModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:0.8rem;color:#991b1b;line-height:1.45;">
+        <strong>Warning:</strong> This permanently clears data from both this device and live Firebase cloud database for the active company. All connected staff devices will also be cleared automatically.
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.82rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">Select Clear Scope:</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 10px;margin-bottom:8px;cursor:pointer;font-size:0.8rem;">
+          <input type="radio" name="clearDataScope" value="transactions" checked onchange="toggleClearScopeOptions()" style="margin-top:3px;" />
+          <div>
+            <strong>Clear Transactions Only (Recommended)</strong><br/>
+            <span style="color:#475569;">Clears Orders, Collections, Cash Handovers &amp; Bank Deposits. Keeps Products, Parties &amp; Sales Team safe.</span>
+          </div>
+        </label>
+        <div id="clearResetOpeningWrap" style="margin:-2px 0 10px 24px;font-size:0.78rem;color:#334155;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="clearResetPartyOpeningChk" />
+            <span>Also reset all Party Opening Balances to ₹0</span>
+          </label>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;">
+          <input type="radio" name="clearDataScope" value="all" onchange="toggleClearScopeOptions()" style="margin-top:3px;" />
+          <div>
+            <strong style="color:#b91c1c;">Clear All Company Data (Full Wipe)</strong><br/>
+            <span style="color:#475569;">Clears Products, Parties, Orders, Collections, Cash Handovers &amp; Bank Deposits. Keeps Sales Team logins active.</span>
+          </div>
+        </label>
+      </div>
+
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 10px;margin-bottom:14px;font-size:0.8rem;color:#166534;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+          <input type="checkbox" id="clearAutoBackupChk" checked />
+          <span>💾 Automatically download Safety Backup Excel before clearing</span>
+        </label>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:0.8rem;font-weight:700;color:#b91c1c;">Type <code>CLEAR</code> below to unlock the button:</label>
+        <input type="text" id="clearDataConfirmInput" class="form-control font-bold" placeholder="Type CLEAR here..." oninput="handleClearConfirmTyping()" autocomplete="off" />
+      </div>
+
+      <div id="clearDataStatusMsg" style="display:none;font-size:0.82rem;font-weight:600;color:#b91c1c;margin-bottom:10px;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;font-weight:600;" onclick="closeModal('clearDataModal')">Cancel</button>
+        <button type="button" id="btnExecuteClearData" class="btn btn-danger" style="flex:1.6;justify-content:center;font-weight:700;" onclick="executeClearAllData()" disabled>
+          🗑️ Permanently Clear Data
+        </button>
       </div>
     </div>
   </div>
@@ -5508,6 +5661,9 @@
       activeCategory = "ALL";
       activeArea = "ALL";
       loadCompanyState();
+      if (isFirebaseLive && db) {
+        attachCompanyFirebaseListeners();
+      }
       refreshAll();
     }
 
@@ -5519,6 +5675,20 @@
 
     function getStorageKey() {
       return STORAGE_KEY + "_" + activeCompany.toLowerCase();
+    }
+
+    function getLegacyStorageKeys(coKey) {
+      const c = (coKey || activeCompany).toLowerCase();
+      return [
+        "madhav_shivom_erp_v23_" + c,
+        "madhav_shivom_erp_v22_" + c,
+        "madhav_shivom_erp_v21_" + c,
+        "madhav_shivom_erp_v16_" + c,
+        "madhav_shivom_erp_v15_" + c,
+        "madhav_shivom_erp_v14_" + c,
+        "madhav_shivom_erp_v13_" + c,
+        "madhav_shivom_erp_v12_" + c
+      ];
     }
 
     function loadCompanyState() {
@@ -5536,66 +5706,60 @@
         persistLocal();
       }
 
+      if (!state.products) state.products = [];
+      if (!state.parties) state.parties = [];
+      if (!state.orders) state.orders = [];
+      if (!state.collections) state.collections = [];
       if (!state.cashHandovers) state.cashHandovers = [];
       if (!state.bankDeposits) state.bankDeposits = [];
 
-      // Auto-merge orders, parties, collections from any previous version storages
-      try {
-        const prevKeys = [
-          "madhav_shivom_erp_v23_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v22_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v21_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v16_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v15_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v14_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v13_" + activeCompany.toLowerCase(),
-          "madhav_shivom_erp_v12_" + activeCompany.toLowerCase()
-        ];
-        let mergedAny = false;
-        if (!state.orders) state.orders = [];
-        if (!state.parties) state.parties = [];
-        if (!state.collections) state.collections = [];
+      // Auto-merge orders, parties, collections from any previous version storages (skip if Owner explicitly cleared data)
+      if (!state._clearedAt) {
+        try {
+          const prevKeys = getLegacyStorageKeys(activeCompany);
+          let mergedAny = false;
 
-        prevKeys.forEach(pk => {
-          if (pk === key) return;
-          const raw = localStorage.getItem(pk);
-          if (raw) {
-            try {
-              const oldState = JSON.parse(raw);
-              if (oldState.orders && Array.isArray(oldState.orders)) {
-                oldState.orders.forEach(oldOrd => {
-                  if (!state.orders.some(o => o.id === oldOrd.id || (o.memoNo && o.memoNo === oldOrd.memoNo) || (o.orderNo && o.orderNo === oldOrd.orderNo && o.date === oldOrd.date))) {
-                    state.orders.push(oldOrd);
-                    mergedAny = true;
-                  }
-                });
-              }
-              if (oldState.parties && Array.isArray(oldState.parties)) {
-                oldState.parties.forEach(oldParty => {
-                  if (!state.parties.some(p => p.id === oldParty.id || p.name === oldParty.name)) {
-                    state.parties.push(oldParty);
-                    mergedAny = true;
-                  }
-                });
-              }
-              if (oldState.collections && Array.isArray(oldState.collections)) {
-                oldState.collections.forEach(oldCol => {
-                  if (!state.collections.some(c => c.id === oldCol.id)) {
-                    state.collections.push(oldCol);
-                    mergedAny = true;
-                  }
-                });
-              }
-            } catch (err) {}
+          prevKeys.forEach(pk => {
+            if (pk === key) return;
+            const raw = localStorage.getItem(pk);
+            if (raw) {
+              try {
+                const oldState = JSON.parse(raw);
+                if (oldState.orders && Array.isArray(oldState.orders)) {
+                  oldState.orders.forEach(oldOrd => {
+                    if (!state.orders.some(o => o.id === oldOrd.id || (o.memoNo && o.memoNo === oldOrd.memoNo) || (o.orderNo && o.orderNo === oldOrd.orderNo && o.date === oldOrd.date))) {
+                      state.orders.push(oldOrd);
+                      mergedAny = true;
+                    }
+                  });
+                }
+                if (oldState.parties && Array.isArray(oldState.parties)) {
+                  oldState.parties.forEach(oldParty => {
+                    if (!state.parties.some(p => p.id === oldParty.id || p.name === oldParty.name)) {
+                      state.parties.push(oldParty);
+                      mergedAny = true;
+                    }
+                  });
+                }
+                if (oldState.collections && Array.isArray(oldState.collections)) {
+                  oldState.collections.forEach(oldCol => {
+                    if (!state.collections.some(c => c.id === oldCol.id)) {
+                      state.collections.push(oldCol);
+                      mergedAny = true;
+                    }
+                  });
+                }
+              } catch (err) {}
+            }
+          });
+
+          if (mergedAny) {
+            state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
+            persistLocal();
           }
-        });
-
-        if (mergedAny) {
-          state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
-          persistLocal();
+        } catch (e) {
+          console.warn("Storage auto-merge exception:", e);
         }
-      } catch (e) {
-        console.warn("Storage auto-merge exception:", e);
       }
 
       // Ensure full registered team is in state.salespersons
@@ -5912,18 +6076,49 @@
       location.reload();
     }
 
-    function connectFirebase(cfg) {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(cfg);
-      }
-      db = firebase.firestore();
-      isFirebaseLive = true;
-      document.getElementById("syncDot").classList.add("live");
-      document.getElementById("syncText").textContent = "Live Sync";
+    let fbUnsubscribers = [];
+    let isResetInProgress = false;
 
-      const prefix = activeCompany.toLowerCase() + "_";
+    function detachCompanyFirebaseListeners() {
+      fbUnsubscribers.forEach(unsub => {
+        try { if (typeof unsub === "function") unsub(); } catch (e) {}
+      });
+      fbUnsubscribers = [];
+    }
+
+    function attachCompanyFirebaseListeners() {
+      if (!isFirebaseLive || !db) return;
+      detachCompanyFirebaseListeners();
+      const boundCompany = activeCompany;
+      const prefix = boundCompany.toLowerCase() + "_";
+
+      // Listen for Owner remote reset/clear markers so staff phones never re-upload cleared data
+      const unsubMeta = db.collection(prefix + "meta").doc("system").onSnapshot(doc => {
+        if (activeCompany !== boundCompany || isResetInProgress) return;
+        if (doc.exists) {
+          const meta = doc.data() || {};
+          const remoteResetAt = Number(meta.resetAt || 0);
+          const localResetAt = Number(state._clearedAt || 0);
+          if (remoteResetAt > localResetAt) {
+            const colsToClear = Array.isArray(meta.clearedCollections)
+              ? meta.clearedCollections
+              : ["orders", "collections", "cashHandovers", "bankDeposits"];
+            colsToClear.forEach(c => { state[c] = []; });
+            if (meta.resetPartyOpening && Array.isArray(state.parties)) {
+              state.parties.forEach(p => { p.openingBalance = 0; });
+            }
+            state._clearedAt = remoteResetAt;
+            getLegacyStorageKeys(boundCompany).forEach(pk => localStorage.removeItem(pk));
+            persistLocal();
+            refreshAll();
+          }
+        }
+      }, err => console.log("Firebase meta notice:", err));
+      fbUnsubscribers.push(unsubMeta);
+
       ["products", "parties", "salespersons", "orders", "collections", "cashHandovers", "bankDeposits"].forEach(col => {
-        db.collection(prefix + col).onSnapshot(snap => {
+        const unsub = db.collection(prefix + col).onSnapshot(snap => {
+          if (activeCompany !== boundCompany || isResetInProgress) return;
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             if (col === "orders" || col === "collections" || col === "parties" || col === "cashHandovers" || col === "bankDeposits") {
@@ -5936,7 +6131,7 @@
                   localList.push(r);
                 }
               });
-              // Upload any local items not yet in Firestore
+              // Upload any local items not yet in Firestore (only if not right after a remote reset)
               localList.forEach(loc => {
                 if (!remoteItems.some(r => r.id === loc.id)) {
                   db.collection(prefix + col).doc(loc.id).set(loc).catch(e => console.warn(e));
@@ -5951,7 +6146,7 @@
             }
             persistLocal();
             refreshAll();
-          } else if (state[col] && state[col].length > 0) {
+          } else if (state[col] && state[col].length > 0 && !state._clearedAt) {
             const CHUNK = 400;
             for (let i = 0; i < state[col].length; i += CHUNK) {
               const batch = db.batch();
@@ -5962,7 +6157,19 @@
             }
           }
         }, err => console.log("Firebase sync notice:", err));
+        fbUnsubscribers.push(unsub);
       });
+    }
+
+    function connectFirebase(cfg) {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(cfg);
+      }
+      db = firebase.firestore();
+      isFirebaseLive = true;
+      document.getElementById("syncDot").classList.add("live");
+      document.getElementById("syncText").textContent = "Live Sync";
+      attachCompanyFirebaseListeners();
     }
 
     async function saveRecord(col, item) {
@@ -9106,23 +9313,858 @@ Thank you! Your payment has been received successfully.`;
       openModal("invoiceModal");
     }
 
-    // ==================== EXCEL BACKUP ====================
-    function exportToExcel() {
-      if (!isAdminLoggedIn) { alert("Only Owner can export Excel."); return; }
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(getComputedStock()), "Stock_Inventory");
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.orders), "Orders_Dispatch");
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.collections), "Cash_Bank_Collection");
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(getComputedParties()), "Party_Balance_Ageing");
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(state.salespersons), "Team_Masters");
-      const filename = activeCompany + "_ERP_Backup.xlsx";
+    // ==================== EXCEL EXPORT, TEMPLATE, IMPORT & CLEAR ALL DATA (OWNER ADMIN) ====================
+    function saveWorkbookAsXlsx(wb, filename, toastMsg) {
       if (window.AndroidApp && typeof window.AndroidApp.saveExcelBase64 === "function") {
         const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
         window.AndroidApp.saveExcelBase64(filename, b64);
-        showToast("Excel backup saved to Downloads!");
+        if (toastMsg) showToast(toastMsg + " (Saved to Downloads)");
       } else {
         XLSX.writeFile(wb, filename);
-        showToast("Excel backup downloaded!");
+        if (toastMsg) showToast(toastMsg);
+      }
+    }
+
+    function makeFormattedSheet(rows, emptyHeaders) {
+      const data = (rows && rows.length > 0)
+        ? rows
+        : [emptyHeaders.reduce((obj, h) => { obj[h] = ""; return obj; }, {})];
+      const ws = XLSX.utils.json_to_sheet(data);
+      const keys = Object.keys(data[0] || {});
+      ws["!cols"] = keys.map(k => {
+        let maxLen = String(k).length;
+        data.slice(0, 200).forEach(r => {
+          const val = r[k] !== undefined && r[k] !== null ? String(r[k]) : "";
+          if (val.length > maxLen) maxLen = val.length;
+        });
+        return { wch: Math.min(Math.max(maxLen + 3, 12), 45) };
+      });
+      return ws;
+    }
+
+    function exportToExcel(customFilename) {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can export Excel data."); return; }
+      const co = COMPANIES[activeCompany] || { name: activeCompany };
+      const todayStr = new Date().toISOString().split("T")[0];
+      const computedStock = getComputedStock();
+      const computedParties = getComputedParties();
+      const cs = getCashSummary();
+
+      const totalOrderVal = (state.orders || []).reduce((s, o) => s + Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0))), 0);
+      const totalDispatchedVal = (state.orders || []).reduce((s, o) => s + (Number(o.dispatchedQty || 0) * Number(o.rate || 0)), 0);
+      const totalCashCol = (state.collections || []).filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalBankCol = (state.collections || []).filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalChequeCleared = (state.collections || []).filter(c => c.mode === "Cheque" && (c.chequeStatus || "Pending") === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalChequePending = (state.collections || []).filter(c => c.mode === "Cheque" && (c.chequeStatus || "Pending") === "Pending").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalReceivable = computedParties.reduce((s, p) => s + Math.max(0, Number(p.netBalance || 0)), 0);
+
+      // 1. Summary Dashboard Sheet
+      const summaryRows = [
+        { Metric: "Company", Value: co.name },
+        { Metric: "Report Export Date", Value: todayStr },
+        { Metric: "Active Products", Value: computedStock.length },
+        { Metric: "Active Parties / Dealers", Value: computedParties.length },
+        { Metric: "Total Orders / Bills Count", Value: (state.orders || []).length },
+        { Metric: "Total Order Booking Value (₹)", Value: Number(totalOrderVal.toFixed(2)) },
+        { Metric: "Total Dispatched Value (₹)", Value: Number(totalDispatchedVal.toFixed(2)) },
+        { Metric: "Pending Dispatch Value (₹)", Value: Number(Math.max(0, totalOrderVal - totalDispatchedVal).toFixed(2)) },
+        { Metric: "Total Cash Collections (₹)", Value: Number(totalCashCol.toFixed(2)) },
+        { Metric: "Total Bank / UPI Collections (₹)", Value: Number(totalBankCol.toFixed(2)) },
+        { Metric: "Cleared Cheques Total (₹)", Value: Number(totalChequeCleared.toFixed(2)) },
+        { Metric: "Pending Cheques In Hand (₹)", Value: Number(totalChequePending.toFixed(2)) },
+        { Metric: "Net Party Receivable Due (₹)", Value: Number(totalReceivable.toFixed(2)) },
+        { Metric: "Cash with Manager Prashik (₹)", Value: Number((cs.prashikInHand || 0).toFixed(2)) },
+        { Metric: "Cash with Gopal (In Pocket) (₹)", Value: Number((cs.gopalPocket || 0).toFixed(2)) },
+        { Metric: "Total Cash Deposited to Banks (₹)", Value: Number((cs.totalBankDeposits || 0).toFixed(2)) }
+      ];
+
+      // 2. Unified All Transactions Ledger Sheet
+      const allTxns = [];
+      (state.orders || []).forEach(o => {
+        const amt = Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0)));
+        const pending = Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0));
+        const st = Number(o.dispatchedQty || 0) === 0 ? "Pending Dispatch" : (pending > 0 ? "Partial Dispatch" : "Dispatched");
+        allTxns.push({
+          Date: o.date || "",
+          Transaction_Type: "Order / Bill",
+          Reference_No: o.memoNo || ("#" + (o.orderNo || "")),
+          Party_or_Staff: o.partyName || "",
+          Handled_By: o.salespersonName || "",
+          Mode_or_Account: "Credit / Billing",
+          Debit_Bill_Amt: Number(amt.toFixed(2)),
+          Credit_Paid_Amt: 0,
+          Status: st,
+          Details_Remark: `${o.productName || ""} | Qty: ${o.orderQty || 0} (Disp: ${o.dispatchedQty || 0})`
+        });
+      });
+      (state.collections || []).forEach(c => {
+        const modeAcc = c.mode === "Bank"
+          ? `Bank - ${getAccShortName(c.depositAccount)}`
+          : (c.mode === "Cheque" ? `Cheque - ${c.chequeBank || "Bank"} (#${c.chequeNo || "-"})` : "Cash");
+        const st = c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "Received";
+        allTxns.push({
+          Date: c.date || "",
+          Transaction_Type: "Payment Collection",
+          Reference_No: c.receiptNo || "",
+          Party_or_Staff: c.partyName || "",
+          Handled_By: c.salespersonName || "",
+          Mode_or_Account: modeAcc,
+          Debit_Bill_Amt: 0,
+          Credit_Paid_Amt: Number(Number(c.amount || 0).toFixed(2)),
+          Status: st,
+          Details_Remark: c.bankRef || ""
+        });
+      });
+      (state.cashHandovers || []).forEach(h => {
+        allTxns.push({
+          Date: h.date || "",
+          Transaction_Type: "Cash Handover",
+          Reference_No: h.id || "",
+          Party_or_Staff: h.fromStaffName || "",
+          Handled_By: h.toStaffName || "PRASHIK HAJARE",
+          Mode_or_Account: "Staff Cash Transfer",
+          Debit_Bill_Amt: 0,
+          Credit_Paid_Amt: Number(Number(h.amount || 0).toFixed(2)),
+          Status: h.status || "Pending",
+          Details_Remark: h.note || h.rejectReason || ""
+        });
+      });
+      (state.bankDeposits || []).forEach(b => {
+        allTxns.push({
+          Date: b.date || "",
+          Transaction_Type: "Bank Deposit",
+          Reference_No: b.challanNo || b.id || "",
+          Party_or_Staff: b.depositedBy || "",
+          Handled_By: b.depositedBy || "",
+          Mode_or_Account: b.bankName || getAccShortName(b.depositAccount),
+          Debit_Bill_Amt: 0,
+          Credit_Paid_Amt: Number(Number(b.amount || 0).toFixed(2)),
+          Status: "Deposited",
+          Details_Remark: `Challan: ${b.challanNo || "-"}`
+        });
+      });
+      allTxns.sort((a, b) => String(b.Date).localeCompare(String(a.Date)));
+
+      // 3. Orders & Bills Sheet
+      const orderRows = (state.orders || []).map(o => {
+        const qty = Number(o.orderQty || 0);
+        const disp = Number(o.dispatchedQty || 0);
+        const pending = Math.max(0, qty - disp);
+        const amt = Number(o.totalAmt || (qty * Number(o.rate || 0)));
+        return {
+          OrderNo: o.orderNo || "",
+          MemoNo: o.memoNo || "",
+          Date: o.date || "",
+          PartyName: o.partyName || "",
+          Salesperson: o.salespersonName || "",
+          ProductName: o.productName || "",
+          Qty: qty,
+          DispatchedQty: disp,
+          PendingQty: pending,
+          Rate: Number(Number(o.rate || 0).toFixed(2)),
+          TotalAmount: Number(amt.toFixed(2)),
+          Status: disp === 0 ? "Pending" : (pending > 0 ? "Partial" : "Completed")
+        };
+      });
+
+      // 4. Collections & Cheques Sheet
+      const colRows = (state.collections || []).map(c => ({
+        ReceiptNo: c.receiptNo || "",
+        Date: c.date || "",
+        PartyName: c.partyName || "",
+        Salesperson: c.salespersonName || "",
+        Amount: Number(Number(c.amount || 0).toFixed(2)),
+        Mode: c.mode || "Cash",
+        DepositAccount: c.depositAccount || "",
+        AccountName: c.depositAccount ? getAccShortName(c.depositAccount) : "",
+        ChequeNo: c.chequeNo || "",
+        ChequeBank: c.chequeBank || "",
+        ChequeDate: c.chequeDate || "",
+        ChequeStatus: c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "",
+        Remark: c.bankRef || ""
+      }));
+
+      // 5. Cash Handovers Sheet
+      const hoRows = (state.cashHandovers || []).map(h => ({
+        Date: h.date || "",
+        Time: h.time || "",
+        FromStaff: h.fromStaffName || "",
+        ToManager: h.toStaffName || "PRASHIK HAJARE",
+        Amount: Number(Number(h.amount || 0).toFixed(2)),
+        Status: h.status || "Pending",
+        AcceptedBy: h.acceptedBy || "",
+        NoteOrReason: h.note || h.rejectReason || ""
+      }));
+
+      // 6. Bank Deposits Sheet
+      const depRows = (state.bankDeposits || []).map(b => ({
+        Date: b.date || "",
+        DepositAccount: b.depositAccount || "",
+        BankName: b.bankName || getAccShortName(b.depositAccount),
+        ChallanNo: b.challanNo || "",
+        Amount: Number(Number(b.amount || 0).toFixed(2)),
+        DepositedBy: b.depositedBy || ""
+      }));
+
+      // 7. Parties & Balances Sheet
+      const partyRows = computedParties.map(p => ({
+        Name: p.name || "",
+        Mobile: p.mobile || "",
+        Area: p.area || "",
+        GSTIN: p.gstin || "",
+        OpeningBalance: Number(Number(p.openingBalance || 0).toFixed(2)),
+        TotalBilled: Number(Number(p.totalBilled || 0).toFixed(2)),
+        TotalPaid: Number(Number(p.totalPaid || 0).toFixed(2)),
+        NetBalanceDue: Number(Number(p.netBalance || 0).toFixed(2)),
+        AgeingDays: Number(p.maxOverdueDays || 0),
+        AlertCategory: p.category || "Clear"
+      }));
+
+      // 8. Stock Inventory Sheet
+      const stockRows = computedStock.map(p => ({
+        Code: p.code || "",
+        Name: p.name || "",
+        Category: p.group || "General",
+        HSN: p.hsn || "",
+        GST_Percent: Number(p.gst || 0),
+        OpeningStock: Number(p.openingStock || 0),
+        InwardStock: Number(p.inwardStock || 0),
+        Dispatched: Number(p.dispatched || 0),
+        BookedPending: Number(p.bookedStock || 0),
+        AvailableStock: Number(p.available || 0),
+        Rate: Number(p.rate || 0),
+        MRP: Number(p.mrp || 0),
+        Scheme: p.scheme || ""
+      }));
+
+      // 9. Sales Team Sheet
+      const teamRows = (state.salespersons || []).map(s => ({
+        Name: s.name || "",
+        Role: s.role || "",
+        Mobile: s.mobile || "",
+        Area: s.area || ""
+      }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(summaryRows, ["Metric", "Value"]), "Summary_Dashboard");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(allTxns, ["Date", "Transaction_Type", "Reference_No", "Party_or_Staff", "Handled_By", "Mode_or_Account", "Debit_Bill_Amt", "Credit_Paid_Amt", "Status", "Details_Remark"]), "All_Transactions_Ledger");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(orderRows, ["OrderNo", "MemoNo", "Date", "PartyName", "Salesperson", "ProductName", "Qty", "DispatchedQty", "PendingQty", "Rate", "TotalAmount", "Status"]), "Orders_&_Bills");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(colRows, ["ReceiptNo", "Date", "PartyName", "Salesperson", "Amount", "Mode", "DepositAccount", "AccountName", "ChequeNo", "ChequeBank", "ChequeDate", "ChequeStatus", "Remark"]), "Collections_&_Cheques");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(hoRows, ["Date", "Time", "FromStaff", "ToManager", "Amount", "Status", "AcceptedBy", "NoteOrReason"]), "Cash_Handovers");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(depRows, ["Date", "DepositAccount", "BankName", "ChallanNo", "Amount", "DepositedBy"]), "Bank_Deposits");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(partyRows, ["Name", "Mobile", "Area", "GSTIN", "OpeningBalance", "TotalBilled", "TotalPaid", "NetBalanceDue", "AgeingDays", "AlertCategory"]), "Parties_&_Balances");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(stockRows, ["Code", "Name", "Category", "HSN", "GST_Percent", "OpeningStock", "InwardStock", "Dispatched", "BookedPending", "AvailableStock", "Rate", "MRP", "Scheme"]), "Stock_Inventory");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(teamRows, ["Name", "Role", "Mobile", "Area"]), "Sales_Team");
+
+      const filename = customFilename || `${activeCompany}_ERP_Full_Report_${todayStr}.xlsx`;
+      saveWorkbookAsXlsx(wb, filename, `✅ Exported ${filename}!`);
+    }
+
+    function downloadExcelTemplate() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can download the data entry template."); return; }
+      const todayStr = new Date().toISOString().split("T")[0];
+      const wb = XLSX.utils.book_new();
+
+      const instructions = [
+        { Step: "1", Guide: "Do NOT rename the sheet tabs (Products, Parties, Orders, Collections, BankDeposits) or column headers." },
+        { Step: "2", Guide: "Row 2 in each sheet has a [SAMPLE] example row. Delete or overwrite it before uploading (rows containing [SAMPLE] are ignored automatically)." },
+        { Step: "3", Guide: "You can fill ONLY the sheets you want (e.g. only Parties or only Orders) and leave other sheets empty." },
+        { Step: "4", Guide: "Date format should be YYYY-MM-DD (e.g. 2026-11-18). Standard Excel dates are also supported." },
+        { Step: "5", Guide: "Collection Mode values: Cash, Bank, or Cheque." },
+        { Step: "6", Guide: "DepositAccount values (for Bank/Cheque/BankDeposits): IOB, ROSHAN, PRASHIK, or SAVITA." },
+        { Step: "7", Guide: "ChequeStatus values (for Cheque mode): Pending, Cleared, or Bounced." },
+        { Step: "8", Guide: "After filling data, open Admin Panel -> Upload / Import Excel, check the preview, and click Confirm & Import." }
+      ];
+
+      const sampleProducts = [{
+        Code: "5060",
+        Name: "[SAMPLE] Greenchef SS Cooker 3L",
+        Category: "Pressure Cookers",
+        HSN: "73239310",
+        GST_Percent: 5,
+        OpeningStock: 20,
+        InwardStock: 0,
+        Rate: 1250,
+        MRP: 2499,
+        Scheme: "Nett Billing",
+        LowStockLimit: 3
+      }];
+
+      const sampleParties = [{
+        Name: "[SAMPLE] VIJAY ELECTRICALS",
+        Mobile: "9876543210",
+        Area: "ITWARI",
+        GSTIN: "",
+        OpeningBalance: 5000
+      }];
+
+      const sampleOrders = [{
+        OrderNo: "501",
+        Date: todayStr,
+        PartyName: "[SAMPLE] VIJAY ELECTRICALS",
+        Salesperson: "PRASHIK HAJARE",
+        ProductName: "Greenchef SS Cooker 3L",
+        Qty: 5,
+        DispatchedQty: 5,
+        Rate: 1250
+      }];
+
+      const sampleCollections = [{
+        ReceiptNo: "RCP-501",
+        Date: todayStr,
+        PartyName: "[SAMPLE] VIJAY ELECTRICALS",
+        Salesperson: "PRASHIK HAJARE",
+        Amount: 2500,
+        Mode: "Bank",
+        DepositAccount: "IOB",
+        ChequeNo: "",
+        ChequeBank: "",
+        ChequeDate: "",
+        ChequeStatus: "",
+        Remark: "UPI Ref 123456"
+      }];
+
+      const sampleBankDeposits = [{
+        Date: todayStr,
+        DepositAccount: "IOB",
+        ChallanNo: "[SAMPLE] CHL-101",
+        Amount: 10000,
+        DepositedBy: "PRASHIK HAJARE"
+      }];
+
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(instructions, ["Step", "Guide"]), "Instructions");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleProducts, Object.keys(sampleProducts[0])), "Products");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleParties, Object.keys(sampleParties[0])), "Parties");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleOrders, Object.keys(sampleOrders[0])), "Orders");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleCollections, Object.keys(sampleCollections[0])), "Collections");
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(sampleBankDeposits, Object.keys(sampleBankDeposits[0])), "BankDeposits");
+
+      const filename = `${activeCompany}_ERP_Data_Entry_Template.xlsx`;
+      saveWorkbookAsXlsx(wb, filename, `📄 Template ${filename} downloaded!`);
+    }
+
+    // ==================== BULK EXCEL UPLOAD / IMPORT ====================
+    let pendingExcelImportData = null;
+
+    function openExcelImportModal() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can upload / import Excel data."); return; }
+      pendingExcelImportData = null;
+      const co = COMPANIES[activeCompany] || { name: activeCompany };
+      const lbl = document.getElementById("importModalCompanyLabel");
+      if (lbl) lbl.textContent = co.name;
+      const fileInp = document.getElementById("excelImportFileInput");
+      if (fileInp) fileInp.value = "";
+      const previewBox = document.getElementById("excelImportPreviewBox");
+      if (previewBox) { previewBox.style.display = "none"; previewBox.innerHTML = ""; }
+      const modeWrap = document.getElementById("excelImportModeWrap");
+      if (modeWrap) modeWrap.style.display = "none";
+      const statusMsg = document.getElementById("excelImportStatusMsg");
+      if (statusMsg) { statusMsg.style.display = "none"; statusMsg.textContent = ""; }
+      const btn = document.getElementById("btnConfirmExcelImport");
+      if (btn) { btn.disabled = true; btn.textContent = "✅ Confirm & Import to ERP"; }
+      openModal("excelImportModal");
+    }
+
+    function normalizeColKey(k) {
+      return String(k || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    function pickExcelVal(row, aliases, fallback = "") {
+      const entries = Object.entries(row || {});
+      for (const alias of aliases) {
+        const target = normalizeColKey(alias);
+        for (const [k, v] of entries) {
+          if (normalizeColKey(k) === target && v !== undefined && v !== null && String(v).trim() !== "") {
+            return v;
+          }
+        }
+      }
+      return fallback;
+    }
+
+    function isSampleOrBlankRow(row) {
+      const vals = Object.values(row || {}).map(v => String(v === undefined || v === null ? "" : v).trim());
+      if (vals.every(v => v === "")) return true;
+      if (vals.some(v => v.toUpperCase().includes("[SAMPLE]"))) return true;
+      return false;
+    }
+
+    function normalizeExcelDate(val) {
+      const fallback = new Date().toISOString().split("T")[0];
+      if (val === undefined || val === null || val === "") return fallback;
+      if (typeof val === "number" && val > 20000 && val < 90000) {
+        const utcDays = Math.floor(val - 25569);
+        const d = new Date(utcDays * 86400 * 1000);
+        if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+      }
+      const s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+      }
+      const parsed = new Date(s);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+      return fallback;
+    }
+
+    function handleExcelImportFileSelect(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const previewBox = document.getElementById("excelImportPreviewBox");
+      const modeWrap = document.getElementById("excelImportModeWrap");
+      const btn = document.getElementById("btnConfirmExcelImport");
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: "array" });
+
+          const findSheet = (candidates) => {
+            for (const name of wb.SheetNames) {
+              const norm = normalizeColKey(name);
+              if (candidates.some(c => norm === normalizeColKey(c) || norm.includes(normalizeColKey(c)))) {
+                return XLSX.utils.sheet_to_json(wb.Sheets[name], { defval: "" });
+              }
+            }
+            return [];
+          };
+
+          const rawProducts = findSheet(["Products", "Stock_Inventory", "Stock"]).filter(r => !isSampleOrBlankRow(r));
+          const rawParties = findSheet(["Parties", "Parties_&_Balances", "Party_Balance_Ageing", "Dealers"]).filter(r => !isSampleOrBlankRow(r));
+          const rawOrders = findSheet(["Orders", "Orders_&_Bills", "Orders_Dispatch"]).filter(r => !isSampleOrBlankRow(r));
+          const rawCollections = findSheet(["Collections", "Collections_&_Cheques", "Cash_Bank_Collection"]).filter(r => !isSampleOrBlankRow(r));
+          const rawDeposits = findSheet(["BankDeposits", "Bank_Deposits"]).filter(r => !isSampleOrBlankRow(r));
+
+          const nowBase = Date.now();
+
+          const products = rawProducts.map((r, i) => {
+            const name = String(pickExcelVal(r, ["Name", "ProductName", "Product"])).trim();
+            if (!name) return null;
+            return {
+              id: "PR_IMP_" + nowBase + "_" + i,
+              code: String(pickExcelVal(r, ["Code", "ProductCode"], "PR" + (i + 1))).trim(),
+              name: name,
+              group: String(pickExcelVal(r, ["Category", "Group"], "General")).trim(),
+              hsn: String(pickExcelVal(r, ["HSN", "HSNCode"], "85166000")).trim(),
+              gst: Number(pickExcelVal(r, ["GST_Percent", "GST", "GST%"], 18)) || 0,
+              openingStock: Number(pickExcelVal(r, ["OpeningStock", "Opening"], 0)) || 0,
+              inwardStock: Number(pickExcelVal(r, ["InwardStock", "Inward"], 0)) || 0,
+              rate: Number(pickExcelVal(r, ["Rate", "DealerRate"], 0)) || 0,
+              mrp: Number(pickExcelVal(r, ["MRP"], 0)) || 0,
+              scheme: String(pickExcelVal(r, ["Scheme"], "")).trim(),
+              lowStockLimit: Number(pickExcelVal(r, ["LowStockLimit"], 3)) || 3
+            };
+          }).filter(Boolean);
+
+          const parties = rawParties.map((r, i) => {
+            const name = String(pickExcelVal(r, ["Name", "PartyName", "StoreName", "Dealer"])).trim().toUpperCase();
+            if (!name) return null;
+            return {
+              id: "P_IMP_" + nowBase + "_" + i,
+              name: name,
+              mobile: String(pickExcelVal(r, ["Mobile", "MobileNumber", "Phone"], "")).replace(/\D/g, "").slice(-10),
+              area: String(pickExcelVal(r, ["Area", "Market", "City"], "NAGPUR")).trim().toUpperCase(),
+              gstin: String(pickExcelVal(r, ["GSTIN", "GSTNo"], "")).trim().toUpperCase(),
+              openingBalance: Number(pickExcelVal(r, ["OpeningBalance", "OpeningDue", "Opening"], 0)) || 0
+            };
+          }).filter(Boolean);
+
+          const orders = rawOrders.map((r, i) => {
+            const partyName = String(pickExcelVal(r, ["PartyName", "Party", "Dealer"])).trim().toUpperCase();
+            const productName = String(pickExcelVal(r, ["ProductName", "Product", "Item"])).trim();
+            const qty = Number(pickExcelVal(r, ["Qty", "OrderQty", "Quantity"], 0)) || 0;
+            if (!partyName || !productName || qty <= 0) return null;
+            const rate = Number(pickExcelVal(r, ["Rate", "UnitRate"], 0)) || 0;
+            const dispQty = Math.min(qty, Math.max(0, Number(pickExcelVal(r, ["DispatchedQty", "Dispatched"], 0)) || 0));
+            const orderNo = String(pickExcelVal(r, ["OrderNo", "BillNo", "MemoNo"], String(1000 + i + 1))).trim();
+            const totalAmt = Number(pickExcelVal(r, ["TotalAmount", "TotalAmt", "Amount"], qty * rate)) || (qty * rate);
+            return {
+              id: "ORD_IMP_" + nowBase + "_" + i,
+              orderNo: orderNo.replace(/^#/, ""),
+              memoNo: String(pickExcelVal(r, ["MemoNo"], "")).trim() || undefined,
+              date: normalizeExcelDate(pickExcelVal(r, ["Date", "OrderDate", "BillDate"])),
+              partyId: "",
+              partyName: partyName,
+              salespersonName: String(pickExcelVal(r, ["Salesperson", "BookedBy", "SalespersonName"], "PRASHIK HAJARE")).trim().toUpperCase(),
+              productId: "",
+              productName: productName,
+              orderQty: qty,
+              dispatchedQty: dispQty,
+              rate: rate,
+              totalAmt: totalAmt
+            };
+          }).filter(Boolean);
+
+          const collections = rawCollections.map((r, i) => {
+            const partyName = String(pickExcelVal(r, ["PartyName", "Party", "Dealer"])).trim().toUpperCase();
+            const amount = Number(pickExcelVal(r, ["Amount", "AmountReceived"], 0)) || 0;
+            if (!partyName || amount <= 0) return null;
+            let mode = String(pickExcelVal(r, ["Mode", "PaymentMode"], "Cash")).trim();
+            if (/bank|upi|online|neft|rtgs/i.test(mode)) mode = "Bank";
+            else if (/cheq|chq/i.test(mode)) mode = "Cheque";
+            else mode = "Cash";
+
+            let depAcc = String(pickExcelVal(r, ["DepositAccount", "Account"], "")).trim().toUpperCase();
+            if (mode !== "Cash" && !["IOB", "ROSHAN", "PRASHIK", "SAVITA"].includes(depAcc)) {
+              depAcc = "IOB";
+            }
+
+            const chqStatusRaw = String(pickExcelVal(r, ["ChequeStatus"], "")).trim();
+            const chqStatus = mode === "Cheque"
+              ? (/clear|pass/i.test(chqStatusRaw) ? "Cleared" : (/bounc/i.test(chqStatusRaw) ? "Bounced" : "Pending"))
+              : null;
+
+            return {
+              id: "COL_IMP_" + nowBase + "_" + i,
+              receiptNo: String(pickExcelVal(r, ["ReceiptNo", "Receipt"], "RCP-IMP-" + (i + 1))).trim(),
+              date: normalizeExcelDate(pickExcelVal(r, ["Date", "PaymentDate"])),
+              partyId: "",
+              partyName: partyName,
+              salespersonName: String(pickExcelVal(r, ["Salesperson", "CollectedBy", "SalespersonName"], "PRASHIK HAJARE")).trim().toUpperCase(),
+              amount: amount,
+              mode: mode,
+              depositAccount: mode === "Cash" ? null : depAcc,
+              chequeNo: mode === "Cheque" ? String(pickExcelVal(r, ["ChequeNo", "ChqNo"], "")).trim() : null,
+              chequeBank: mode === "Cheque" ? String(pickExcelVal(r, ["ChequeBank", "BankName"], "")).trim() : null,
+              chequeDate: mode === "Cheque" ? normalizeExcelDate(pickExcelVal(r, ["ChequeDate", "Date"])) : null,
+              chequeStatus: chqStatus,
+              bankRef: String(pickExcelVal(r, ["Remark", "BankRef", "Reference", "Ref"], "")).trim()
+            };
+          }).filter(Boolean);
+
+          const bankDeposits = rawDeposits.map((r, i) => {
+            const amount = Number(pickExcelVal(r, ["Amount"], 0)) || 0;
+            if (amount <= 0) return null;
+            let acc = String(pickExcelVal(r, ["DepositAccount", "Account"], "IOB")).trim().toUpperCase();
+            if (!["IOB", "ROSHAN", "PRASHIK", "SAVITA"].includes(acc)) acc = "IOB";
+            return {
+              id: "DEP_IMP_" + nowBase + "_" + i,
+              date: normalizeExcelDate(pickExcelVal(r, ["Date", "DepositDate"])),
+              depositAccount: acc,
+              bankName: getAccShortName(acc),
+              challanNo: String(pickExcelVal(r, ["ChallanNo", "Challan", "Ref"], "IMP-" + (i + 1))).trim(),
+              amount: amount,
+              depositedBy: String(pickExcelVal(r, ["DepositedBy", "By"], "PRASHIK HAJARE")).trim().toUpperCase()
+            };
+          }).filter(Boolean);
+
+          const totalCount = products.length + parties.length + orders.length + collections.length + bankDeposits.length;
+          if (totalCount === 0) {
+            pendingExcelImportData = null;
+            previewBox.style.display = "block";
+            previewBox.innerHTML = `<div style="color:#b91c1c;font-weight:700;">⚠️ No valid data rows found in this Excel file.</div><div style="color:#64748b;margin-top:4px;">Make sure you used the official template sheets (<code>Products</code>, <code>Parties</code>, <code>Orders</code>, <code>Collections</code>, <code>BankDeposits</code>) and removed <code>[SAMPLE]</code> tags.</div>`;
+            modeWrap.style.display = "none";
+            btn.disabled = true;
+            return;
+          }
+
+          pendingExcelImportData = { products, parties, orders, collections, bankDeposits };
+          previewBox.style.display = "block";
+          previewBox.innerHTML = `
+            <div style="font-weight:700;color:#0f766e;margin-bottom:6px;">✅ File Parsed Successfully: ${file.name}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;">
+              <div>📦 Products: <strong>${products.length}</strong></div>
+              <div>🏪 Parties: <strong>${parties.length}</strong></div>
+              <div>🛒 Orders / Bills: <strong>${orders.length}</strong></div>
+              <div>💵 Collections: <strong>${collections.length}</strong></div>
+              <div>🏦 Bank Deposits: <strong>${bankDeposits.length}</strong></div>
+              <div><strong>Total Valid Rows: ${totalCount}</strong></div>
+            </div>
+          `;
+          modeWrap.style.display = "block";
+          btn.disabled = false;
+        } catch (err) {
+          console.error("Excel import parse error:", err);
+          pendingExcelImportData = null;
+          previewBox.style.display = "block";
+          previewBox.innerHTML = `<div style="color:#b91c1c;font-weight:700;">❌ Failed to read Excel file: ${err.message}</div>`;
+          modeWrap.style.display = "none";
+          btn.disabled = true;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    async function deleteFirestoreCollectionDocs(prefix, colName) {
+      if (!isFirebaseLive || !db) return;
+      const snap = await db.collection(prefix + colName).get();
+      if (snap.empty) return;
+      const docs = snap.docs;
+      const CHUNK = 400;
+      for (let i = 0; i < docs.length; i += CHUNK) {
+        const batch = db.batch();
+        docs.slice(i, i + CHUNK).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    async function uploadFirestoreCollectionDocs(prefix, colName, items) {
+      if (!isFirebaseLive || !db || !items || items.length === 0) return;
+      const CHUNK = 400;
+      for (let i = 0; i < items.length; i += CHUNK) {
+        const batch = db.batch();
+        items.slice(i, i + CHUNK).forEach(item => {
+          const cleanItem = JSON.parse(JSON.stringify(item));
+          batch.set(db.collection(prefix + colName).doc(cleanItem.id), cleanItem);
+        });
+        await batch.commit();
+      }
+    }
+
+    async function confirmExcelImport() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can import data."); return; }
+      if (!pendingExcelImportData) return;
+
+      const modeEl = document.querySelector('input[name="excelImportMode"]:checked');
+      const importMode = modeEl ? modeEl.value : "merge";
+      const btn = document.getElementById("btnConfirmExcelImport");
+      const statusMsg = document.getElementById("excelImportStatusMsg");
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Importing & Syncing...";
+      if (statusMsg) {
+        statusMsg.style.display = "block";
+        statusMsg.textContent = "Processing records and syncing to Firebase cloud...";
+      }
+
+      try {
+        isResetInProgress = true;
+        const prefix = activeCompany.toLowerCase() + "_";
+        const d = pendingExcelImportData;
+        const touchedCols = [];
+
+        // 1. Products
+        if (d.products.length > 0) {
+          touchedCols.push("products");
+          if (importMode === "replace") {
+            state.products = d.products;
+            await deleteFirestoreCollectionDocs(prefix, "products");
+          } else {
+            d.products.forEach(np => {
+              const existing = state.products.find(p =>
+                (np.code && p.code && p.code.toLowerCase() === np.code.toLowerCase()) ||
+                p.name.toLowerCase() === np.name.toLowerCase()
+              );
+              if (existing) {
+                Object.assign(existing, { ...np, id: existing.id });
+              } else {
+                state.products.push(np);
+              }
+            });
+          }
+        }
+
+        // 2. Parties
+        if (d.parties.length > 0) {
+          touchedCols.push("parties");
+          if (importMode === "replace") {
+            state.parties = d.parties;
+            await deleteFirestoreCollectionDocs(prefix, "parties");
+          } else {
+            d.parties.forEach(np => {
+              const existing = state.parties.find(p => p.name.toUpperCase() === np.name.toUpperCase());
+              if (existing) {
+                if (np.mobile) existing.mobile = np.mobile;
+                if (np.area) existing.area = np.area;
+                if (np.gstin) existing.gstin = np.gstin;
+                existing.openingBalance = np.openingBalance;
+              } else {
+                state.parties.push(np);
+              }
+            });
+          }
+        }
+
+        // Helper to ensure party exists and get partyId
+        const resolvePartyId = (pName) => {
+          const upper = pName.toUpperCase();
+          let p = state.parties.find(x => x.name.toUpperCase() === upper);
+          if (!p) {
+            p = { id: "P_AUTO_" + Date.now() + "_" + Math.floor(Math.random() * 1000), name: upper, mobile: "", area: "NAGPUR", gstin: "", openingBalance: 0 };
+            state.parties.push(p);
+            if (!touchedCols.includes("parties")) touchedCols.push("parties");
+          }
+          return p.id;
+        };
+
+        // 3. Orders
+        if (d.orders.length > 0) {
+          touchedCols.push("orders");
+          const linkedOrders = d.orders.map(o => {
+            const pId = resolvePartyId(o.partyName);
+            const prod = state.products.find(pr => pr.name.toLowerCase() === o.productName.toLowerCase() || (pr.code && pr.code.toLowerCase() === o.productName.toLowerCase()));
+            return { ...o, partyId: pId, productId: prod ? prod.id : "" };
+          });
+          if (importMode === "replace") {
+            state.orders = linkedOrders;
+            await deleteFirestoreCollectionDocs(prefix, "orders");
+          } else {
+            linkedOrders.forEach(no => state.orders.unshift(no));
+          }
+          state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
+        }
+
+        // 4. Collections
+        if (d.collections.length > 0) {
+          touchedCols.push("collections");
+          const linkedCols = d.collections.map(c => ({ ...c, partyId: resolvePartyId(c.partyName) }));
+          if (importMode === "replace") {
+            state.collections = linkedCols;
+            await deleteFirestoreCollectionDocs(prefix, "collections");
+          } else {
+            linkedCols.forEach(nc => state.collections.unshift(nc));
+          }
+        }
+
+        // 5. Bank Deposits
+        if (d.bankDeposits.length > 0) {
+          touchedCols.push("bankDeposits");
+          if (importMode === "replace") {
+            state.bankDeposits = d.bankDeposits;
+            await deleteFirestoreCollectionDocs(prefix, "bankDeposits");
+          } else {
+            d.bankDeposits.forEach(nb => state.bankDeposits.unshift(nb));
+          }
+        }
+
+        persistLocal();
+
+        // Sync touched collections to Firebase
+        for (const col of touchedCols) {
+          await uploadFirestoreCollectionDocs(prefix, col, state[col]);
+        }
+
+        isResetInProgress = false;
+        refreshAll();
+        closeModal("excelImportModal");
+        showToast(`✅ Excel data imported successfully into ${activeCompany}!`);
+      } catch (err) {
+        isResetInProgress = false;
+        console.error("Import error:", err);
+        alert("Import encountered an error: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "✅ Confirm & Import to ERP";
+      }
+    }
+
+    // ==================== CLEAR ALL DATA (OWNER ONLY — TRIPLE SAFETY) ====================
+    function openClearDataModal() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can clear data."); return; }
+      const co = COMPANIES[activeCompany] || { name: activeCompany };
+      const lbl = document.getElementById("clearModalCompanyLabel");
+      if (lbl) lbl.textContent = co.name;
+      const inp = document.getElementById("clearDataConfirmInput");
+      if (inp) inp.value = "";
+      const btn = document.getElementById("btnExecuteClearData");
+      if (btn) { btn.disabled = true; btn.textContent = "🗑️ Permanently Clear Data"; }
+      const msg = document.getElementById("clearDataStatusMsg");
+      if (msg) { msg.style.display = "none"; msg.textContent = ""; }
+      const txRadio = document.querySelector('input[name="clearDataScope"][value="transactions"]');
+      if (txRadio) txRadio.checked = true;
+      const openChk = document.getElementById("clearResetPartyOpeningChk");
+      if (openChk) openChk.checked = false;
+      const bkChk = document.getElementById("clearAutoBackupChk");
+      if (bkChk) bkChk.checked = true;
+      toggleClearScopeOptions();
+      openModal("clearDataModal");
+    }
+
+    function toggleClearScopeOptions() {
+      const scopeEl = document.querySelector('input[name="clearDataScope"]:checked');
+      const wrap = document.getElementById("clearResetOpeningWrap");
+      if (wrap) wrap.style.display = (scopeEl && scopeEl.value === "transactions") ? "block" : "none";
+    }
+
+    function handleClearConfirmTyping() {
+      const inp = document.getElementById("clearDataConfirmInput");
+      const btn = document.getElementById("btnExecuteClearData");
+      if (!inp || !btn) return;
+      btn.disabled = (inp.value.trim().toUpperCase() !== "CLEAR");
+    }
+
+    async function executeClearAllData() {
+      if (!isAdminLoggedIn) { alert("Only Owner Admin can clear data."); return; }
+      const inp = document.getElementById("clearDataConfirmInput");
+      if (!inp || inp.value.trim().toUpperCase() !== "CLEAR") {
+        alert("Please type CLEAR to confirm.");
+        return;
+      }
+
+      const scopeEl = document.querySelector('input[name="clearDataScope"]:checked');
+      const scope = scopeEl ? scopeEl.value : "transactions";
+      const resetPartyOpening = scope === "transactions" && Boolean(document.getElementById("clearResetPartyOpeningChk")?.checked);
+      const autoBackup = Boolean(document.getElementById("clearAutoBackupChk")?.checked);
+
+      const btn = document.getElementById("btnExecuteClearData");
+      const statusMsg = document.getElementById("clearDataStatusMsg");
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Clearing Data...";
+      if (statusMsg) {
+        statusMsg.style.display = "block";
+        statusMsg.textContent = "Step 1/3: Creating safety backup & clearing local database...";
+      }
+
+      try {
+        // Step 1: Safety Backup Excel
+        if (autoBackup) {
+          const ts = new Date().toISOString().split("T")[0];
+          exportToExcel(`${activeCompany}_PRE_CLEAR_BACKUP_${ts}.xlsx`);
+        }
+
+        isResetInProgress = true;
+        const resetTimestamp = Date.now();
+        const colsToClear = scope === "all"
+          ? ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits"]
+          : ["orders", "collections", "cashHandovers", "bankDeposits"];
+
+        // Step 2: Clear local state & legacy localStorage keys so old data never resurrects
+        colsToClear.forEach(c => { state[c] = []; });
+        if (resetPartyOpening && Array.isArray(state.parties)) {
+          state.parties.forEach(p => { p.openingBalance = 0; });
+        }
+        state._clearedAt = resetTimestamp;
+        getLegacyStorageKeys(activeCompany).forEach(pk => localStorage.removeItem(pk));
+        persistLocal();
+
+        // Step 3: Clear Firestore collections & publish reset marker for all connected staff devices
+        if (isFirebaseLive && db) {
+          if (statusMsg) statusMsg.textContent = "Step 2/3: Clearing live Firebase cloud records...";
+          const prefix = activeCompany.toLowerCase() + "_";
+
+          // Write reset marker FIRST so any listening device drops stale local cache immediately
+          await db.collection(prefix + "meta").doc("system").set({
+            resetAt: resetTimestamp,
+            scope: scope,
+            clearedCollections: colsToClear,
+            resetPartyOpening: resetPartyOpening,
+            clearedBy: "OWNER"
+          });
+
+          for (const col of colsToClear) {
+            await deleteFirestoreCollectionDocs(prefix, col);
+          }
+
+          if (resetPartyOpening && state.parties && state.parties.length > 0) {
+            await uploadFirestoreCollectionDocs(prefix, "parties", state.parties);
+          }
+        }
+
+        if (statusMsg) statusMsg.textContent = "Step 3/3: Refreshing ERP portal...";
+        isResetInProgress = false;
+        refreshAll();
+        closeModal("clearDataModal");
+        showToast(scope === "all"
+          ? `🗑️ All ${activeCompany} data cleared permanently!`
+          : `🗑️ All ${activeCompany} transactions cleared! Products & Parties kept safe.`);
+      } catch (err) {
+        isResetInProgress = false;
+        console.error("Clear data error:", err);
+        alert("Failed to clear some cloud records: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "🗑️ Permanently Clear Data";
       }
     }
 
