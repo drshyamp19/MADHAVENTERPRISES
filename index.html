@@ -479,7 +479,73 @@
       border-bottom: 1px dashed var(--border);
       margin: 8px 0 12px;
     }
-    .dealer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .dealer-actions { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 6px; }
+    .dealer-actions .btn { font-size: 0.78rem; padding: 7px 4px; justify-content: center; }
+    .dealer-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; width: 100%; }
+    .dealer-name { font-size: 0.96rem; font-weight: 800; color: var(--primary); word-break: break-word; flex: 1; }
+    .dealer-bal-box { text-align: right; flex-shrink: 0; min-width: fit-content; }
+    .dealer-bal-num { font-size: 1.22rem; font-weight: 800; color: #dc2626; white-space: nowrap; }
+
+    /* Sub-Tab Navigation Bar */
+    .subtab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      background: #f8fafc;
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .subtab-btn {
+      flex: 1;
+      justify-content: center;
+      font-weight: 700;
+      padding: 9px 12px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .subtab-btn.active {
+      background: var(--primary) !important;
+      color: #fff !important;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+    }
+    .subtab-btn.inactive {
+      background: #fff !important;
+      color: #475569 !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr !important;
+        padding: 12px !important;
+        gap: 12px !important;
+      }
+      .form-grid .form-group {
+        grid-column: 1 / -1 !important;
+      }
+      .form-control, select.form-control, input.form-control {
+        font-size: 0.95rem !important;
+        padding: 9px 10px !important;
+        box-sizing: border-box !important;
+      }
+      .dealer-card {
+        padding: 12px !important;
+      }
+      .dealer-bal-num {
+        font-size: 1.15rem !important;
+      }
+      .subtab-btn {
+        font-size: 0.78rem !important;
+        padding: 8px 6px !important;
+      }
+    }
 
     /* Stock Card */
     .stock-card {
@@ -1380,6 +1446,7 @@
             </table>
           </div>
         </div>
+        </div>
       </section>
 
       <!-- ==================== ADMIN TAB 2: INWARD STOCK ==================== -->
@@ -1478,6 +1545,16 @@
 
       <!-- ==================== ADMIN TAB 3: ORDER BOOKING MEMO ==================== -->
       <section id="tab-admin-orders" class="tab-panel">
+        <!-- Orders Sub-Tab Navigation -->
+        <div class="subtab-bar">
+          <button type="button" id="subtab-btn-order-form" class="subtab-btn active" onclick="switchOrderSubTab('form')">
+            📝 Book New Order
+          </button>
+          <button type="button" id="subtab-btn-order-reg" class="subtab-btn inactive" onclick="switchOrderSubTab('reg')">
+            📋 View Orders Register (<span id="subtabOrderCountBadge">0</span>)
+          </button>
+        </div>
+        <div id="orderFormWrap">
         <div class="card" style="margin-bottom:16px;">
           <div class="card-header">
             <div>
@@ -1620,6 +1697,8 @@
           </div>
         </div>
 
+        </div>
+        <div id="orderRegisterWrap" style="display:none;">
         <!-- Order Booking Memos Register -->
         <div class="card">
           <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px;">
@@ -1662,6 +1741,16 @@
 
       <!-- ==================== ADMIN TAB 4: COLLECTION ==================== -->
       <section id="tab-admin-collection" class="tab-panel">
+        <!-- Collection Sub-Tab Navigation -->
+        <div class="subtab-bar">
+          <button type="button" id="subtab-btn-col-form" class="subtab-btn active" onclick="switchColSubTab('form')">
+            💵 Record Payment Entry
+          </button>
+          <button type="button" id="subtab-btn-col-ledger" class="subtab-btn inactive" onclick="switchColSubTab('ledger')">
+            📜 View Collection Ledger (<span id="subtabColCountBadge">0</span>)
+          </button>
+        </div>
+        <div id="colFormWrap">
         <div class="card">
           <div class="card-header"><span class="card-title">Record Payment Collection (Cash / Bank)</span></div>
           <form class="form-grid" onsubmit="handleCreateCollection(event)">
@@ -1754,6 +1843,8 @@
           </form>
         </div>
 
+        </div>
+        <div id="colLedgerWrap" style="display:none;">
         <!-- Cheque Clearance Hub Card -->
         <div class="card" id="chequeRegisterCard" style="display:none;background:#f8fafc;border:1.5px solid #cbd5e1;margin-bottom:20px;">
           <div class="card-header" style="background:#f1f5f9;border-bottom:1px solid #e2e8f0;">
@@ -1804,6 +1895,7 @@
               <tbody id="collectionTableBody"></tbody>
             </table>
           </div>
+        </div>
         </div>
       </section>
 
@@ -2608,6 +2700,9 @@
         <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:11px;font-size:0.9rem;">
           💬 Send Order Booking Memo on WhatsApp
         </a>
+        <button type="button" class="btn btn-primary" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:11px;font-size:0.9rem;" onclick="openOrderBookingMemoFromSuccess()">
+          📄 Print / View Booking Memo (PDF)
+        </button>
         <button type="button" class="btn btn-outline" style="justify-content:center;border-color:var(--border);" onclick="closeModal('orderSuccessModal')">
           Done / Book Another Memo
         </button>
@@ -7032,6 +7127,7 @@
     }
 
     function refreshAll() {
+      updateSubTabBadges();
       populateDropdowns();
       renderOpenStock();
       renderOpenDealers();
@@ -7300,6 +7396,10 @@
               ${(p.netBalance > 0 && cleanPhone.length >= 10)
                 ? `<a class="btn btn-whatsapp btn-sm" target="_blank" href="https://wa.me/91${cleanPhone.slice(-10)}?text=${waMsg}">💬 WhatsApp</a>`
                 : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>💬 WhatsApp</button>`}
+
+              <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="quickCollectFromDue('${p.id}')">
+                💵 Collect
+              </button>
             </div>
 
             <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px;color:var(--primary);border-color:var(--border);" onclick="openDealerLedgerModal('${p.id}')">
@@ -8183,7 +8283,9 @@ Note: This is an order booking memo only. Official tax invoice will be issued up
 Thank you!`;
     }
 
+    let lastActiveOrd = null;
     function showOrderSuccessModal(ord, party) {
+      lastActiveOrd = ord;
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
       document.getElementById("succOrdNo").textContent = "#" + memoDisplayNo;
 
@@ -8427,8 +8529,9 @@ Thank you!`;
             <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
               ${(canDispatch && pending > 0) ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
               <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
+              <button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openOrderBookingMemo('${o.id}')" title="View Order Booking Memo">Memo PDF</button>
               <button class="btn btn-teal btn-sm" onclick="openDeliveryChallan('${o.id}')" title="View Delivery Challan">DC PDF</button>
-              <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Bill PDF">Bill PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Tax Invoice">Bill PDF</button>
               ${canEditOrder ? `
                 <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="Edit Order Memo (Rate / Qty)">✏️ Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="Delete Order Memo">🗑️</button>
@@ -12800,6 +12903,208 @@ Thank you! Your payment has been received successfully.`;
     window.addEventListener("DOMContentLoaded", initApp);
 
     // ==================== V30 ENHANCEMENTS: STATEMENTS, CHALLAN, PROOF, BACKUP, EOD ====================
+    let lastActiveMemoOrderId = null;
+
+    function switchOrderSubTab(view) {
+      const formWrap = document.getElementById("orderFormWrap");
+      const regWrap = document.getElementById("orderRegisterWrap");
+      const btnForm = document.getElementById("subtab-btn-order-form");
+      const btnReg = document.getElementById("subtab-btn-order-reg");
+
+      if (view === "reg") {
+        if (formWrap) formWrap.style.display = "none";
+        if (regWrap) regWrap.style.display = "block";
+        if (btnForm) { btnForm.classList.remove("active"); btnForm.classList.add("inactive"); }
+        if (btnReg) { btnReg.classList.remove("inactive"); btnReg.classList.add("active"); }
+        renderOrdersTable();
+      } else {
+        if (formWrap) formWrap.style.display = "block";
+        if (regWrap) regWrap.style.display = "none";
+        if (btnForm) { btnForm.classList.remove("inactive"); btnForm.classList.add("active"); }
+        if (btnReg) { btnReg.classList.remove("active"); btnReg.classList.add("inactive"); }
+      }
+      updateSubTabBadges();
+    }
+
+    function switchColSubTab(view) {
+      const formWrap = document.getElementById("colFormWrap");
+      const ledgerWrap = document.getElementById("colLedgerWrap");
+      const btnForm = document.getElementById("subtab-btn-col-form");
+      const btnLedger = document.getElementById("subtab-btn-col-ledger");
+
+      if (view === "ledger") {
+        if (formWrap) formWrap.style.display = "none";
+        if (ledgerWrap) ledgerWrap.style.display = "block";
+        if (btnForm) { btnForm.classList.remove("active"); btnForm.classList.add("inactive"); }
+        if (btnLedger) { btnLedger.classList.remove("inactive"); btnLedger.classList.add("active"); }
+        renderCollectionTable();
+      } else {
+        if (formWrap) formWrap.style.display = "block";
+        if (ledgerWrap) ledgerWrap.style.display = "none";
+        if (btnForm) { btnForm.classList.remove("inactive"); btnForm.classList.add("active"); }
+        if (btnLedger) { btnLedger.classList.remove("active"); btnLedger.classList.add("inactive"); }
+      }
+      updateSubTabBadges();
+    }
+
+    function updateSubTabBadges() {
+      const ordBadge = document.getElementById("subtabOrderCountBadge");
+      if (ordBadge && state.orders) ordBadge.textContent = state.orders.length;
+      const colBadge = document.getElementById("subtabColCountBadge");
+      if (colBadge && state.collections) colBadge.textContent = state.collections.length;
+    }
+
+    function quickCollectFromDue(partyId) {
+      const p = getComputedParties().find(x => x.id === partyId);
+      if (!p) return;
+
+      // 1. Switch to Collection Tab
+      switchTab("admin-collection", document.querySelector('[data-tab="admin-collection"]'));
+      
+      // 2. Ensure Form view is visible
+      switchColSubTab("form");
+
+      // 3. Pre-fill party
+      const pInp = document.getElementById("colPartyInput");
+      if (pInp) {
+        pInp.value = p.name;
+        updateColPartyDueAlert();
+      }
+
+      // 4. Focus amount input
+      const amtInp = document.getElementById("colAmount");
+      if (amtInp) {
+        amtInp.focus();
+      }
+      showToast(`Ready to record collection for ${p.name} (Balance: ${fmtINR(p.netBalance)})`);
+    }
+
+    function openOrderBookingMemo(orderId) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+      lastActiveMemoOrderId = orderId;
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const party = getComputedParties().find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+
+      const logoHtml = co.hasLogo
+        ? '<img src="' + SHOP_LOGO + '" alt="Logo" style="height:50px;object-fit:contain;" />'
+        : '<div style="font-size:1.8rem;">📝</div>';
+
+      let itemsRowsHtml = "";
+      let totalQty = 0;
+      let totalValue = 0;
+
+      if (ord.items && ord.items.length > 0) {
+        itemsRowsHtml = ord.items.map((it, idx) => {
+          const q = Number(it.qty || 0);
+          const isFoc = (it.isFoc || Number(it.rate) === 0);
+          const r = isFoc ? 0 : Number(it.rate || 0);
+          const val = isFoc ? 0 : Number(it.totalAmt || (q * r));
+          totalQty += q;
+          totalValue += val;
+          return `
+            <tr>
+              <td class="text-center" style="padding:6px;">${idx + 1}</td>
+              <td style="padding:6px;">
+                <strong>${it.productName}</strong>
+                ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC (Free)</span>' : ""}
+              </td>
+              <td class="text-center" style="padding:6px;">${q} Units</td>
+              <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(r)}</td>
+              <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(val)}</td>
+            </tr>
+          `;
+        }).join("");
+      } else {
+        totalQty = Number(ord.orderQty || 1);
+        const isFoc = (Number(ord.rate) === 0);
+        totalValue = isFoc ? 0 : Number(ord.totalAmt || (totalQty * Number(ord.rate || 0)));
+        itemsRowsHtml = `
+          <tr>
+            <td class="text-center" style="padding:6px;">1</td>
+            <td style="padding:6px;">
+              <strong>${ord.productName}</strong>
+              ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC</span>' : ""}
+            </td>
+            <td class="text-center" style="padding:6px;">${totalQty} Units</td>
+            <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(ord.rate)}</td>
+            <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(totalValue)}</td>
+          </tr>
+        `;
+      }
+
+      document.getElementById("invoicePrintArea").innerHTML = `
+        <div class="inv-top">
+          ${logoHtml}
+          <div class="inv-company">
+            <h2>${co.name}</h2>
+            <div>${co.sub}</div>
+            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
+            <div>Phone: 7499477581 | Nagpur</div>
+          </div>
+        </div>
+        <div class="inv-title-bar" style="background:#0284c7;color:#fff;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:1px;margin:10px 0;">
+          ORDER BOOKING MEMO
+        </div>
+        <div style="font-size:10.5px;text-align:center;color:#475569;margin-bottom:8px;font-style:italic;">
+          (Order booking memo for dealer confirmation — Official Tax Invoice will be issued upon dispatch)
+        </div>
+        <div class="inv-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;font-size:11.5px;">
+          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
+            <strong>Dealer / Party Details:</strong><br/>
+            <span style="font-size:13px;font-weight:700;">${party.name}</span><br/>
+            Area / Town: ${party.area || "Nagpur"}<br/>
+            Contact No: ${party.mobile || "-"}<br/>
+            GSTIN: <strong>${party.gstin || "Unregistered (B2C)"}</strong>
+          </div>
+          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
+            <strong>Memo Information:</strong><br/>
+            Memo No: <strong>#${memoDisplayNo}</strong><br/>
+            Date: <strong>${fmtDate(ord.date)}</strong><br/>
+            Booked By: <strong>${ord.salespersonName || "-"}</strong><br/>
+            Status: <span class="pill pill-yellow">Order Booked (Pending Dispatch)</span>
+          </div>
+        </div>
+        <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
+              <th class="text-center" style="padding:6px;width:35px;">#</th>
+              <th style="padding:6px;">Product Description</th>
+              <th class="text-center" style="padding:6px;width:90px;">Qty Booked</th>
+              <th class="text-right" style="padding:6px;width:110px;">Agreed Rate (₹)</th>
+              <th class="text-right" style="padding:6px;width:120px;">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml}
+            <tr style="background:#ecfdf5;font-weight:800;border-top:2px solid #cbd5e1;font-size:12px;">
+              <td colspan="2" class="text-right" style="padding:8px;">TOTAL ESTIMATED ORDER VALUE:</td>
+              <td class="text-center" style="padding:8px;">${totalQty} Units</td>
+              <td></td>
+              <td class="text-right" style="padding:8px;color:#0f766e;font-size:13px;">${fmtINR(totalValue)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10px;">
+          <strong>Notes:</strong><br/>
+          1. Rates are agreed as per booking memo. Goods will be dispatched as per warehouse stock availability.<br/>
+          2. Final GST Tax Invoice and Delivery Challan will accompany goods at the time of delivery.<br/>
+          <div style="display:flex;justify-content:space-between;margin-top:20px;">
+            <div>Dealer / Buyer Stamp &amp; Signature<br/><strong>Acknowledged</strong></div>
+            <div style="text-align:right;">Booked by <strong>${ord.salespersonName || co.name}</strong><br/><strong>Sales Representative</strong></div>
+          </div>
+        </div>
+      `;
+      openModal("invoiceModal");
+    }
+
+    function openOrderBookingMemoFromSuccess() {
+      if (lastActiveOrd) {
+        openOrderBookingMemo(lastActiveOrd.id);
+      }
+    }
+
     let currentStatementPartyId = null;
 
     function printDealerStatement(partyId) {
