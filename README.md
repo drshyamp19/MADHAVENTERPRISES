@@ -1,4 +1,4 @@
-# MADHAV & SHIVOM ENTERPRISES — Dual ERP Portal
+# MADHAV & SHIVOM ENTERPRISES - Dual ERP Portal
 
 Stock, Order, GST Billing & Recovery ERP for:
 1. **MADHAV ENTERPRISES**: Greenchef Appliances & Cookware (Nagpur)
