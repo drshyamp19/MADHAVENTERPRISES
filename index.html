@@ -8598,9 +8598,10 @@ Thank you!`;
       tbody.innerHTML = list.map(o => {
         const pending = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
         const st = Number(o.dispatchedQty || 0) === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
-        const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
         const isDispatched = Number(o.dispatchedQty || 0) > 0;
-        const canEditOrder = !isSalesperson || !isDispatched;
+        // Dispatched orders (Bill generated) can ONLY be edited or deleted by Owner (मालक).
+        // Pending dispatch orders can be edited by sales staff prior to dispatch.
+        const canEditOrder = isDispatched ? isAdminLoggedIn : true;
         return `
           <tr>
             <td class="font-bold">#${o.orderNo}</td>
@@ -8628,7 +8629,7 @@ Thank you!`;
                 <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="Edit Order Memo (Rate / Qty)">✏️ Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="Delete Order Memo">🗑️</button>
               ` : `
-                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="Order already dispatched - cannot be modified by salesperson">🔒 Dispatched</button>
+                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="Dispatched &amp; Bill Generated - Edit locked (Only Owner can edit)">🔒 Dispatched</button>
               `}
             </td>
           </tr>
@@ -8651,9 +8652,9 @@ Thank you!`;
         return;
       }
 
-      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
-      if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
-        alert("Cannot edit: This order has already been dispatched from warehouse. Please contact Manager (Prashik) or Owner for changes.");
+      const isDispatched = Number(ord.dispatchedQty || 0) > 0;
+      if (isDispatched && !isAdminLoggedIn) {
+        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be edited by staff. Only Owner (मालक) can edit dispatched orders.");
         return;
       }
 
@@ -8979,6 +8980,12 @@ Thank you!`;
       const ord = state.orders.find(o => o.id === currentEditingOrderId);
       if (!ord) return;
 
+      const isDispatched = Number(ord.dispatchedQty || 0) > 0;
+      if (isDispatched && !isAdminLoggedIn) {
+        alert("🔒 Dispatched Bill Locked: Only Owner (मालक) can save changes to an already dispatched order/bill.");
+        return;
+      }
+
       if (!editingOrderItems || editingOrderItems.length === 0) {
         alert("Memo must contain at least one product. To delete the memo completely, use the 🗑️ Delete button.");
         return;
@@ -9030,9 +9037,9 @@ Thank you!`;
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) return;
 
-      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
-      if (isSalesperson && Number(ord.dispatchedQty || 0) > 0) {
-        alert("Cannot delete: This order has already been dispatched from the warehouse.");
+      const isDispatched = Number(ord.dispatchedQty || 0) > 0;
+      if (isDispatched && !isAdminLoggedIn) {
+        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be deleted by staff. Only Owner (मालक) can delete dispatched orders.");
         return;
       }
 
