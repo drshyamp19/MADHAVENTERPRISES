@@ -1726,7 +1726,7 @@
             <div class="order-add-box">
               <div class="form-group custom-autocomplete-wrap" style="margin-bottom:10px;">
                 <label>Select Product <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
-                <input type="text" id="ordProductInput" class="form-control font-bold" placeholder="Type product name or code..." autocomplete="off" onchange="handleProductSelected()" oninput="handleProductSelected()" />
+                <input type="text" id="ordProductInput" class="form-control font-bold" placeholder="Type product name or code..." autocomplete="off" />
                 <div id="ordProductSuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
               </div>
               <div class="order-qty-rate-row">
@@ -2799,7 +2799,7 @@
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div>
-            <input type="text"  id="editAddProdInput" class="form-control" placeholder="Search product name or code..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect()" oninput="handleEditAddProdSelect()" />
+            <input type="text" id="editAddProdInput" class="form-control" placeholder="Search product name or code..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect(true)" />
             <div id="editAddAvailHint" style="font-size:0.74rem;color:var(--muted);margin-top:2px;"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
@@ -6448,9 +6448,16 @@
         renderItem: (prod, q) => renderProductAutocompleteItem(prod, q),
         onEmpty: (q) => `<div style="padding:12px;text-align:center;color:#64748b;font-size:0.85rem;background:#ffffff;">No product found matching "<strong>${escapeHtml(q)}</strong>"</div>`,
         onSelect: () => {
-          handleProductSelected();
+          handleProductSelected(true);
         }
       });
+
+      const ordProdInpEl = document.getElementById("ordProductInput");
+      if (ordProdInpEl) {
+        ordProdInpEl.addEventListener("blur", () => {
+          handleProductSelected(false);
+        });
+      }
     }
 
     function setupAutocomplete({ inputId, dropdownId, getItems, renderItem, onEmpty, onSelect }) {
@@ -6515,6 +6522,22 @@
           input.value = val;
           dropdown.style.display = "none";
           if (onSelect) onSelect(val);
+        }
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const firstItem = dropdown.querySelector("[data-item-name]");
+          if (firstItem && dropdown.style.display !== "none") {
+            const val = firstItem.getAttribute("data-item-name");
+            input.value = val;
+            dropdown.style.display = "none";
+            if (onSelect) onSelect(val);
+          } else if (input.value.trim()) {
+            dropdown.style.display = "none";
+            if (onSelect) onSelect(input.value.trim());
+          }
         }
       });
 
@@ -8275,7 +8298,7 @@
       }
     }
 
-    function handleProductSelected() {
+    function handleProductSelected(isUserSelection = false) {
       const input = document.getElementById("ordProductInput");
       const hint = document.getElementById("ordAvailHint");
       const rateInput = document.getElementById("ordRate");
@@ -8288,7 +8311,16 @@
         // Leave rateInput completely blank so salesman enters agreed rate.
         rateInput.value = "";
         rateInput.placeholder = "Type Rate (₹)";
-        rateInput.focus();
+        // ONLY move focus if this was an explicit user selection from the dropdown or Enter key!
+        // NEVER steal focus while user is simply typing in the product field!
+        if (isUserSelection && rateInput) {
+          setTimeout(() => {
+            rateInput.focus();
+            if (window.innerWidth < 768) {
+              rateInput.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 80);
+        }
       } else {
         if (hint) hint.textContent = "";
       }
@@ -9205,7 +9237,7 @@ Thank you!`;
       }
     }
 
-    function handleEditAddProdSelect() {
+    function handleEditAddProdSelect(isUserSelection = false) {
       const inp = document.getElementById("editAddProdInput");
       const hint = document.getElementById("editAddAvailHint");
       const rateInp = document.getElementById("editAddRate");
@@ -9213,7 +9245,7 @@ Thank you!`;
       const prod = findProductByName(inp.value);
       if (prod) {
         if (hint) hint.textContent = `(Available Stock: ${prod.available} Units | MRP: ₹${prod.mrp})`;
-        if (rateInp && !rateInp.value) {
+        if (isUserSelection && rateInp && !rateInp.value) {
           rateInp.placeholder = "Type Rate (₹)";
           rateInp.focus();
         }
@@ -10744,16 +10776,20 @@ Thank you! Your payment has been received successfully.`;
     function findProductByName(nameInput) {
       if (!nameInput) return null;
       const clean = nameInput.trim().toLowerCase();
+      if (!clean) return null;
       const stock = getComputedStock();
       // 1. Exact match on name or code
-      let match = stock.find(p => p.name.toLowerCase() === clean || (p.code && p.code.toLowerCase() === clean));
+      let match = stock.find(p => (p.name && p.name.toLowerCase() === clean) || (p.code && p.code.toLowerCase() === clean));
       if (match) return match;
-      // 2. Starts with name or code
-      match = stock.find(p => p.name.toLowerCase().startsWith(clean) || (p.code && p.code.toLowerCase().startsWith(clean)));
-      if (match) return match;
-      // 3. Includes clean substring
-      match = stock.find(p => p.name.toLowerCase().includes(clean) || (p.code && p.code.toLowerCase().includes(clean)));
-      return match || null;
+      // 2. Starts with name or code (only if input is at least 3 chars)
+      if (clean.length >= 3) {
+        match = stock.find(p => (p.name && p.name.toLowerCase().startsWith(clean)) || (p.code && p.code.toLowerCase().startsWith(clean)));
+        if (match) return match;
+        // 3. Includes clean substring (only if input is at least 3 chars)
+        match = stock.find(p => (p.name && p.name.toLowerCase().includes(clean)) || (p.code && p.code.toLowerCase().includes(clean)));
+        if (match) return match;
+      }
+      return null;
     }
 
     function findPartyByName(nameInput) {
