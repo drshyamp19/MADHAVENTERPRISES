@@ -1337,9 +1337,6 @@
             ⚡ Shivom
           </button>
         </div>
-        <a href="https://drive.google.com/drive/folders/1Rpl2zwQTUU5K4bKm5cfm2w07o6BIRabn" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:4px 8px;font-size:0.75rem;font-weight:700;border-radius:6px;display:inline-flex;align-items:center;gap:3px;text-decoration:none;" title="Open MADHAV_SHIVOM_ERP_DOCS in Google Drive">
-          📁 Drive Docs
-        </a>
         <span class="badge-status">
           <span class="dot live" id="syncDot"></span>
           <span id="syncText">Live Sync</span>
@@ -2816,7 +2813,6 @@
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">📤 Share PDF</button>
           <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share Text</button>
-          <button type="button" class="btn btn-teal btn-sm" onclick="backupPaymentReceiptToDrive(lastActiveColId, this)">☁️ Save to Drive</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
           <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('paymentReceiptModal')">✕ Close</button>
         </div>
@@ -2927,7 +2923,6 @@
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderPdfOnWhatsApp(lastActiveMemoOrderId)">📤 Share PDF</button>
           <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderTextOnWhatsApp(lastActiveMemoOrderId)">💬 Share Text</button>
-          <button type="button" class="btn btn-teal btn-sm" onclick="backupOrderMemoToDrive(lastActiveMemoOrderId, this)">☁️ Save to Drive</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Memo</button>
           <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('orderMemoModal')">✕ Close</button>
         </div>
@@ -3060,7 +3055,6 @@
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareOrderPdfOnWhatsApp(currentPreviewInvoiceOrderId || lastActiveMemoOrderId)">📤 Share PDF</button>
           <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share Text</button>
-          <button type="button" class="btn btn-teal btn-sm" onclick="backupTaxInvoiceToDrive(currentPreviewInvoiceOrderId || lastActiveMemoOrderId, this)">☁️ Save to Drive</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
           <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('invoiceModal')">✕ Close</button>
         </div>
@@ -3381,6 +3375,80 @@
           btnEl.innerHTML = "☁️ Save to Drive";
         }
         alert("Upload to Google Drive failed. Please check your internet connection.");
+      }
+    }
+
+    
+    // ==================== AUTO DRIVE BACKUP HELPERS ====================
+    async function autoBackupOrderMemoToDrive(ord, isCorrection = false) {
+      if (!ord || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      try {
+        const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName };
+        const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
+        const memoNo = ord.memoNo || `OB-${ord.orderNo}`;
+        const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+        const suffix = isCorrection ? "_REVISED" : "";
+        const fileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}${suffix}.html`;
+
+        const memoHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order Memo #${memoNo} - ${co.name}</title>
+        <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;margin-top:14px;}th,td{border:1px solid #cbd5e1;padding:8px 10px;}th{background:#f1f5f9;}</style>
+        </head><body>
+        <h2>${co.name}</h2><p>${co.sub}</p><hr/>
+        <h3>ORDER BOOKING MEMO #${memoNo} ${isCorrection ? '<span style="color:#b45309;">(REVISED / UPDATED)</span>' : ''}</h3>
+        <p><strong>Date:</strong> ${fmtDate(ord.date)} | <strong>Dealer:</strong> ${ord.partyName} (${party.area || 'Nagpur'}) | <strong>Salesperson:</strong> ${ord.salespersonName}</p>
+        <table><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
+        ${(ord.items || []).map((it, idx) => `<tr><td>${idx+1}</td><td>${it.productName}</td><td>${it.qty}</td><td>₹${it.rate}</td><td>₹${it.totalAmt}</td></tr>`).join("")}
+        </tbody></table>
+        <h3 style="text-align:right;margin-top:14px;">Total Amount: ₹${Number(ord.totalAmt || 0).toLocaleString('en-IN')}</h3>
+        <p style="font-size:12px;color:#64748b;">${isCorrection ? 'Corrected & Replaced' : 'Auto-Saved'} in Google Drive on ${new Date().toLocaleString()}</p>
+        </body></html>`;
+
+        const base64Data = btoa(unescape(encodeURIComponent(memoHtml)));
+        const res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", fileName, base64Data, "text/html");
+        if (res && res.fileUrl) {
+          ord.driveUrl = res.fileUrl;
+          persistLocal();
+          if (isFirebaseLive && db) {
+            const prefix = activeCompany.toLowerCase() + "_";
+            db.collection(prefix + "orders").doc(ord.id).update({ driveUrl: res.fileUrl }).catch(e => console.warn(e));
+          }
+          renderOrdersTable();
+          console.log(`Auto-backed up Order Memo #${memoNo} to Drive:`, res.fileUrl);
+        }
+      } catch (err) {
+        console.error("Auto backup order memo error:", err);
+      }
+    }
+
+    async function autoBackupTaxInvoiceToDrive(ord) {
+      if (!ord || ord.invoiceDriveUrl || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      try {
+        const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
+        const gst = computeOrderGstBreakdown(ord);
+        const invNo = gst.invoiceNo || ord.invoiceNo || ("INV-" + ord.orderNo);
+        const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.html`;
+
+        const invEl = document.getElementById("invoiceModal") || document.getElementById("taxInvoicePrintArea");
+        const invHtml = invEl ? invEl.innerHTML : `Tax Invoice #${invNo}`;
+        const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${invNo} - ${co.name}</title>
+        <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #cbd5e1;padding:6px;font-size:12px;}th{background:#f1f5f9;}</style>
+        </head><body>${invHtml}</body></html>`;
+
+        const base64Data = btoa(unescape(encodeURIComponent(fullDoc)));
+        const res = await uploadDocToGoogleDrive(activeCompany, "Invoices", fileName, base64Data, "text/html");
+        if (res && res.fileUrl) {
+          ord.invoiceDriveUrl = res.fileUrl;
+          persistLocal();
+          if (isFirebaseLive && db) {
+            const prefix = activeCompany.toLowerCase() + "_";
+            db.collection(prefix + "orders").doc(ord.id).update({ invoiceDriveUrl: res.fileUrl }).catch(e => console.warn(e));
+          }
+          renderOrdersTable();
+          console.log(`Auto-backed up Tax Invoice #${invNo} to Drive:`, res.fileUrl);
+        }
+      } catch (err) {
+        console.error("Auto backup invoice error:", err);
       }
     }
 
@@ -9018,6 +9086,7 @@ const SHOP_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAACPCAYAAAD
       }
 
       showToast(`Order Booking Memo #${newOrder.memoNo} Saved Successfully!`);
+      autoBackupOrderMemoToDrive(newOrder, false);
       showOrderSuccessModal(newOrder, party);
     }
 
@@ -9315,6 +9384,7 @@ Thank you!`;
               ${(canDispatch && pending > 0) ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
               <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
               <button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openOrderBookingMemo('${o.id}')" title="View Order Booking Memo">Memo PDF</button>
+              ${o.driveUrl || o.invoiceDriveUrl ? `<a href="${o.driveUrl || o.invoiceDriveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;font-weight:700;display:inline-flex;align-items:center;gap:3px;text-decoration:none;" title="Open in Google Drive">📁 Drive</a>` : ''}
               <button class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareOrderPdfOnWhatsApp('${o.id}')" title="Share PDF document directly on WhatsApp">📤 Share PDF</button>
               ${isDispatched ? `
                 <button class="btn btn-teal btn-sm" onclick="openDeliveryChallan('${o.id}')" title="View Delivery Challan">DC PDF</button>
@@ -9723,6 +9793,7 @@ Thank you!`;
       }
 
       closeModal("editOrderModal");
+      autoBackupOrderMemoToDrive(ord, true);
       showToast(`✅ Order Memo #${ord.memoNo || ord.orderNo} updated and saved successfully!`);
     }
 
@@ -11954,6 +12025,7 @@ Thank you! Your payment has been received successfully.`;
 
       const roundOffSign = gst.roundOff >= 0 ? "+" : "";
 
+      autoBackupTaxInvoiceToDrive(ord);
       document.getElementById("invoicePrintArea").innerHTML = `
         <div class="inv-top">
           ${logoHtml}
