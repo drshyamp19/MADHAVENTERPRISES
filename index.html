@@ -4,6 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>MADHAV ENTERPRISES &amp; SHIVOM SALES - Dual ERP Portal v30</title>
+  <script>
+    // Instant Redirect if opened with ?doc=<DriveFileId> or ?bill=<DriveFileId>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var docId = params.get('doc') || params.get('bill');
+        if (docId) {
+          var target = docId.indexOf('http') === 0 ? docId : ('https://drive.google.com/file/d/' + encodeURIComponent(docId) + '/view');
+          window.location.replace(target);
+        }
+      } catch (e) {
+        console.warn('Doc redirect error:', e);
+      }
+    })();
+  </script>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#1e3a5f" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -2808,13 +2823,11 @@
   <!-- ==================== OFFICIAL PAYMENT RECEIPT PREVIEW MODAL ==================== -->
   <div class="modal-backdrop" id="paymentReceiptModal">
     <div class="modal modal-lg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
         <h3 style="margin:0;font-size:1.05rem;">Official Payment Receipt Preview</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">📤 Share PDF</button>
-          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share Text</button>
-          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('paymentReceiptModal')">✕ Close</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share on WhatsApp</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('paymentReceiptModal')">← Back</button>
         </div>
       </div>
       <div id="receiptPrintArea" class="invoice-paper" style="max-width:680px;margin:0 auto;background:#fff;padding:24px;border:1px solid #cbd5e1;border-radius:8px;"></div>
@@ -2898,18 +2911,15 @@
       <h3 style="color:#0f766e;margin-bottom:2px;font-size:1.15rem;">Order Booking Memo Generated!</h3>
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Memo No: <strong id="succOrdNo" style="color:var(--primary);">#OB-1050</strong></p>
       <div id="succOrdDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
-        <button type="button" class="btn btn-sm" style="background:#15803d;color:#ffffff;font-weight:700;padding:12px;font-size:0.92rem;justify-content:center;display:flex;align-items:center;gap:6px;border-radius:8px;border:none;" onclick="if(lastActiveOrd) shareOrderPdfOnWhatsApp(lastActiveOrd.id)">
-          📤 Share PDF Document on WhatsApp
-        </button>
-        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;">
-          💬 Send Text Summary on WhatsApp
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;">
+          💬 Share on WhatsApp
         </a>
-        <button type="button" class="btn btn-primary" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;" onclick="openOrderBookingMemoFromSuccess()">
-          📄 Print / View Booking Memo (PDF)
+        <button type="button" class="btn btn-outline" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openOrderBookingMemoFromSuccess()">
+          📄 View Booking Memo
         </button>
-        <button type="button" class="btn" style="justify-content:center;background:#e2e8f0;color:#0f172a;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
-          ⬅️ Back / Book Another Memo
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#334155;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
+          ← Back / Done
         </button>
       </div>
     </div>
@@ -2918,13 +2928,11 @@
   <!-- ==================== ORDER BOOKING MEMO VIEW/PRINT MODAL ==================== -->
   <div class="modal-backdrop" id="orderMemoModal">
     <div class="modal modal-lg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <h3 style="margin:0;color:var(--primary);">📝 Order Booking Memo</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderPdfOnWhatsApp(lastActiveMemoOrderId)">📤 Share PDF</button>
-          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderTextOnWhatsApp(lastActiveMemoOrderId)">💬 Share Text</button>
-          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Memo</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('orderMemoModal')">✕ Close</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
+        <h3 style="margin:0;color:var(--primary);font-size:1.1rem;">📝 Order Booking Memo</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="if(lastActiveMemoOrderId) shareOrderTextOnWhatsApp(lastActiveMemoOrderId)">💬 Share on WhatsApp</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('orderMemoModal')">← Back</button>
         </div>
       </div>
       <div id="orderMemoModalContent"></div>
@@ -2939,18 +2947,15 @@
       <h3 style="color:#15803d;margin-bottom:2px;font-size:1.15rem;">Payment Receipt Saved!</h3>
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Receipt No: <strong id="succColNo" style="color:var(--primary);">#REC-1050</strong></p>
       <div id="succColDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
-        <button type="button" class="btn btn-sm" style="background:#15803d;color:#ffffff;font-weight:700;padding:12px;font-size:0.92rem;justify-content:center;display:flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">
-          📤 Share PDF Document on WhatsApp
-        </button>
-        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;">
-          💬 Send Text Summary on WhatsApp
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;">
+          💬 Share on WhatsApp
         </a>
-        <button type="button" class="btn btn-primary" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;" onclick="openPaymentReceiptFromSuccess()">
-          📄 View / Print Official Receipt
+        <button type="button" class="btn btn-outline" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openPaymentReceiptFromSuccess()">
+          📄 View Official Receipt
         </button>
-        <button type="button" class="btn" style="justify-content:center;background:#e2e8f0;color:#0f172a;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('colSuccessModal')">
-          ⬅️ Back / Record Another Receipt
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#334155;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('colSuccessModal')">
+          ← Back / Done
         </button>
       </div>
     </div>
@@ -3050,13 +3055,11 @@
   <!-- Tax Invoice Modal -->
   <div class="modal-backdrop" id="invoiceModal">
     <div class="modal modal-lg">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
-        <h3 style="margin:0;">Official GST Tax Invoice Preview</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareOrderPdfOnWhatsApp(currentPreviewInvoiceOrderId || lastActiveMemoOrderId)">📤 Share PDF</button>
-          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share Text</button>
-          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('invoiceModal')">✕ Close</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
+        <h3 style="margin:0;font-size:1.1rem;">Official GST Tax Invoice Preview</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share on WhatsApp</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('invoiceModal')">← Back</button>
         </div>
       </div>
       <div id="invoicePrintArea" class="invoice-paper"></div>
@@ -3070,10 +3073,9 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;color:var(--primary);">Party Account Statement Preview</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareCurrentStatementPdfWhatsApp()">📤 Share PDF</button>
-          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentStatementWhatsApp()">💬 Share Text</button>
+          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 14px;" onclick="shareCurrentStatementWhatsApp()">💬 Share on WhatsApp</button>
           <button class="btn btn-primary btn-sm" onclick="triggerDocumentPrint('Party_Statement')">🖨️ Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('statementModal')">✕ Close</button>
+          <button class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 14px;" onclick="closeModal('statementModal')">← Back</button>
         </div>
       </div>
       <div id="statementPrintArea" class="invoice-paper"></div>
@@ -3260,6 +3262,19 @@
     const GOOGLE_DRIVE_UPLOADER_URL = "https://script.google.com/macros/s/AKfycbw06Fy3_B4I3QPOV6gA1pzT7Tu_eVOsOMNy3-uREQ68WNCNaR2wPqoBEzEJXVTzvehQ/exec";
     const GOOGLE_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1Rpl2zwQTUU5K4bKm5cfm2w07o6BIRabn";
 
+    function getShortDocLink(driveUrl) {
+      if (!driveUrl) return "";
+      const match = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const fileId = match ? match[1] : null;
+      if (fileId) {
+        const origin = (window.location && window.location.origin && window.location.origin !== "null" && !window.location.origin.includes("file://"))
+          ? window.location.origin
+          : "https://madhaventerprises.vercel.app";
+        return `${origin}/?doc=${fileId}`;
+      }
+      return driveUrl;
+    }
+
     async function uploadDocToGoogleDrive(company, docType, fileName, base64Data, mimeType = "image/jpeg") {
       if (!GOOGLE_DRIVE_UPLOADER_URL || !base64Data) return null;
       try {
@@ -3413,6 +3428,14 @@
             db.collection(prefix + "orders").doc(ord.id).update({ driveUrl: res.fileUrl }).catch(e => console.warn(e));
           }
           renderOrdersTable();
+          const waBtn = document.getElementById("succOrdWhatsAppBtn");
+          if (waBtn && lastActiveOrd && lastActiveOrd.id === ord.id) {
+            const updatedMsg = getOrderMemoWhatsAppText(ord, party);
+            const cleanPhone = (party.mobile || "").replace(/\D/g, "");
+            waBtn.href = cleanPhone.length >= 10
+              ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
+              : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
+          }
           console.log(`Auto-backed up Order Memo #${memoNo} to Drive:`, res.fileUrl);
         }
       } catch (err) {
@@ -9115,6 +9138,10 @@ const SHOP_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAACPCAYAAAD
         : ord.orderQty;
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      const shortLink = ord.driveUrl ? getShortDocLink(ord.driveUrl) : "";
+      const docLinkSection = shortLink
+        ? `\n-----------------------------\n📄 *Open Digital Order Memo:*\n👉 ${shortLink}`
+        : "";
 
       return `*${coName}*
 📝 *ORDER BOOKING MEMO*
@@ -9129,7 +9156,7 @@ ${itemsList}
 -----------------------------
 *Total Items:* ${totalQty} Units
 *Total Estimated Value:* ${fmtINR(ord.totalAmt)}
-*Status:* Order Booked (Pending Dispatch)
+*Status:* Order Booked (Pending Dispatch)${docLinkSection}
 -----------------------------
 Note: This is an order booking memo only. Official tax invoice will be issued upon dispatch.
 Thank you!`;
@@ -11108,6 +11135,11 @@ Thank you!`;
 
       const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
       const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const targetColDrive = newCol.driveUrl || newCol.receiptDriveUrl || newCol.proofDriveUrl;
+      const shortLink = targetColDrive ? getShortDocLink(targetColDrive) : "";
+      const docLinkSection = shortLink
+        ? `\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${shortLink}`
+        : "";
       const msg = `*${coName}*
 🧾 *Payment Receipt*
 -----------------------------
@@ -11117,7 +11149,7 @@ Thank you!`;
 *Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})
 *Received By:* ${newCol.salespersonName}
 -----------------------------
-*Current Balance Due:* ${fmtINR(remBal)}
+*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}
 -----------------------------
 Thank you! Your payment has been received successfully.`;
 
@@ -11534,6 +11566,15 @@ Thank you! Your payment has been received successfully.`;
               newCol.driveUrl = res.fileUrl;
               await saveRecord("collections", newCol);
               renderCollectionTable();
+              const waBtn = document.getElementById("succColWhatsAppBtn");
+              if (waBtn && lastActiveColId === newCol.id) {
+                const updatedShort = getShortDocLink(res.fileUrl);
+                const updatedMsg = `*${COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : 'MADHAV ENTERPRISES'}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${newCol.receiptNo}\n*Date:* ${fmtDate(newCol.date)}\n*Received From:* ${newCol.partyName}\n*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})\n*Received By:* ${newCol.salespersonName}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${updatedShort}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+                const cleanPhone = (party && party.mobile ? party.mobile.replace(/\D/g, "") : "");
+                waBtn.href = cleanPhone.length >= 10
+                  ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
+                  : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
+              }
               const succDriveLink = document.getElementById("succColDriveLink");
               if (succDriveLink) {
                 succDriveLink.innerHTML = `<a href="${res.fileUrl}" target="_blank" rel="noopener noreferrer" style="color:#0284c7;font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;">📁 View Proof on Google Drive</a>`;
@@ -12190,6 +12231,7 @@ Thank you! Your payment has been received successfully.`;
           ? `IGST: ${fmtINR(gst.totalIgst)}`
           : `CGST: ${fmtINR(gst.totalCgst)} | SGST: ${fmtINR(gst.totalSgst)}`,
         `*GRAND TOTAL: ${fmtINR(gst.roundedGrandTotal)}*`,
+        (ord.invoiceDriveUrl || ord.driveUrl) ? `\n📄 *Open Official GST Invoice:*\n👉 ${getShortDocLink(ord.invoiceDriveUrl || ord.driveUrl)}` : "",
         gst.ewayRequired ? `⚠️ E-Way Bill Applicable (≥ ₹50,000)` : "",
         `\n*Pay Easily via UPI / Bank:*`,
         `UPI ID: ${upiId}`,
@@ -14738,7 +14780,12 @@ Thank you! Your payment has been received successfully.`;
       const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
       const remBal = computed ? computed.netBalance : 0;
       const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
-      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+      const targetDriveUrl = col.driveUrl || col.receiptDriveUrl || col.proofDriveUrl;
+      const shortLink = targetDriveUrl ? getShortDocLink(targetDriveUrl) : "";
+      const docLinkSection = shortLink
+        ? `\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${shortLink}`
+        : "";
+      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
