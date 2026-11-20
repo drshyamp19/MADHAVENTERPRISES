@@ -7861,7 +7861,7 @@ const SHOP_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAACPCAYAAAD
 
         return `
           <tr>
-            <td class="font-bold">${c.receiptNo}<br/><small style="color:var(--muted);">Chq #${c.chequeNo || '-'}</small></td>
+            <td class="font-bold">${c.receiptNo}<br/><small style="color:var(--muted);">Chq #${c.chequeNo || '-'}</small>${c.driveUrl || c.proofImg ? `<br/><a href="${c.driveUrl || '#'}" ${c.driveUrl ? 'target="_blank" rel="noopener noreferrer"' : `onclick="openProofImageModal('${c.id}'); return false;"`} class="btn btn-sm" style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;padding:2px 6px;font-size:0.7rem;font-weight:700;display:inline-flex;align-items:center;gap:2px;text-decoration:none;margin-top:3px;" title="View Cheque in Google Drive">📁 Drive</a>` : ''}</td>
             <td>${fmtDate(c.chequeDate || c.date)}<br/><small style="color:var(--muted);">${c.salespersonName || '-'}</small></td>
             <td><strong>${c.partyName}</strong></td>
             <td>${c.chequeBank || '-'}</td>
@@ -11345,8 +11345,8 @@ Thank you! Your payment has been received successfully.`;
         const legacyFull = !anyItemDisp && Number(ord.dispatchedQty || 0) >= Number(ord.orderQty || 0);
 
         itemsContainer.innerHTML = `
-          <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
-            <table style="width:100%;font-size:0.82rem;">
+          <div style="max-height:300px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:8px;">
+            <table style="min-width:340px;width:100%;font-size:0.82rem;">
               <thead>
                 <tr style="background:#f8fafc;">
                   <th style="padding:8px;">Product</th>
