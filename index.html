@@ -946,6 +946,7 @@
       max-height: 250px !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
+      touch-action: pan-y !important;
       z-index: 999999 !important;
       margin: 0 !important;
       padding: 0 !important;
@@ -6482,12 +6483,30 @@
         dropdown.style.display = "block";
       }
 
-      input.addEventListener("focus", () => renderMatches(input.value));
+      input.addEventListener("focus", () => {
+        renderMatches(input.value);
+        if (window.innerWidth < 768) {
+          setTimeout(() => {
+            input.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 300);
+        }
+      });
       input.addEventListener("input", () => renderMatches(input.value));
 
       dropdown.addEventListener("mousedown", (e) => {
         e.preventDefault(); // prevent input blur from closing before click
       });
+
+      dropdown.addEventListener("touchstart", (e) => {
+        const row = e.target.closest("[data-item-name]");
+        if (row) {
+          e.preventDefault();
+          const val = row.getAttribute("data-item-name");
+          input.value = val;
+          dropdown.style.display = "none";
+          if (onSelect) onSelect(val);
+        }
+      }, { passive: false });
 
       dropdown.addEventListener("click", (e) => {
         const row = e.target.closest("[data-item-name]");
