@@ -1303,7 +1303,7 @@
           <span id="syncText">Live Sync</span>
         </span>
         <button type="button" class="btn btn-sm" onclick="forceAppRefresh()" title="Force Refresh & Update Cache" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:4px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:3px;" id="forceRefreshBtn">
-          🔄 रिफ्रेश
+          🔄 Refresh App
         </button>
         <span id="staffBadgeWrap" style="display:none;align-items:center;gap:6px;">
           <span class="badge-staff" id="staffUserName">👤 Staff</span>
@@ -2762,9 +2762,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;font-size:1.05rem;">Official Payment Receipt Preview</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openReceiptPdfBlob(lastActiveColId)">📱 Open Full PDF</button>
+          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">📤 Share PDF</button>
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share Text</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('paymentReceiptModal')">Close</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('paymentReceiptModal')">✕ Close</button>
         </div>
       </div>
       <div id="receiptPrintArea" class="invoice-paper" style="max-width:680px;margin:0 auto;background:#fff;padding:24px;border:1px solid #cbd5e1;border-radius:8px;"></div>
@@ -2858,8 +2859,8 @@
         <button type="button" class="btn btn-primary" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;" onclick="openOrderBookingMemoFromSuccess()">
           📄 Print / View Booking Memo (PDF)
         </button>
-        <button type="button" class="btn" style="justify-content:center;background:#e2e8f0;color:#0f172a;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;" onclick="closeModal('orderSuccessModal')">
-          ⬅️ मागे जा / नवीन मेमो बुक करा (Back / Done)
+        <button type="button" class="btn" style="justify-content:center;background:#e2e8f0;color:#0f172a;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
+          ⬅️ Back / Book Another Memo
         </button>
       </div>
     </div>
@@ -2871,10 +2872,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <h3 style="margin:0;color:var(--primary);">📝 Order Booking Memo</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openInvoicePdfBlob(lastActiveMemoOrderId)">📱 Open Full PDF</button>
           <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderPdfOnWhatsApp(lastActiveMemoOrderId)">📤 Share PDF</button>
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="if(lastActiveMemoOrderId) shareOrderTextOnWhatsApp(lastActiveMemoOrderId)">💬 Share Text</button>
           <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Memo</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('orderMemoModal')">✕ Close</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('orderMemoModal')">✕ Close</button>
         </div>
       </div>
       <div id="orderMemoModalContent"></div>
@@ -2883,20 +2884,24 @@
 
   <!-- ==================== COLLECTION SUCCESS & WHATSAPP MODAL ==================== -->
   <div class="modal-backdrop" id="colSuccessModal">
-    <div class="modal" style="max-width:440px;text-align:center;">
-      <div style="font-size:2.6rem;margin-bottom:8px;">💵</div>
-      <h3 style="color:#15803d;margin-bottom:4px;">Payment Receipt Saved!</h3>
-      <p style="font-size:0.8rem;color:var(--muted);">Receipt No: <strong id="succColNo">#REC-1050</strong></p>
-      <div id="succColDetails" style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.82rem;line-height:1.6;margin:14px 0;text-align:left;border:1px solid var(--border);"></div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;">
-          💬 Send Payment Receipt to Dealer on WhatsApp
+    <div class="modal" style="max-width:480px;text-align:center;position:relative;max-height:88vh;overflow-y:auto;padding:18px 14px;">
+      <button type="button" onclick="closeModal('colSuccessModal')" style="position:absolute;top:10px;right:10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;" title="Close">✕</button>
+      <div style="font-size:2.2rem;margin-bottom:4px;">💵</div>
+      <h3 style="color:#15803d;margin-bottom:2px;font-size:1.15rem;">Payment Receipt Saved!</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Receipt No: <strong id="succColNo" style="color:var(--primary);">#REC-1050</strong></p>
+      <div id="succColDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+        <button type="button" class="btn btn-sm" style="background:#15803d;color:#ffffff;font-weight:700;padding:12px;font-size:0.92rem;justify-content:center;display:flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">
+          📤 Share PDF Document on WhatsApp
+        </button>
+        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;">
+          💬 Send Text Summary on WhatsApp
         </a>
-        <button type="button" class="btn btn-primary" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;" onclick="openPaymentReceiptFromSuccess()">
+        <button type="button" class="btn btn-primary" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:10px;font-size:0.88rem;border-radius:8px;" onclick="openPaymentReceiptFromSuccess()">
           📄 View / Print Official Receipt
         </button>
-        <button type="button" class="btn btn-outline" style="justify-content:center;border-color:var(--border);" onclick="closeModal('colSuccessModal')">
-          Done / Record Another Receipt
+        <button type="button" class="btn" style="justify-content:center;background:#e2e8f0;color:#0f172a;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('colSuccessModal')">
+          ⬅️ Back / Record Another Receipt
         </button>
       </div>
     </div>
@@ -2999,11 +3004,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;">Official GST Tax Invoice Preview</h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openInvoicePdfBlob(currentPreviewInvoiceOrderId || lastActiveMemoOrderId)">📱 Open Full PDF</button>
           <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareOrderPdfOnWhatsApp(currentPreviewInvoiceOrderId || lastActiveMemoOrderId)">📤 Share PDF</button>
-          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="display:none;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share on WhatsApp</button>
-          <button class="btn btn-primary btn-sm" onclick="window.print()">Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('invoiceModal')">Close</button>
+          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share Text</button>
+          <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('invoiceModal')">✕ Close</button>
         </div>
       </div>
       <div id="invoicePrintArea" class="invoice-paper"></div>
@@ -3017,9 +3021,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;color:var(--primary);">Party Account Statement Preview</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" onclick="shareCurrentStatementWhatsApp()">💬 Share on WhatsApp</button>
+          <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareCurrentStatementPdfWhatsApp()">📤 Share PDF</button>
+          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;" onclick="shareCurrentStatementWhatsApp()">💬 Share Text</button>
           <button class="btn btn-primary btn-sm" onclick="triggerDocumentPrint('Party_Statement')">🖨️ Print / Save PDF</button>
-          <button class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('statementModal')">Close</button>
+          <button class="btn btn-sm" style="background:#e2e8f0;font-weight:700;color:#0f172a;border:1px solid #cbd5e1;" onclick="closeModal('statementModal')">✕ Close</button>
         </div>
       </div>
       <div id="statementPrintArea" class="invoice-paper"></div>
@@ -8814,6 +8819,7 @@ Thank you!`;
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
       openModal("orderSuccessModal");
+      setTimeout(() => pregenerateOrderPdf(ord.id), 80);
     }
 
     function openOrderMemoModal(orderId) {
@@ -8992,7 +8998,7 @@ Thank you!`;
         const pending = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
         const st = Number(o.dispatchedQty || 0) === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
         const isDispatched = Number(o.dispatchedQty || 0) > 0;
-        // Dispatched orders (Bill generated) can ONLY be edited or deleted by Owner (मालक).
+        // Dispatched orders (Bill generated) can ONLY be edited or deleted by Owner.
         // Pending dispatch orders can be edited by sales staff prior to dispatch.
         const canEditOrder = isDispatched ? isAdminLoggedIn : true;
         return `
@@ -9047,7 +9053,7 @@ Thank you!`;
 
       const isDispatched = Number(ord.dispatchedQty || 0) > 0;
       if (isDispatched && !isAdminLoggedIn) {
-        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be edited by staff. Only Owner (मालक) can edit dispatched orders.");
+        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be edited by staff. Only Owner can edit dispatched orders.");
         return;
       }
 
@@ -9375,7 +9381,7 @@ Thank you!`;
 
       const isDispatched = Number(ord.dispatchedQty || 0) > 0;
       if (isDispatched && !isAdminLoggedIn) {
-        alert("🔒 Dispatched Bill Locked: Only Owner (मालक) can save changes to an already dispatched order/bill.");
+        alert("🔒 Dispatched Bill Locked: Only Owner can save changes to an already dispatched order/bill.");
         return;
       }
 
@@ -9432,7 +9438,7 @@ Thank you!`;
 
       const isDispatched = Number(ord.dispatchedQty || 0) > 0;
       if (isDispatched && !isAdminLoggedIn) {
-        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be deleted by staff. Only Owner (मालक) can delete dispatched orders.");
+        alert("🔒 Dispatched Bill Locked: Once goods are dispatched and the bill is generated, this order cannot be deleted by staff. Only Owner can delete dispatched orders.");
         return;
       }
 
@@ -10749,6 +10755,7 @@ Thank you! Your payment has been received successfully.`;
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
       openModal("colSuccessModal");
+      setTimeout(() => pregenerateColPdf(newCol.id), 80);
     }
 
     function sendOrderWhatsApp(orderId) {
@@ -13762,7 +13769,7 @@ Thank you! Your payment has been received successfully.`;
     }
 
     async function forceAppRefresh() {
-      showToast("⏳ App अपडेट व कॅश रीफ्रेश होत आहे...");
+      showToast("⏳ Checking updates & refreshing app cache...");
       try {
         if ("caches" in window) {
           const keys = await caches.keys();
@@ -14024,6 +14031,47 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
+    let cachedOrderPdfFile = null;
+    let cachedOrderPdfOrderId = null;
+    let isGeneratingOrderPdf = false;
+
+    async function pregenerateOrderPdf(orderId) {
+      if (!orderId || isGeneratingOrderPdf) return;
+      isGeneratingOrderPdf = true;
+      try {
+        const ord = state.orders.find(o => o.id === orderId || o.orderNo === String(orderId) || o.memoNo === orderId);
+        if (!ord) return;
+        const isDispatched = Number(ord.dispatchedQty || 0) > 0;
+        const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+        const docType = isDispatched ? "Tax_Invoice" : "Order_Memo";
+        const fileName = `${docType}_${memoDisplayNo}.pdf`;
+
+        if (isDispatched) {
+          openTaxInvoice(ord.id);
+        } else {
+          openOrderBookingMemo(ord.id);
+        }
+
+        const element = document.getElementById("invoicePrintArea");
+        if (element && window.html2pdf) {
+          const opt = {
+            margin: [6, 6, 6, 6],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+          cachedOrderPdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+          cachedOrderPdfOrderId = ord.id;
+        }
+      } catch (err) {
+        console.warn("Pre-generate Order PDF error:", err);
+      } finally {
+        isGeneratingOrderPdf = false;
+      }
+    }
+
     async function shareOrderPdfOnWhatsApp(orderId) {
       const targetId = orderId || currentPreviewInvoiceOrderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
       if (!targetId) {
@@ -14043,7 +14091,25 @@ Thank you! Your payment has been received successfully.`;
       const fileName = `${docType}_${memoDisplayNo}.pdf`;
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
 
-      // Ensure proper render into invoicePrintArea
+      // 1. If cached PDF is already ready, share IMMEDIATELY inside user gesture
+      if (cachedOrderPdfFile && (cachedOrderPdfOrderId === targetId || cachedOrderPdfOrderId === ord.id)) {
+        if (navigator.canShare && navigator.canShare({ files: [cachedOrderPdfFile] })) {
+          try {
+            await navigator.share({
+              title: fileName,
+              files: [cachedOrderPdfFile]
+            });
+            showToast("✅ PDF shared successfully on WhatsApp!");
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === "AbortError") return;
+            console.warn("Cached PDF share failed, regenerating:", shareErr);
+          }
+        }
+      }
+
+      // 2. Otherwise generate PDF now
+      showToast("⏳ Generating PDF for WhatsApp sharing...");
       if (isDispatched) {
         openTaxInvoice(ord.id);
       } else {
@@ -14055,8 +14121,6 @@ Thank you! Your payment has been received successfully.`;
         showToast("⚠️ Document preview element not found.");
         return;
       }
-
-      showToast("⏳ Generating PDF for WhatsApp sharing...");
 
       try {
         if (window.html2pdf) {
@@ -14070,6 +14134,8 @@ Thank you! Your payment has been received successfully.`;
 
           const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
           const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+          cachedOrderPdfFile = pdfFile;
+          cachedOrderPdfOrderId = ord.id;
 
           // Always ensure the PDF file is also downloaded/saved on device as backup
           try {
@@ -14083,38 +14149,262 @@ Thank you! Your payment has been received successfully.`;
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           } catch(e) {}
 
-          // Direct file sharing on Mobile (Android / iOS)
-          // CRITICAL ANDROID WHATSAPP FIX: Do NOT pass 'text' alongside 'files'!
-          // When 'text' is passed, Android WhatsApp ignores the file attachment and only pastes text!
-          // Sending ONLY 'files: [pdfFile]' forces WhatsApp to attach the actual PDF file!
           if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
             try {
               await navigator.share({
                 title: fileName,
                 files: [pdfFile]
               });
-              showToast("✅ PDF WhatsApp वर यशस्वीरीत्या शेअर केले!");
+              showToast("✅ PDF shared successfully on WhatsApp!");
               return;
             } catch (shareErr) {
-              if (shareErr.name === "AbortError") return; // User closed share sheet
+              if (shareErr.name === "AbortError") return;
               console.warn("Share files error, falling back:", shareErr);
             }
           }
 
           // Fallback on Desktop PC or browsers without Web Share Files support
-          const msg = getOrderMemoWhatsAppText(ord, party) + "\n\n📄 (PDF फाईल तुमच्या डिव्हाइसवर डाऊनलोड झाली आहे — कृपया चॅटमध्ये 📎 Attach वर क्लिक करून ही PDF फाईल पाठवा.)";
+          const msg = getOrderMemoWhatsAppText(ord, party) + "\n\n📄 (Official PDF has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)";
           const waUrl = cleanPhone.length >= 10
             ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
             : `https://wa.me/?text=${encodeURIComponent(msg)}`;
           window.open(waUrl, "_blank");
-          showToast("📄 PDF डाऊनलोड झाले! WhatsApp वर पाठवण्यासाठी 📎 Attach करा...");
+          showToast("📄 PDF downloaded to device. Opening WhatsApp chat...");
         } else {
-          // Graceful fallback to print
           window.print();
         }
       } catch (err) {
         console.error("PDF share error:", err);
         showToast("⚠️ PDF generation issue. Opening print preview...");
+        window.print();
+      }
+    }
+
+    function shareOrderTextOnWhatsApp(orderId) {
+      const targetId = orderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
+      if (!targetId) return;
+      const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
+      if (!ord) return;
+      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
+      const cleanPhone = (party.mobile || "").replace(/\D/g, "");
+      const msg = getOrderMemoWhatsAppText(ord, party);
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+    }
+
+    let cachedColPdfFile = null;
+    let cachedColPdfId = null;
+    let isGeneratingColPdf = false;
+
+    async function pregenerateColPdf(colId) {
+      if (!colId || isGeneratingColPdf) return;
+      isGeneratingColPdf = true;
+      try {
+        const col = state.collections.find(c => c.id === colId || c.receiptNo === colId);
+        if (!col) return;
+        const fileName = `Payment_Receipt_${col.receiptNo}.pdf`;
+        openPaymentReceipt(col.id);
+        const element = document.getElementById("receiptPrintArea");
+        if (element && window.html2pdf) {
+          const opt = {
+            margin: [6, 6, 6, 6],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+          cachedColPdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+          cachedColPdfId = col.id;
+        }
+      } catch (err) {
+        console.warn("Pre-generate Col PDF error:", err);
+      } finally {
+        isGeneratingColPdf = false;
+      }
+    }
+
+    async function sharePaymentReceiptPdfOnWhatsApp(colId) {
+      const targetId = colId || lastActiveColId;
+      if (!targetId) {
+        showToast("⚠️ Receipt reference not found.");
+        return;
+      }
+      const col = state.collections.find(c => c.id === targetId || c.receiptNo === targetId);
+      if (!col) {
+        showToast("⚠️ Receipt details not found.");
+        return;
+      }
+      const party = state.parties.find(p => p.id === col.partyId || p.name === col.partyName) || { name: col.partyName, area: "Nagpur", mobile: "" };
+      const cleanPhone = (party.mobile || "").replace(/\D/g, "");
+      const fileName = `Payment_Receipt_${col.receiptNo}.pdf`;
+
+      // 1. If cached PDF is already ready, share IMMEDIATELY inside user gesture!
+      if (cachedColPdfFile && (cachedColPdfId === targetId || cachedColPdfId === col.id)) {
+        if (navigator.canShare && navigator.canShare({ files: [cachedColPdfFile] })) {
+          try {
+            await navigator.share({
+              title: fileName,
+              files: [cachedColPdfFile]
+            });
+            showToast("✅ Payment Receipt PDF shared successfully!");
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === "AbortError") return;
+            console.warn("Direct share col failed, regenerating:", shareErr);
+          }
+        }
+      }
+
+      // 2. Otherwise generate now
+      showToast("⏳ Generating Receipt PDF for WhatsApp sharing...");
+      openPaymentReceipt(col.id);
+      const element = document.getElementById("receiptPrintArea");
+      if (!element) return;
+
+      try {
+        if (window.html2pdf) {
+          const opt = {
+            margin: [6, 6, 6, 6],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+          const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+          cachedColPdfFile = pdfFile;
+          cachedColPdfId = col.id;
+
+          // Always ensure the PDF file is also downloaded/saved on device as backup
+          try {
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const dlA = document.createElement("a");
+            dlA.href = blobUrl;
+            dlA.download = fileName;
+            document.body.appendChild(dlA);
+            dlA.click();
+            document.body.removeChild(dlA);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+          } catch(e) {}
+
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            try {
+              await navigator.share({
+                title: fileName,
+                files: [pdfFile]
+              });
+              showToast("✅ Payment Receipt PDF shared successfully!");
+              return;
+            } catch (shareErr) {
+              if (shareErr.name === "AbortError") return;
+              console.warn("Share col error, falling back:", shareErr);
+            }
+          }
+
+          // Fallback on Desktop PC or browsers without Web Share Files support
+          const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+          const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
+          const remBal = computed ? computed.netBalance : 0;
+          const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 (Official PDF receipt has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)`;
+          const waUrl = cleanPhone.length >= 10
+            ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+          window.open(waUrl, "_blank");
+          showToast("📄 PDF downloaded to device. Opening WhatsApp chat...");
+        } else {
+          window.print();
+        }
+      } catch (err) {
+        console.error("Col PDF generation error:", err);
+        showToast("⚠️ Receipt PDF issue. Opening print preview...");
+        window.print();
+      }
+    }
+
+    function shareCurrentReceiptWhatsApp(colId) {
+      const targetId = colId || lastActiveColId;
+      if (!targetId) return;
+      const col = state.collections.find(c => c.id === targetId || c.receiptNo === targetId);
+      if (!col) return;
+      const party = state.parties.find(p => p.id === col.partyId || p.name === col.partyName) || { name: col.partyName, area: "Nagpur", mobile: "" };
+      const cleanPhone = (party.mobile || "").replace(/\D/g, "");
+      const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
+      const remBal = computed ? computed.netBalance : 0;
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+    }
+
+    async function shareCurrentStatementPdfWhatsApp() {
+      if (!currentStatementPartyId) {
+        showToast("⚠️ Party statement not found.");
+        return;
+      }
+      const p = getComputedParties().find(x => x.id === currentStatementPartyId);
+      if (!p) return;
+      const fileName = `Statement_${p.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      const cleanPhone = (p.mobile || "").replace(/\D/g, "");
+      const element = document.getElementById("statementPrintArea");
+      if (!element) return;
+
+      showToast("⏳ Generating Statement PDF for WhatsApp...");
+      try {
+        if (window.html2pdf) {
+          const opt = {
+            margin: [6, 6, 6, 6],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+          const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+          // Auto download backup copy
+          try {
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const dlA = document.createElement("a");
+            dlA.href = blobUrl;
+            dlA.download = fileName;
+            document.body.appendChild(dlA);
+            dlA.click();
+            document.body.removeChild(dlA);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+          } catch(e) {}
+
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            try {
+              await navigator.share({
+                title: fileName,
+                files: [pdfFile]
+              });
+              showToast("✅ Statement PDF shared successfully!");
+              return;
+            } catch(shareErr) {
+              if (shareErr.name === "AbortError") return;
+              console.warn("Statement share error:", shareErr);
+            }
+          }
+
+          const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+          const msg = `*${co.name}*\n📄 *Account Statement: ${p.name}*\n-----------------------------\n*Total Outstanding Due:* ${fmtINR(p.netBalance)}\n-----------------------------\n📄 (Official Statement PDF has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)`;
+          const waUrl = cleanPhone.length >= 10
+            ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+          window.open(waUrl, "_blank");
+          showToast("📄 Statement PDF downloaded to device. Opening WhatsApp chat...");
+        } else {
+          window.print();
+        }
+      } catch (err) {
+        console.error("Statement PDF share error:", err);
+        showToast("⚠️ Statement PDF generation issue. Opening print preview...");
         window.print();
       }
     }
