@@ -930,6 +930,46 @@
     *, *:before, *:after {
       box-sizing: inherit !important;
     }
+    /* Custom Autocomplete Component - 100% Solid, Anti-Bleed, Mobile-Optimized */
+    .custom-autocomplete-wrap {
+      position: relative !important;
+    }
+    .custom-autocomplete-dropdown {
+      position: absolute !important;
+      top: calc(100% + 4px) !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: #ffffff !important;
+      border: 2px solid #0f766e !important;
+      border-radius: 8px !important;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.28) !important;
+      max-height: 250px !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      z-index: 999999 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .custom-autocomplete-item {
+      padding: 10px 12px !important;
+      cursor: pointer !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      gap: 8px !important;
+      background: #ffffff !important;
+      transition: background 0.12s ease !important;
+    }
+    .custom-autocomplete-item:last-child {
+      border-bottom: none !important;
+    }
+    .custom-autocomplete-item:hover,
+    .custom-autocomplete-item:active,
+    .custom-autocomplete-item.active {
+      background: #f0fdf4 !important;
+    }
+
     .order-top-row {
       display: flex;
       flex-wrap: wrap;
@@ -1649,14 +1689,15 @@
                 <label>Memo Date</label>
                 <input type="date" id="ordDate" class="form-control" required />
               </div>
-              <div class="form-group order-party-col">
+              <div class="form-group order-party-col custom-autocomplete-wrap">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                   <label style="margin:0;font-weight:600;">Select Party / Dealer</label>
-                  <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal()" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+                  <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal('ordPartyInput')" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
                     ➕ Add New Party
                   </button>
                 </div>
-                <input type="text" list="partyDatalist" id="ordPartyInput" class="form-control" placeholder="Type party name..." oninput="updatePartyDueAlert()" onchange="updatePartyDueAlert()" required />
+                <input type="text" id="ordPartyInput" class="form-control font-bold" placeholder="Type party name or area..." autocomplete="off" oninput="updatePartyDueAlert()" onchange="updatePartyDueAlert()" required />
+                <div id="ordPartySuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
                 <div id="ordPartyDueAlert" style="font-size:0.76rem;margin-top:4px;"></div>
               </div>
               <div class="form-group order-salesperson-col">
@@ -1682,9 +1723,10 @@
               <span>➕ Add Item to Memo</span>
             </div>
             <div class="order-add-box">
-              <div class="form-group" style="margin-bottom:10px;">
+              <div class="form-group custom-autocomplete-wrap" style="margin-bottom:10px;">
                 <label>Select Product <span id="ordAvailHint" style="color:#0f766e;font-weight:700;"></span></label>
-                <input type="text" list="productDatalist" id="ordProductInput" class="form-control" placeholder="Type product name or code..." onchange="handleProductSelected()" oninput="handleProductSelected()" />
+                <input type="text" id="ordProductInput" class="form-control font-bold" placeholder="Type product name or code..." autocomplete="off" onchange="handleProductSelected()" oninput="handleProductSelected()" />
+                <div id="ordProductSuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
               </div>
               <div class="order-qty-rate-row">
                 <div class="form-group col-qty">
@@ -1836,14 +1878,15 @@
               <label>Payment Date</label>
               <input type="date" id="colDate" class="form-control" required />
             </div>
-            <div class="form-group" style="grid-column: span 2;">
+            <div class="form-group custom-autocomplete-wrap" style="grid-column: span 2;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                 <label style="margin:0;font-weight:600;">Party / Dealer Name</label>
                 <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal('colPartyInput')" style="padding:2px 8px;font-size:0.75rem;border-radius:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
                   ➕ Add New Party
                 </button>
               </div>
-              <input type="text" list="partyDatalist" id="colPartyInput" class="form-control" placeholder="Type party name..." oninput="updateColPartyDueAlert()" onchange="updateColPartyDueAlert()" required />
+              <input type="text" id="colPartyInput" class="form-control font-bold" placeholder="Type party name or area..." autocomplete="off" oninput="updateColPartyDueAlert()" onchange="updateColPartyDueAlert()" required />
+              <div id="colPartySuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
               <div id="colPartyDueAlert" style="font-size:0.78rem;margin-top:4px;"></div>
             </div>
             <div class="form-group">
@@ -2371,9 +2414,10 @@
               <label>Return Date *</label>
               <input type="date" id="srDate" class="form-control" required />
             </div>
-            <div class="form-group" style="grid-column: span 2;">
+            <div class="form-group custom-autocomplete-wrap" style="grid-column: span 2;">
               <label>Party / Dealer *</label>
-              <input type="text" list="partyDatalist" id="srPartyInput" class="form-control" placeholder="Select dealer returning goods..." required />
+              <input type="text" id="srPartyInput" class="form-control font-bold" placeholder="Select dealer returning goods..." autocomplete="off" required />
+              <div id="srPartySuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
             </div>
             <div class="form-group">
               <label>Original Inv. No (Optional)</label>
@@ -6350,7 +6394,175 @@
     }
 
 
+    // ==================== 100% OPAQUE CUSTOM AUTOCOMPLETE ENGINE ====================
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[m]);
+    }
+
+    function initCustomAutocompletes() {
+      // 1. Order Memo Party Autocomplete
+      setupAutocomplete({
+        inputId: "ordPartyInput",
+        dropdownId: "ordPartySuggestions",
+        getItems: () => getComputedParties(),
+        renderItem: (p, q) => renderPartyAutocompleteItem(p, q),
+        onEmpty: (q) => renderPartyAutocompleteEmpty(q, "ordPartyInput"),
+        onSelect: () => {
+          updatePartyDueAlert();
+          const prodInp = document.getElementById("ordProductInput");
+          if (prodInp) prodInp.focus();
+        }
+      });
+
+      // 2. Collection Party Autocomplete
+      setupAutocomplete({
+        inputId: "colPartyInput",
+        dropdownId: "colPartySuggestions",
+        getItems: () => getComputedParties(),
+        renderItem: (p, q) => renderPartyAutocompleteItem(p, q),
+        onEmpty: (q) => renderPartyAutocompleteEmpty(q, "colPartyInput"),
+        onSelect: () => {
+          updateColPartyDueAlert();
+          const amtInp = document.getElementById("colAmount");
+          if (amtInp) amtInp.focus();
+        }
+      });
+
+      // 3. Sales Return Party Autocomplete
+      setupAutocomplete({
+        inputId: "srPartyInput",
+        dropdownId: "srPartySuggestions",
+        getItems: () => getComputedParties(),
+        renderItem: (p, q) => renderPartyAutocompleteItem(p, q),
+        onEmpty: (q) => renderPartyAutocompleteEmpty(q, "srPartyInput"),
+        onSelect: () => {}
+      });
+
+      // 4. Order Memo Product Autocomplete
+      setupAutocomplete({
+        inputId: "ordProductInput",
+        dropdownId: "ordProductSuggestions",
+        getItems: () => getComputedStock(),
+        renderItem: (prod, q) => renderProductAutocompleteItem(prod, q),
+        onEmpty: (q) => `<div style="padding:12px;text-align:center;color:#64748b;font-size:0.85rem;background:#ffffff;">No product found matching "<strong>${escapeHtml(q)}</strong>"</div>`,
+        onSelect: () => {
+          handleProductSelected();
+        }
+      });
+    }
+
+    function setupAutocomplete({ inputId, dropdownId, getItems, renderItem, onEmpty, onSelect }) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      if (!input || !dropdown) return;
+
+      function renderMatches(q) {
+        const query = (q || "").trim().toLowerCase();
+        const allItems = getItems() || [];
+        let matches = [];
+
+        if (!query) {
+          matches = allItems.slice(0, 15);
+        } else {
+          matches = allItems.filter(item => {
+            const name = (item.name || "").toLowerCase();
+            const code = (item.code || "").toLowerCase();
+            const area = (item.area || "").toLowerCase();
+            const mob = (item.mobile || "").toLowerCase();
+            return name.includes(query) || code.includes(query) || area.includes(query) || mob.includes(query);
+          }).slice(0, 20);
+        }
+
+        if (matches.length === 0) {
+          dropdown.innerHTML = onEmpty ? onEmpty(query) : `<div style="padding:12px;text-align:center;color:#64748b;font-size:0.85rem;background:#ffffff;">No matches found</div>`;
+        } else {
+          dropdown.innerHTML = matches.map(m => renderItem(m, query)).join("");
+        }
+        dropdown.style.display = "block";
+      }
+
+      input.addEventListener("focus", () => renderMatches(input.value));
+      input.addEventListener("input", () => renderMatches(input.value));
+
+      dropdown.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // prevent input blur from closing before click
+      });
+
+      dropdown.addEventListener("click", (e) => {
+        const row = e.target.closest("[data-item-name]");
+        if (row) {
+          const val = row.getAttribute("data-item-name");
+          input.value = val;
+          dropdown.style.display = "none";
+          if (onSelect) onSelect(val);
+        }
+      });
+
+      input.addEventListener("blur", () => {
+        setTimeout(() => {
+          dropdown.style.display = "none";
+        }, 220);
+      });
+    }
+
+    function renderPartyAutocompleteItem(p, q) {
+      const due = Number(p.netBalance || 0);
+      const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
+      const areaTxt = p.area ? `📍 ${p.area}` : '';
+      const mobTxt = p.mobile ? `📞 ${p.mobile}` : '';
+      const subParts = [areaTxt, mobTxt].filter(Boolean).join(" | ");
+
+      return `
+        <div class="custom-autocomplete-item" data-item-name="${escapeHtml(p.name)}">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#0f172a;font-size:0.92rem;word-break:break-word;">${escapeHtml(p.name)}</div>
+            ${subParts ? `<div style="font-size:0.75rem;color:#64748b;margin-top:2px;">${escapeHtml(subParts)}</div>` : ''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <span class="pill ${badgeClass}" style="font-size:0.72rem;padding:3px 7px;font-weight:700;">
+              ${due > 0 ? fmtINR(due) : '✓ Clear'}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPartyAutocompleteEmpty(q, targetInputId) {
+      return `
+        <div style="padding:14px;text-align:center;background:#ffffff;">
+          <div style="font-size:0.85rem;color:#64748b;margin-bottom:8px;">
+            No party found matching "<strong>${escapeHtml(q)}</strong>"
+          </div>
+          <button type="button" class="btn btn-teal btn-sm" onclick="openQuickAddPartyModal('${targetInputId}'); const d = document.getElementById('${targetInputId}Suggestions'); if (d) d.style.display='none';" style="font-weight:700;padding:6px 14px;font-size:0.8rem;">
+            ➕ Add New Party "${escapeHtml(q)}"
+          </button>
+        </div>
+      `;
+    }
+
+    function renderProductAutocompleteItem(p, q) {
+      const avail = Number(p.available || 0);
+      const availCol = avail > 0 ? '#15803d' : '#dc2626';
+      return `
+        <div class="custom-autocomplete-item" data-item-name="${escapeHtml(p.name)}">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#0f172a;font-size:0.92rem;">${escapeHtml(p.name)}</div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Code: <strong>${escapeHtml(p.code || '-')}</strong> | Standard Rate: <strong>₹${p.rate || 0}</strong></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <span class="pill" style="font-size:0.72rem;font-weight:700;background:#f0fdf4;color:${availCol};border:1px solid #bbf7d0;">
+              Avail: ${avail}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
     function initApp() {
+      if (typeof initCustomAutocompletes === "function") initCustomAutocompletes();
       document.getElementById("gatewayLogo1").src = SHOP_LOGO;
 
       const today = "2026-11-16";
@@ -8038,7 +8250,11 @@
           : "";
         alertEl.innerHTML = `<span class="pill ${badgeClass}" style="margin-right:6px;">${p.alertBadge}</span> <span>📍 Area: <strong>${p.area || "Nagpur"}</strong> | Balance Due: <strong>${fmtINR(p.netBalance)}</strong>${limitTxt}</span>`;
       } else {
-        alertEl.innerHTML = '<span style="color:var(--muted);">Party not found in registered list.</span>';
+        if (document.activeElement === input) {
+          alertEl.innerHTML = "";
+        } else {
+          alertEl.innerHTML = `<span style="color:#dc2626;font-size:0.75rem;font-weight:600;">⚠️ Party not in registered list. Select from dropdown or click "+ Add New Party".</span>`;
+        }
       }
     }
 
