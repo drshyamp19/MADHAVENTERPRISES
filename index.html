@@ -1302,6 +1302,9 @@
           <span class="dot live" id="syncDot"></span>
           <span id="syncText">Live Sync</span>
         </span>
+        <button type="button" class="btn btn-sm" onclick="forceAppRefresh()" title="Force Refresh & Update Cache" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:4px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:3px;" id="forceRefreshBtn">
+          🔄 रिफ्रेश
+        </button>
         <span id="staffBadgeWrap" style="display:none;align-items:center;gap:6px;">
           <span class="badge-staff" id="staffUserName">👤 Staff</span>
           <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="staffLogout()">🚪 Logout</button>
@@ -13758,12 +13761,56 @@ Thank you! Your payment has been received successfully.`;
       };
     }
 
+    async function forceAppRefresh() {
+      showToast("⏳ App अपडेट व कॅश रीफ्रेश होत आहे...");
+      try {
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const r of regs) {
+            await r.unregister();
+          }
+        }
+      } catch (e) {
+        console.warn("Cache reset error:", e);
+      }
+      const sep = window.location.href.includes("?") ? "&" : "?";
+      window.location.href = window.location.origin + window.location.pathname + sep + "_v=" + Date.now();
+    }
+
     // Register Service Worker for PWA installability & offline shell
     if ("serviceWorker" in navigator && !window.AndroidApp) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch((err) => {
+        navigator.serviceWorker.register("/sw.js").then((reg) => {
+          reg.update().catch(() => {});
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+          reg.addEventListener("updatefound", () => {
+            const installing = reg.installing;
+            if (installing) {
+              installing.addEventListener("statechange", () => {
+                if (installing.state === "installed" && navigator.serviceWorker.controller) {
+                  installing.postMessage({ type: "SKIP_WAITING" });
+                }
+              });
+            }
+          });
+        }).catch((err) => {
           console.warn("ServiceWorker registration skipped:", err);
         });
+
+        let reloading = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (!reloading) {
+            reloading = true;
+            window.location.reload();
+          }
+        });
+
         // Show install helper on iOS Safari if not already installed
         const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
         if (isIos && !isRunningStandaloneOrApk()) {
