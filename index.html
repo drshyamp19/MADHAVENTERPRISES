@@ -1295,45 +1295,87 @@
 <body>
 
   <!-- ==================== GATEWAY / SECURE LOGIN SCREEN (OPTION 1) ==================== -->
+    <!-- ==================== UNIFIED GATEWAY & AUTHENTICATION PORTAL ==================== -->
   <div id="gatewayScreen">
-    <div style="text-align:center; max-width:680px;">
-      <div style="font-size:2.4rem;margin-bottom:8px;">🏢⚡</div>
-      <h1 style="font-size:2.2rem; font-weight:800; margin-bottom:10px; letter-spacing:-0.5px;">MADHAV &amp; SHIVOM ERP</h1>
-      <p style="font-size:0.95rem; opacity:0.9; margin-bottom:10px;">Dual-Firm Cloud ERP: Stock, Orders, GST Billing &amp; Payment Recovery Portal</p>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:5px 16px;border-radius:999px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#38bdf8;">
-        🔒 Authorized Access Only &bull; Public Browsing Disabled
+    <div style="text-align:center; max-width:580px; width:100%; margin-bottom:18px;">
+      <div style="font-size:2.4rem;margin-bottom:6px;">🏢⚡</div>
+      <h1 style="font-size:2.1rem; font-weight:800; margin-bottom:6px; letter-spacing:-0.5px;">MADHAV &amp; SHIVOM ERP</h1>
+      <p style="font-size:0.9rem; opacity:0.9; margin-bottom:10px;">Cloud ERP: Stock, Orders, GST Billing &amp; Payment Recovery Portal</p>
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:4px 14px;border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#38bdf8;">
+        🔒 Single Unified Portal &bull; Firebase Cloud Auth
       </span>
     </div>
 
-    <div class="gateway-card-wrap">
-      <!-- Card 1: Owner Admin Portal -->
-      <div class="gateway-card" onclick="openLoginModal()" style="border-top:5px solid #f59e0b;">
-        <div>
-          <div style="font-size:3rem;margin-bottom:12px;">👑</div>
-          <h2 style="color:#b45309;">Owner Admin Portal</h2>
-          <p>Full Owner Access: Executive Dashboard, Multi-Tab Excel, Live Profits, GST &amp; GSTR-1, Expenses, Staff Supervision &amp; Master Controls.</p>
-        </div>
-        <button type="button" class="btn btn-amber" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;" onclick="event.stopPropagation();openLoginModal();">
-          🔐 Login as Owner Admin
-        </button>
+    <!-- Unified Login Card -->
+    <div class="gateway-login-box" style="background:#ffffff; color:#0f172a; border-radius:16px; padding:28px 24px; max-width:440px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2); box-sizing:border-box;">
+      <div style="text-align:center; margin-bottom:20px;">
+        <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin-bottom:4px;">Sign In to Enterprise</h2>
+        <p style="font-size:0.8rem; color:#64748b;">Admin Email (Firebase Auth) or Sales Team Username</p>
       </div>
 
-      <!-- Card 2: Sales & Field Team Portal -->
-      <div class="gateway-card" onclick="openStaffLoginModal()" style="border-top:5px solid #0f766e;">
-        <div>
-          <div style="font-size:3rem;margin-bottom:12px;">📱</div>
-          <h2 style="color:#0f766e;">Sales Team Portal</h2>
-          <p>Field Staff Access for <strong>Prashik Hajare (Manager), Gopal Ambagade &amp; Vikram Singh Thakur</strong>: Book Orders, Record Collections &amp; Handover Cash.</p>
+      <form id="unifiedLoginForm" onsubmit="handleUnifiedLogin(event)">
+        <div style="margin-bottom:14px; text-align:left;">
+          <label for="unifiedLoginIdentifier" style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:6px;">
+            👤 Username or Admin Email
+          </label>
+          <input 
+            type="text" 
+            id="unifiedLoginIdentifier" 
+            class="form-control" 
+            placeholder="e.g. admin email or sales username" 
+            required 
+            autocomplete="username"
+            style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem; box-sizing:border-box;"
+          />
+          <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
+            Admin: <code>madhaventerprises.care@gmail.com</code> | Sales: <code>prashik</code> / <code>gopal</code> / <code>vikram</code>
+          </div>
         </div>
-        <button type="button" class="btn btn-teal" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;" onclick="event.stopPropagation();openStaffLoginModal();">
-          👥 Login as Sales Team
+
+        <div style="margin-bottom:18px; text-align:left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label for="unifiedLoginPassword" style="font-size:0.78rem; font-weight:700; color:#334155;">
+              🔑 Password or PIN
+            </label>
+            <a href="javascript:void(0)" onclick="handleForgotPassword()" style="font-size:0.75rem; color:#0284c7; text-decoration:none; font-weight:600;">
+              Forgot Password?
+            </a>
+          </div>
+          <div style="position:relative;">
+            <input 
+              type="password" 
+              id="unifiedLoginPassword" 
+              class="form-control" 
+              placeholder="Enter password or PIN" 
+              required 
+              autocomplete="current-password"
+              style="width:100%; padding:11px 42px 11px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem; box-sizing:border-box;"
+            />
+            <button 
+              type="button" 
+              onclick="toggleUnifiedPasswordVisibility()" 
+              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; color:#64748b; padding:4px;"
+              title="Show/Hide Password"
+            >👁️</button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="unifiedLoginSubmitBtn" 
+          class="btn btn-primary" 
+          style="width:100%; justify-content:center; padding:12px; font-size:0.95rem; font-weight:700; border-radius:8px; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border:none; color:#ffffff; box-shadow:0 4px 12px rgba(2,132,199,0.35); cursor:pointer;"
+        >
+          🚀 Sign In to ERP Portal
         </button>
-      </div>
+      </form>
+
+      <div id="unifiedLoginStatus" style="display:none; margin-top:12px; font-size:0.8rem; text-align:center; padding:8px; border-radius:6px;"></div>
     </div>
 
-    <div style="margin-top:28px;text-align:center;max-width:680px;font-size:0.75rem;opacity:0.75;line-height:1.6;">
-      <div><strong>MADHAV ENTERPRISES</strong> (Plot No 408, Besan Bag, Indora, Nagpur) &bull; <strong>SHIVOM SALES</strong> (10 No Puliya, Indora, Nagpur)</div>
-      <div style="margin-top:4px;">Protected Enterprise Management System &bull; All customer data, debt balances &amp; stock numbers are encrypted and private.</div>
+    <div style="margin-top:20px; text-align:center; max-width:580px; font-size:0.75rem; opacity:0.8; line-height:1.5;">
+      <div><strong>MADHAV ENTERPRISES</strong> (Indora, Nagpur) &bull; <strong>SHIVOM SALES</strong> (Indora, Nagpur)</div>
+      <div style="margin-top:2px;">Cloud Firebase Auth Protected &bull; All customer data, debt balances &amp; stock numbers are encrypted.</div>
     </div>
 
     <div id="pwaInstallBannerGateway" style="display:none;margin-top:16px;text-align:center;">
@@ -3279,6 +3321,7 @@
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
@@ -7329,6 +7372,156 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
     // ==================== OWNER AUTHENTICATION ====================
+    
+    // ==================== UNIFIED LOGIN & AUTHENTICATION ====================
+    function toggleUnifiedPasswordVisibility() {
+      const el = document.getElementById("unifiedLoginPassword");
+      if (el) {
+        el.type = el.type === "password" ? "text" : "password";
+      }
+    }
+
+    async function handleForgotPassword() {
+      const enteredId = document.getElementById("unifiedLoginIdentifier") ? document.getElementById("unifiedLoginIdentifier").value.trim() : "";
+      let targetEmail = "madhaventerprises.care@gmail.com";
+      if (enteredId && enteredId.includes("@")) {
+        targetEmail = enteredId;
+      }
+      
+      const proceed = confirm(`Send password reset email to: ${targetEmail}?\n\nYou will receive a secure password reset link from Google Firebase.`);
+      if (!proceed) return;
+
+      if (window.firebase && firebase.auth) {
+        try {
+          await firebase.auth().sendPasswordResetEmail(targetEmail);
+          alert(`Password reset link sent successfully to ${targetEmail}!\n\nPlease check your email inbox/spam folder to set your new password.`);
+        } catch(err) {
+          alert("Could not send password reset email: " + err.message);
+        }
+      } else {
+        alert("Firebase Auth service is offline. Please check your internet connection.");
+      }
+    }
+
+    async function handleUnifiedLogin(e) {
+      if (e) e.preventDefault();
+      const rawId = document.getElementById("unifiedLoginIdentifier").value.trim();
+      const enteredPass = document.getElementById("unifiedLoginPassword").value.trim();
+
+      if (!rawId || !enteredPass) {
+        alert("Please enter both Username/Email and Password.");
+        return;
+      }
+
+      const btn = document.getElementById("unifiedLoginSubmitBtn");
+      const origBtnText = btn ? btn.innerHTML : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ Signing In...`;
+      }
+
+      try {
+        const idLower = rawId.toLowerCase();
+        const isEmailOrAdmin = idLower.includes("@") || idLower === "admin" || idLower === "owner" || rawId === "7499477581";
+        
+        let emailToTry = rawId;
+        if (idLower === "admin" || idLower === "owner" || (!rawId.includes("@") && rawId === "7499477581")) {
+          emailToTry = "madhaventerprises.care@gmail.com";
+        }
+
+        // 1. Try Firebase Authentication (Email / Password)
+        let fbSuccess = false;
+        let fbErrorMsg = "";
+        if (window.firebase && firebase.auth && isEmailOrAdmin) {
+          try {
+            const userCred = await firebase.auth().signInWithEmailAndPassword(emailToTry, enteredPass);
+            if (userCred && userCred.user) {
+              fbSuccess = true;
+            }
+          } catch(fbErr) {
+            fbErrorMsg = fbErr.message;
+            console.warn("Firebase Auth sign-in attempted with result:", fbErr.code, fbErr.message);
+          }
+        }
+
+        // 2. Check Master PIN Fallback (Emergency / Offline / PIN Auth)
+        let isMasterPinMatch = false;
+        if (window.crypto && crypto.subtle) {
+          try {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(enteredPass));
+            const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+            if (hex === PIN_HASH) isMasterPinMatch = true;
+          } catch (err) {}
+        }
+        if (!isMasterPinMatch && simpleHash(enteredPass) === PIN_NUM) {
+          isMasterPinMatch = true;
+        }
+
+        if (fbSuccess || (isMasterPinMatch && isEmailOrAdmin)) {
+          // SUCCESS: Admin / Owner Logged in with FULL CONTROL
+          isAdminLoggedIn = true;
+          sessionStorage.setItem(AUTH_SESSION_KEY, "true");
+          const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+          selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
+          updateAdminUI();
+          switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
+          showToast(`Welcome Admin / Owner! Full Controls Unlocked via ${fbSuccess ? "Firebase Cloud Auth" : "Master Security"}.`);
+          return;
+        }
+
+        // 3. Check Sales Team Staff Credentials
+        const member = STAFF_CREDENTIALS.find(u => 
+          u.mobile === rawId || 
+          u.name.toLowerCase().includes(idLower) ||
+          (idLower === "prashik" && u.name.toUpperCase().includes("PRASHIK")) ||
+          (idLower === "gopal" && u.name.toUpperCase().includes("GOPAL")) ||
+          (idLower === "vikram" && u.name.toUpperCase().includes("VIKRAM"))
+        );
+
+        if (member) {
+          let isStaffMatch = false;
+          if (window.crypto && crypto.subtle) {
+            try {
+              const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(enteredPass));
+              const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+              if (hex === member.sha) isStaffMatch = true;
+            } catch (err) {}
+          }
+          if (!isStaffMatch && simpleHash(enteredPass) === member.simple) {
+            isStaffMatch = true;
+          }
+
+          if (isStaffMatch) {
+            // SUCCESS: Sales Staff Logged In
+            currentStaff = member;
+            sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+            localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+            const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+            selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "SHIVOM");
+            updateStaffUI();
+            switchTab("admin-orders", document.querySelector('[data-tab="admin-orders"]'));
+            showToast(`Welcome ${member.name} (${member.role})! Field Portal Unlocked.`);
+            return;
+          } else {
+            alert("Incorrect password for " + member.name + ". Please try again.");
+            return;
+          }
+        }
+
+        // If credentials did not match:
+        if (fbErrorMsg) {
+          alert("Login Failed: " + fbErrorMsg);
+        } else {
+          alert("Invalid Username or Password. Please check your credentials.");
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origBtnText;
+        }
+      }
+    }
+
     function openLoginModal() {
       document.getElementById("ownerPinInput").value = "";
       openModal("ownerLoginModal");
@@ -7379,9 +7572,12 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     function ownerLogout() {
       isAdminLoggedIn = false;
       sessionStorage.removeItem(AUTH_SESSION_KEY);
+      if (window.firebase && firebase.auth && firebase.auth().currentUser) {
+        firebase.auth().signOut().catch(() => {});
+      }
       updateAdminUI();
       returnToGateway();
-      showToast("Owner logged out securely.");
+      showToast("Admin / Owner logged out securely.");
     }
 
     
