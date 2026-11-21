@@ -1,4 +1,4 @@
-const CACHE_NAME = 'madhav-shivom-erp-v46';
+const CACHE_NAME = 'madhav-shivom-erp-v47';
 const APP_SHELL = [
   '/',
   '/index.html',

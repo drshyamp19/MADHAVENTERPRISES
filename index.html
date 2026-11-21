@@ -1971,19 +1971,57 @@
         <!-- Order Booking Memos Register -->
         <div class="card">
           <div class="card-header" style="flex-direction:column;align-items:stretch;gap:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <!-- Top Header & Primary Action Buttons -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
               <span class="card-title" style="display:flex;align-items:center;gap:6px;">
                 📋 Order Booking Memos Register
               </span>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm" onclick="openWarehousePickingSlipModal()" style="background:#0284c7;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;box-shadow:0 1px 3px rgba(2,132,199,0.25);" title="Generate Warehouse Picking &amp; Packing Slip for pending orders">
+                  <span>📦</span> Warehouse Slip
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="exportOrdersToExcel()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;background:#f8fafc;color:#334155;" title="Export current orders list to CSV / Excel file">
+                  <span>📊</span> Export Excel
+                </button>
+              </div>
+            </div>
+
+            <!-- Enhanced Filters Bar: Search, Date Range, Salesperson -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">
+              <div style="flex:1;min-width:220px;">
                 <input 
                   type="text" 
                   id="orderSearch" 
                   class="form-control" 
-                  style="width:280px;min-width:200px;" 
-                  placeholder="🔍 Search Party, Memo No, Salesperson..." 
+                  style="width:100%;margin:0;" 
+                  placeholder="🔍 Search Party, Memo No, Item, Salesperson..." 
                   oninput="renderOrdersTable()" 
                 />
+              </div>
+
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <select id="orderDateRangeFilter" class="form-control" style="width:140px;margin:0;font-weight:600;" onchange="handleOrderDateFilterChange()">
+                  <option value="all">📅 All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="thisWeek">This Week</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="custom">Custom Range...</option>
+                </select>
+
+                <div id="orderCustomDateWrap" style="display:none;align-items:center;gap:4px;">
+                  <input type="date" id="orderDateFrom" class="form-control" style="width:130px;margin:0;" onchange="renderOrdersTable()" />
+                  <span style="font-size:0.8rem;color:#64748b;font-weight:700;">to</span>
+                  <input type="date" id="orderDateTo" class="form-control" style="width:130px;margin:0;" onchange="renderOrdersTable()" />
+                </div>
+
+                <select id="orderSalespersonFilter" class="form-control" style="width:160px;margin:0;font-weight:600;" onchange="renderOrdersTable()">
+                  <option value="all">👤 All Salespersons</option>
+                </select>
+
+                <button type="button" class="btn btn-sm btn-outline" onclick="resetOrderFilters()" style="padding:6px 10px;border-radius:6px;font-weight:700;background:#ffffff;" title="Reset all filters">
+                  🔄 Reset
+                </button>
               </div>
             </div>
 
@@ -2030,19 +2068,56 @@
               </button>
             </div>
           </div>
+
+          <!-- Multi-Select / Batch Action Toolbar -->
+          <div id="orderBatchActionToolbar" style="display:none;background:#f0f9ff;border:1.5px solid #0284c7;border-radius:10px;padding:10px 14px;margin:0 14px 10px 14px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.1rem;">☑️</span>
+              <span id="orderBatchSelectedInfo" style="font-weight:700;color:#0369a1;font-size:0.88rem;">0 orders selected</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm" id="btnBatchCombinedSlip" onclick="generateBatchWarehouseSlip()" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 12px;border-radius:6px;">
+                📦 Selected Picking Slip
+              </button>
+              <button type="button" class="btn btn-sm btn-amber" id="btnBatchCombineDispatch" onclick="openCombinedDispatchModal()" style="font-weight:700;padding:5px 12px;border-radius:6px;display:none;">
+                🚚 Combine Dispatch for Same Dealer
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="clearSelectedOrders()" style="font-weight:600;padding:5px 10px;border-radius:6px;background:#fff;">
+                ✕ Deselect All
+              </button>
+            </div>
+          </div>
+
           <div class="table-wrap">
-            <table>
+            <table id="ordersMainTable">
               <thead>
                 <tr>
-                  <th>Memo No</th>
-                  <th>Date</th>
-                  <th>Party Name &amp; Balance</th>
+                  <th style="width:36px;text-align:center;">
+                    <input type="checkbox" id="orderSelectAllChk" onchange="toggleSelectAllOrders(this)" title="Select All Visible Orders" />
+                  </th>
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('memoNo')">
+                    Memo No <span id="sortIcon_memoNo">⇅</span>
+                  </th>
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('date')">
+                    Date &amp; Age <span id="sortIcon_date">▼</span>
+                  </th>
+                  <th style="cursor:pointer;user-select:none;" onclick="toggleOrderSort('partyName')">
+                    Party Name &amp; Balance <span id="sortIcon_partyName">⇅</span>
+                  </th>
                   <th>Booked By</th>
                   <th>Items Details</th>
-                  <th class="text-right">Ord Qty</th>
-                  <th class="text-right">Disp Qty</th>
-                  <th class="text-right">Pending</th>
-                  <th class="text-right">Total Value</th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('ordQty')">
+                    Ord Qty <span id="sortIcon_ordQty">⇅</span>
+                  </th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('dispQty')">
+                    Disp Qty <span id="sortIcon_dispQty">⇅</span>
+                  </th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('pendingQty')">
+                    Pending <span id="sortIcon_pendingQty">⇅</span>
+                  </th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('totalAmt')">
+                    Total Value <span id="sortIcon_totalAmt">⇅</span>
+                  </th>
                   <th class="text-center">Status</th>
                   <th class="text-center" style="min-width:180px;">Actions</th>
                 </tr>
@@ -9785,6 +9860,13 @@ Thank you!`;
 
       let items = [];
 
+      // 0. Quick Order Preview
+      items.push(`
+        <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+          <span>👁️</span> <span>Quick Order Preview</span>
+        </a>
+      `);
+
       // 1. Memo PDF
       items.push(`
         <a href="javascript:void(0)" onclick="openOrderBookingMemo('${o.id}');closeAllOrderMenus();" class="order-menu-item">
@@ -9868,14 +9950,285 @@ Thank you!`;
       menu.innerHTML = items.join("");
     }
 
+    // ==================== ENHANCED ORDER REGISTER CONTROLS ====================
+    let orderSortCol = "date";
+    let orderSortDir = "desc";
+    let selectedOrderIds = new Set();
+    let orderDatePreset = "all";
+
+    function handleOrderDateFilterChange() {
+      const presetEl = document.getElementById("orderDateRangeFilter");
+      orderDatePreset = presetEl ? presetEl.value : "all";
+      const customWrap = document.getElementById("orderCustomDateWrap");
+      if (customWrap) {
+        customWrap.style.display = orderDatePreset === "custom" ? "inline-flex" : "none";
+      }
+      renderOrdersTable();
+    }
+
+    function populateOrderSalespersonFilter() {
+      const selectEl = document.getElementById("orderSalespersonFilter");
+      if (!selectEl) return;
+      const currentVal = selectEl.value || "all";
+      const spSet = new Set();
+      (state.orders || []).forEach(o => {
+        if (o.salespersonName && o.salespersonName.trim()) spSet.add(o.salespersonName.trim());
+      });
+      (state.staff || []).forEach(s => {
+        if (s.name && s.name.trim()) spSet.add(s.name.trim());
+      });
+      const sortedSp = Array.from(spSet).sort();
+      let html = `<option value="all">👤 All Salespersons</option>`;
+      sortedSp.forEach(sp => {
+        const sel = (sp === currentVal) ? "selected" : "";
+        html += `<option value="${escapeHtml(sp)}" ${sel}>${escapeHtml(sp)}</option>`;
+      });
+      selectEl.innerHTML = html;
+      if (Array.from(spSet).includes(currentVal)) {
+        selectEl.value = currentVal;
+      }
+    }
+
+    function resetOrderFilters() {
+      const searchEl = document.getElementById("orderSearch");
+      if (searchEl) searchEl.value = "";
+      const dateEl = document.getElementById("orderDateRangeFilter");
+      if (dateEl) dateEl.value = "all";
+      const customWrap = document.getElementById("orderCustomDateWrap");
+      if (customWrap) customWrap.style.display = "none";
+      const dFrom = document.getElementById("orderDateFrom");
+      if (dFrom) dFrom.value = "";
+      const dTo = document.getElementById("orderDateTo");
+      if (dTo) dTo.value = "";
+      const spEl = document.getElementById("orderSalespersonFilter");
+      if (spEl) spEl.value = "all";
+      orderDatePreset = "all";
+      renderOrdersTable();
+    }
+
+    function toggleOrderSort(col) {
+      if (orderSortCol === col) {
+        orderSortDir = orderSortDir === "asc" ? "desc" : "asc";
+      } else {
+        orderSortCol = col;
+        orderSortDir = (col === "date" || col === "memoNo" || col === "totalAmt") ? "desc" : "asc";
+      }
+      updateOrderSortHeaders();
+      renderOrdersTable();
+    }
+
+    function updateOrderSortHeaders() {
+      const cols = ["memoNo", "date", "partyName", "ordQty", "dispQty", "pendingQty", "totalAmt"];
+      cols.forEach(c => {
+        const el = document.getElementById(`sortIcon_${c}`);
+        if (el) {
+          if (orderSortCol === c) {
+            el.textContent = orderSortDir === "asc" ? "▲" : "▼";
+            el.style.color = "var(--primary)";
+            el.style.fontWeight = "800";
+          } else {
+            el.textContent = "⇅";
+            el.style.color = "#94a3b8";
+            el.style.fontWeight = "normal";
+          }
+        }
+      });
+    }
+
+    function toggleSelectAllOrders(masterChk) {
+      const isChecked = masterChk.checked;
+      const checkboxes = document.querySelectorAll(".order-select-chk");
+      checkboxes.forEach(chk => {
+        chk.checked = isChecked;
+        if (isChecked) {
+          selectedOrderIds.add(chk.value);
+        } else {
+          selectedOrderIds.delete(chk.value);
+        }
+      });
+      updateSelectedOrdersBar();
+    }
+
+    function toggleSelectOrder(chk, orderId) {
+      if (chk.checked) {
+        selectedOrderIds.add(orderId);
+      } else {
+        selectedOrderIds.delete(orderId);
+      }
+      updateSelectedOrdersBar();
+    }
+
+    function clearSelectedOrders() {
+      selectedOrderIds.clear();
+      const masterChk = document.getElementById("orderSelectAllChk");
+      if (masterChk) masterChk.checked = false;
+      const checkboxes = document.querySelectorAll(".order-select-chk");
+      checkboxes.forEach(chk => chk.checked = false);
+      updateSelectedOrdersBar();
+    }
+
+    function updateSelectedOrdersBar() {
+      const bar = document.getElementById("orderBatchActionToolbar");
+      const info = document.getElementById("orderBatchSelectedInfo");
+      const btnCombine = document.getElementById("btnBatchCombineDispatch");
+      if (!bar || !info) return;
+
+      const count = selectedOrderIds.size;
+      if (count === 0) {
+        bar.style.display = "none";
+        const masterChk = document.getElementById("orderSelectAllChk");
+        if (masterChk) masterChk.checked = false;
+        return;
+      }
+
+      bar.style.display = "flex";
+      const selectedOrders = (state.orders || []).filter(o => selectedOrderIds.has(o.id));
+      let totUnits = 0;
+      let totVal = 0;
+      const partiesSet = new Set();
+
+      selectedOrders.forEach(o => {
+        const ordQ = Number(o.orderQty || 0);
+        const dispQ = Number(o.dispatchedQty || 0);
+        const remQ = Math.max(0, ordQ - dispQ);
+        totUnits += remQ;
+        const lineTotal = Number(o.totalAmt || (ordQ * Number(o.rate || 0)) || 0);
+        totVal += (ordQ > 0 ? (remQ / ordQ) * lineTotal : 0);
+        if (o.partyName) partiesSet.add(o.partyName.trim().toLowerCase());
+      });
+
+      info.textContent = `${count} order(s) selected | Pending: ${totUnits} units | Value: ${fmtINR(totVal)}`;
+
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (btnCombine) {
+        if (count >= 2 && partiesSet.size === 1 && canDispatch) {
+          const partyDisplayName = selectedOrders[0].partyName;
+          btnCombine.style.display = "inline-flex";
+          btnCombine.textContent = `🚚 Combine Dispatch (${count} for ${partyDisplayName})`;
+        } else {
+          btnCombine.style.display = "none";
+        }
+      }
+    }
+
+    function isOrderInSelectedDateRange(orderDateStr) {
+      if (!orderDateStr) return true;
+      if (!orderDatePreset || orderDatePreset === "all") return true;
+
+      const now = new Date();
+      const todayStr = now.toISOString().split("T")[0];
+
+      if (orderDatePreset === "today") {
+        return orderDateStr === todayStr;
+      }
+      if (orderDatePreset === "yesterday") {
+        const y = new Date(now);
+        y.setDate(y.getDate() - 1);
+        const yStr = y.toISOString().split("T")[0];
+        return orderDateStr === yStr;
+      }
+      if (orderDatePreset === "thisWeek") {
+        const w = new Date(now);
+        w.setDate(w.getDate() - 7);
+        const wStr = w.toISOString().split("T")[0];
+        return orderDateStr >= wStr && orderDateStr <= todayStr;
+      }
+      if (orderDatePreset === "thisMonth") {
+        const mStr = todayStr.substring(0, 7);
+        return orderDateStr.startsWith(mStr);
+      }
+      if (orderDatePreset === "custom") {
+        const fromVal = document.getElementById("orderDateFrom") ? document.getElementById("orderDateFrom").value : "";
+        const toVal = document.getElementById("orderDateTo") ? document.getElementById("orderDateTo").value : "";
+        if (fromVal && orderDateStr < fromVal) return false;
+        if (toVal && orderDateStr > toVal) return false;
+        return true;
+      }
+      return true;
+    }
+
+    function getFilteredAndSortedOrdersList() {
+      const allOrders = state.orders || [];
+      const q = (document.getElementById("orderSearch") ? document.getElementById("orderSearch").value : "").toLowerCase();
+      const spFilterEl = document.getElementById("orderSalespersonFilter");
+      const selectedSp = (spFilterEl && spFilterEl.value) ? spFilterEl.value : "all";
+
+      // 1. Filter by active smart tab
+      let list = allOrders;
+      if (currentOrderRegisterTab === "Pending") {
+        list = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
+      } else if (currentOrderRegisterTab === "Completed") {
+        list = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0);
+      }
+
+      // 2. Filter by search query
+      if (q) {
+        list = list.filter(o =>
+          (o.orderNo || "").toLowerCase().includes(q) ||
+          (o.memoNo || "").toLowerCase().includes(q) ||
+          (o.partyName || "").toLowerCase().includes(q) ||
+          (o.productName || "").toLowerCase().includes(q) ||
+          (o.salespersonName || "").toLowerCase().includes(q) ||
+          (Array.isArray(o.items) && o.items.some(it => (it.productName || "").toLowerCase().includes(q)))
+        );
+      }
+
+      // 3. Filter by Date range
+      list = list.filter(o => isOrderInSelectedDateRange(o.date));
+
+      // 4. Filter by Salesperson
+      if (selectedSp !== "all") {
+        list = list.filter(o => (o.salespersonName || "").trim().toLowerCase() === selectedSp.trim().toLowerCase());
+      }
+
+      // 5. Sorting
+      list.sort((a, b) => {
+        let valA, valB;
+        if (orderSortCol === "memoNo") {
+          valA = parseInt((a.memoNo || a.orderNo || "0").replace(/\D/g, ""), 10) || 0;
+          valB = parseInt((b.memoNo || b.orderNo || "0").replace(/\D/g, ""), 10) || 0;
+        } else if (orderSortCol === "date") {
+          valA = a.date || "";
+          valB = b.date || "";
+        } else if (orderSortCol === "partyName") {
+          valA = (a.partyName || "").toLowerCase();
+          valB = (b.partyName || "").toLowerCase();
+        } else if (orderSortCol === "ordQty") {
+          valA = Number(a.orderQty || 0);
+          valB = Number(b.orderQty || 0);
+        } else if (orderSortCol === "dispQty") {
+          valA = Number(a.dispatchedQty || 0);
+          valB = Number(b.dispatchedQty || 0);
+        } else if (orderSortCol === "pendingQty") {
+          valA = Number(a.orderQty || 0) - Number(a.dispatchedQty || 0);
+          valB = Number(b.orderQty || 0) - Number(b.dispatchedQty || 0);
+        } else if (orderSortCol === "totalAmt") {
+          valA = Number(a.totalAmt || (Number(a.orderQty || 0) * Number(a.rate || 0)) || 0);
+          valB = Number(b.totalAmt || (Number(b.orderQty || 0) * Number(b.rate || 0)) || 0);
+        } else {
+          valA = a.date || "";
+          valB = b.date || "";
+        }
+
+        if (valA < valB) return orderSortDir === "asc" ? -1 : 1;
+        if (valA > valB) return orderSortDir === "asc" ? 1 : -1;
+        return 0;
+      });
+
+      return list;
+    }
+
     function renderOrdersTable() {
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
-      const q = (document.getElementById("orderSearch").value || "").toLowerCase();
-
-      // Compute KPI totals across all orders
       const allOrders = state.orders || [];
       const computedParties = (typeof computePartiesForState === "function") ? computePartiesForState(state) : (state.parties || []);
 
+      // Populate Salesperson filter options if select element exists
+      if (document.getElementById("orderSalespersonFilter") && document.getElementById("orderSalespersonFilter").options.length <= 1) {
+        populateOrderSalespersonFilter();
+      }
+
+      // Compute KPI totals across all orders
       let pendingVal = 0;
       let dispatchedVal = 0;
       let totalBookedVal = 0;
@@ -9923,28 +10276,16 @@ Thank you!`;
       if (cPenEl) cPenEl.textContent = totalPendingCount;
       if (cCompEl) cCompEl.textContent = totalCompletedCount;
 
-      // Filter by active smart tab
-      let filteredOrders = allOrders;
-      if (currentOrderRegisterTab === "Pending") {
-        filteredOrders = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
-      } else if (currentOrderRegisterTab === "Completed") {
-        filteredOrders = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0);
-      }
+      updateOrderSortHeaders();
 
-      // Filter by search query
-      const list = filteredOrders.filter(o =>
-        (o.orderNo || "").toLowerCase().includes(q) ||
-        (o.memoNo || "").toLowerCase().includes(q) ||
-        (o.partyName || "").toLowerCase().includes(q) ||
-        (o.productName || "").toLowerCase().includes(q) ||
-        (o.salespersonName || "").toLowerCase().includes(q)
-      );
-
+      // Get filtered and sorted list
+      const list = getFilteredAndSortedOrdersList();
       const tbody = document.getElementById("ordersTableBody");
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching '${q ? q : currentOrderRegisterTab}'.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
+        updateSelectedOrdersBar();
         return;
       }
 
@@ -9956,13 +10297,17 @@ Thank you!`;
         const isPartial = (pending > 0 && isDispatched);
         const lineTotal = Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0)) || 0);
 
-        // Party Live Due Calculation
+        // Party Live Due Calculation with Quick Collect Payment Shortcut
         const partyInfo = computedParties.find(p => p.name && p.name.trim().toLowerCase() === (o.partyName || "").trim().toLowerCase());
         let partyDueHtml = "";
         if (partyInfo) {
           const bal = Number(partyInfo.netBalance || 0);
           if (bal > 0) {
-            partyDueHtml = `<div style="font-size:0.71rem;color:#b45309;font-weight:700;margin-top:2px;">🔴 Due: ${fmtINR(bal)}</div>`;
+            partyDueHtml = `
+              <div style="font-size:0.71rem;color:#b45309;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                <span>🔴 Due: ${fmtINR(bal)}</span>
+                <button type="button" class="btn btn-xs" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.65rem;padding:1px 5px;border-radius:4px;font-weight:700;cursor:pointer;line-height:1.2;" onclick="quickCollectFromDue('${escapeHtml(partyInfo.id || o.partyName)}')" title="Record collection for ${escapeHtml(o.partyName)}">💵 Collect</button>
+              </div>`;
           } else if (bal === 0) {
             partyDueHtml = `<div style="font-size:0.71rem;color:#15803d;font-weight:600;margin-top:2px;">🟢 Nil Due</div>`;
           } else {
@@ -9970,7 +10315,42 @@ Thank you!`;
           }
         }
 
-        // Smart Primary Actions (Option 1 + Option 2 Hybrid)
+        // Date Ageing / Days Pending Calculation
+        let ageingHtml = "";
+        if (o.date) {
+          const parts = o.date.split("-");
+          if (parts.length === 3) {
+            const oDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const now = new Date();
+            const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const diffDays = Math.round((todayZero - oDate) / (1000 * 60 * 60 * 24));
+
+            if (diffDays <= 0) {
+              ageingHtml = `<span style="font-size:0.66rem;padding:1px 5px;border-radius:4px;background:#f0fdf4;color:#166534;font-weight:700;display:inline-block;margin-top:2px;">Today</span>`;
+            } else if (diffDays === 1) {
+              ageingHtml = `<span style="font-size:0.66rem;padding:1px 5px;border-radius:4px;background:#f8fafc;color:#475569;font-weight:600;display:inline-block;margin-top:2px;">1d ago</span>`;
+            } else {
+              if (pending > 0 && diffDays >= 3) {
+                ageingHtml = `<span style="font-size:0.66rem;padding:1px 5px;border-radius:4px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;display:inline-block;margin-top:2px;" title="${diffDays} days pending since order booking">⚠️ ${diffDays}d Pending</span>`;
+              } else {
+                ageingHtml = `<span style="font-size:0.66rem;padding:1px 5px;border-radius:4px;background:#f1f5f9;color:#64748b;font-weight:600;display:inline-block;margin-top:2px;">${diffDays}d ago</span>`;
+              }
+            }
+          }
+        }
+
+        // Formatted Item Details with Badges
+        let itemsHtml = "";
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          const badgeItems = o.items.slice(0, 2).map(it => `<span style="display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:0.73rem;margin:1px 2px;white-space:nowrap;"><strong>${escapeHtml(it.productName)}</strong> (${it.qty})</span>`).join("");
+          const extraCount = o.items.length - 2;
+          const morePill = extraCount > 0 ? `<a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="font-size:0.7rem;color:#0284c7;font-weight:700;text-decoration:none;margin-left:2px;">+${extraCount} more</a>` : "";
+          itemsHtml = `<div style="max-width:220px;line-height:1.3;">${badgeItems}${morePill}</div>`;
+        } else {
+          itemsHtml = `<div style="max-width:220px;font-size:0.78rem;font-weight:600;color:#334155;">${escapeHtml(o.productName || "General Goods")}</div>`;
+        }
+
+        // Smart Primary Actions
         let primaryBtn1 = "";
         let primaryBtn2 = "";
 
@@ -9993,19 +10373,31 @@ Thank you!`;
         `;
 
         const memoDisplay = o.memoNo ? o.memoNo : `#${o.orderNo}`;
+        const isChecked = selectedOrderIds.has(o.id) ? "checked" : "";
 
         return `
           <tr>
-            <td class="font-bold" style="white-space:nowrap;">${memoDisplay}</td>
-            <td style="white-space:nowrap;">${fmtDate(o.date)}</td>
+            <td style="text-align:center;vertical-align:middle;">
+              <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" />
+            </td>
+            <td class="font-bold" style="white-space:nowrap;">
+              <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="color:var(--primary);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Click for Quick Preview">
+                <span>${memoDisplay}</span>
+                <span style="font-size:0.75rem;opacity:0.75;">👁️</span>
+              </a>
+            </td>
+            <td style="white-space:nowrap;">
+              <div style="font-weight:600;">${fmtDate(o.date)}</div>
+              ${ageingHtml}
+            </td>
             <td>
-              <div class="font-bold" style="color:#0f172a;">${o.partyName}</div>
+              <div class="font-bold" style="color:#0f172a;">${escapeHtml(o.partyName)}</div>
               ${partyDueHtml}
             </td>
-            <td style="font-size:0.78rem;font-weight:600;color:#475569;">${o.salespersonName}</td>
-            <td style="max-width:220px;font-size:0.78rem;">${o.productName}</td>
+            <td style="font-size:0.78rem;font-weight:600;color:#475569;">${escapeHtml(o.salespersonName || "-")}</td>
+            <td>${itemsHtml}</td>
             <td class="text-right font-bold">${o.orderQty}</td>
-            <td class="text-right" style="color:#15803d;font-weight:600;">${o.dispatchedQty}</td>
+            <td class="text-right" style="color:#15803d;font-weight:600;">${o.dispatchedQty || 0}</td>
             <td class="text-right font-bold" style="color:#ea580c;">${pending}</td>
             <td class="text-right font-bold" style="color:#0f172a;">${fmtINR(lineTotal)}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
@@ -10019,6 +10411,565 @@ Thank you!`;
           </tr>
         `;
       }).join("");
+
+      updateSelectedOrdersBar();
+    }
+
+    // ==================== QUICK ORDER PREVIEW MODAL ====================
+    function openQuickOrderPreviewModal(orderId) {
+      const ord = (state.orders || []).find(o => o.id === orderId);
+      if (!ord) return;
+
+      const modal = document.getElementById("quickOrderPreviewModal");
+      const titleEl = document.getElementById("quickPreviewMemoTitle");
+      const subEl = document.getElementById("quickPreviewSubtitle");
+      const badgeEl = document.getElementById("quickPreviewStatusBadge");
+      const contentEl = document.getElementById("quickOrderPreviewContent");
+      const leftActs = document.getElementById("quickPreviewActionLeft");
+      if (!modal || !contentEl) return;
+
+      const memoDisplay = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      const pending = Number(ord.orderQty || 0) - Number(ord.dispatchedQty || 0);
+      const isDispatched = Number(ord.dispatchedQty || 0) > 0;
+      const isCompleted = (pending === 0 && Number(ord.orderQty || 0) > 0);
+      const lineTotal = Number(ord.totalAmt || (Number(ord.orderQty || 0) * Number(ord.rate || 0)) || 0);
+
+      if (titleEl) titleEl.textContent = `Order Memo #${memoDisplay}`;
+      if (subEl) subEl.textContent = `Booked on ${fmtDate(ord.date)} by ${ord.salespersonName || "Salesperson"}`;
+      
+      if (badgeEl) {
+        if (isCompleted) {
+          badgeEl.className = "pill pill-green";
+          badgeEl.textContent = "Fully Dispatched";
+        } else if (isDispatched) {
+          badgeEl.className = "pill pill-yellow";
+          badgeEl.textContent = `Partially Dispatched (${ord.dispatchedQty}/${ord.orderQty})`;
+        } else {
+          badgeEl.className = "pill pill-red";
+          badgeEl.textContent = "Pending Dispatch";
+        }
+      }
+
+      const parties = (typeof getComputedParties === "function") ? getComputedParties() : (state.parties || []);
+      const party = parties.find(p => (p.id === ord.partyId) || (p.name && p.name.trim().toLowerCase() === (ord.partyName || "").trim().toLowerCase())) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
+      const bal = Number(party.netBalance || 0);
+
+      let partyDueHtml = "";
+      if (bal > 0) {
+        partyDueHtml = `<span style="color:#b45309;font-weight:700;">🔴 Current Due: ${fmtINR(bal)}</span>`;
+      } else if (bal === 0) {
+        partyDueHtml = `<span style="color:#15803d;font-weight:600;">🟢 Nil Due</span>`;
+      } else {
+        partyDueHtml = `<span style="color:#0284c7;font-weight:600;">🔵 Advance: ${fmtINR(Math.abs(bal))}</span>`;
+      }
+
+      let itemsTableRows = "";
+      if (Array.isArray(ord.items) && ord.items.length > 0) {
+        itemsTableRows = ord.items.map((it, idx) => {
+          const itQty = Number(it.qty || 0);
+          const itDisp = Number(it.dispatchedQty || 0);
+          const itPend = Math.max(0, itQty - itDisp);
+          const itRate = Number(it.rate || 0);
+          const itAmt = itQty * itRate;
+          return `
+            <tr>
+              <td style="padding:8px 10px;font-weight:600;">${idx + 1}. ${escapeHtml(it.productName)}</td>
+              <td class="text-right" style="padding:8px 10px;">${fmtINR(itRate)}</td>
+              <td class="text-right font-bold" style="padding:8px 10px;">${itQty}</td>
+              <td class="text-right" style="padding:8px 10px;color:#15803d;font-weight:600;">${itDisp}</td>
+              <td class="text-right font-bold" style="padding:8px 10px;color:#ea580c;">${itPend}</td>
+              <td class="text-right font-bold" style="padding:8px 10px;">${fmtINR(itAmt)}</td>
+            </tr>
+          `;
+        }).join("");
+      } else {
+        itemsTableRows = `
+          <tr>
+            <td style="padding:8px 10px;font-weight:600;">1. ${escapeHtml(ord.productName || "General Goods")}</td>
+            <td class="text-right" style="padding:8px 10px;">${fmtINR(Number(ord.rate || 0))}</td>
+            <td class="text-right font-bold" style="padding:8px 10px;">${ord.orderQty}</td>
+            <td class="text-right" style="padding:8px 10px;color:#15803d;font-weight:600;">${ord.dispatchedQty || 0}</td>
+            <td class="text-right font-bold" style="padding:8px 10px;color:#ea580c;">${pending}</td>
+            <td class="text-right font-bold" style="padding:8px 10px;">${fmtINR(lineTotal)}</td>
+          </tr>
+        `;
+      }
+
+      contentEl.innerHTML = `
+        <div style="background:#f8fafc;padding:12px 14px;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px;">
+          <div>
+            <div style="font-size:0.7rem;text-transform:uppercase;color:#64748b;font-weight:700;">Party / Dealer</div>
+            <div style="font-size:1rem;font-weight:800;color:#0f172a;">${escapeHtml(ord.partyName)}</div>
+            <div style="font-size:0.8rem;color:#475569;margin-top:2px;">📍 ${escapeHtml(party.area || "Nagpur")} | 📞 ${escapeHtml(party.mobile || "-")}</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              ${partyDueHtml}
+              ${bal > 0 ? `<button type="button" class="btn btn-xs" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.68rem;padding:2px 8px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="closeModal('quickOrderPreviewModal');quickCollectFromDue('${escapeHtml(party.id || ord.partyName)}')">💵 Collect Payment</button>` : ''}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;text-transform:uppercase;color:#64748b;font-weight:700;">Order Info</div>
+            <div style="font-size:0.85rem;font-weight:600;color:#334155;"><strong>Date:</strong> ${fmtDate(ord.date)}</div>
+            <div style="font-size:0.85rem;font-weight:600;color:#334155;"><strong>Salesperson:</strong> ${escapeHtml(ord.salespersonName || "-")}</div>
+            ${ord.dispatchDate ? `<div style="font-size:0.85rem;font-weight:600;color:#15803d;"><strong>Dispatched On:</strong> ${fmtDate(ord.dispatchDate)}</div>` : ''}
+            ${ord.gstInvoiceNo ? `<div style="font-size:0.85rem;font-weight:600;color:#0284c7;"><strong>Invoice No:</strong> ${escapeHtml(ord.gstInvoiceNo)}</div>` : ''}
+          </div>
+        </div>
+
+        <div style="border:1px solid #e2e8f0;border-radius:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table style="width:100%;font-size:0.84rem;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f1f5f9;color:#334155;border-bottom:1.5px solid #cbd5e1;">
+                <th style="padding:8px 10px;text-align:left;">Item / Product Description</th>
+                <th class="text-right" style="padding:8px 10px;">Rate</th>
+                <th class="text-right" style="padding:8px 10px;">Ordered</th>
+                <th class="text-right" style="padding:8px 10px;">Dispatched</th>
+                <th class="text-right" style="padding:8px 10px;">Pending</th>
+                <th class="text-right" style="padding:8px 10px;">Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsTableRows}
+            </tbody>
+            <tfoot>
+              <tr style="background:#f8fafc;border-top:2px solid #cbd5e1;font-weight:800;font-size:0.9rem;">
+                <td colspan="2" style="padding:10px;">Total Summary</td>
+                <td class="text-right" style="padding:10px;">${ord.orderQty}</td>
+                <td class="text-right" style="padding:10px;color:#15803d;">${ord.dispatchedQty || 0}</td>
+                <td class="text-right" style="padding:10px;color:#ea580c;">${pending}</td>
+                <td class="text-right font-bold" style="padding:10px;color:#0f172a;">${fmtINR(lineTotal)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (leftActs) {
+        leftActs.innerHTML = `
+          <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:6px 14px;" onclick="closeModal('quickOrderPreviewModal');openOrderBookingMemo('${ord.id}')">
+            📄 View Full PDF Memo
+          </button>
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:6px 14px;" onclick="sendOrderWhatsApp('${ord.id}')">
+            💬 WhatsApp Memo
+          </button>
+          ${(pending > 0 && canDispatch) ? `
+            <button type="button" class="btn btn-amber btn-sm" style="font-weight:700;padding:6px 14px;" onclick="closeModal('quickOrderPreviewModal');openDispatchModal('${ord.id}')">
+              🚚 Dispatch Order
+            </button>
+          ` : ''}
+        `;
+      }
+
+      openModal("quickOrderPreviewModal");
+    }
+
+    // ==================== WAREHOUSE PICKING & PACKING SLIP ====================
+    function openWarehousePickingSlipModal(specificOrderIds) {
+      const modal = document.getElementById("warehousePickingSlipModal");
+      const printArea = document.getElementById("warehousePickingSlipPrintArea");
+      const subEl = document.getElementById("warehouseSlipSubtitle");
+      if (!modal || !printArea) return;
+
+      let targetOrders = [];
+      if (Array.isArray(specificOrderIds) && specificOrderIds.length > 0) {
+        targetOrders = (state.orders || []).filter(o => specificOrderIds.includes(o.id));
+      } else {
+        targetOrders = (state.orders || []).filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
+      }
+
+      if (targetOrders.length === 0) {
+        alert("No pending orders found to generate Warehouse Picking Slip.");
+        return;
+      }
+
+      if (subEl) {
+        subEl.textContent = `Generated on ${new Date().toLocaleString('en-IN')} | ${targetOrders.length} Pending Orders`;
+      }
+
+      const productMap = {};
+      let totalUnitsToPack = 0;
+
+      targetOrders.forEach(o => {
+        const memoDisplay = o.memoNo ? o.memoNo : `OB-${o.orderNo}`;
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          o.items.forEach(it => {
+            const ordQ = Number(it.qty || 0);
+            const dispQ = Number(it.dispatchedQty || 0);
+            const remQ = Math.max(0, ordQ - dispQ);
+            if (remQ > 0) {
+              const key = it.productName.trim();
+              if (!productMap[key]) {
+                productMap[key] = {
+                  productName: key,
+                  totalOrderQty: 0,
+                  totalDispQty: 0,
+                  totalPendingQty: 0,
+                  breakdown: []
+                };
+              }
+              productMap[key].totalOrderQty += ordQ;
+              productMap[key].totalDispQty += dispQ;
+              productMap[key].totalPendingQty += remQ;
+              productMap[key].breakdown.push({
+                partyName: o.partyName,
+                memoNo: memoDisplay,
+                qty: remQ
+              });
+              totalUnitsToPack += remQ;
+            }
+          });
+        } else {
+          const ordQ = Number(o.orderQty || 0);
+          const dispQ = Number(o.dispatchedQty || 0);
+          const remQ = Math.max(0, ordQ - dispQ);
+          if (remQ > 0) {
+            const key = (o.productName || "General Goods").trim();
+            if (!productMap[key]) {
+              productMap[key] = {
+                productName: key,
+                totalOrderQty: 0,
+                totalDispQty: 0,
+                totalPendingQty: 0,
+                breakdown: []
+              };
+            }
+            productMap[key].totalOrderQty += ordQ;
+            productMap[key].totalDispQty += dispQ;
+            productMap[key].totalPendingQty += remQ;
+            productMap[key].breakdown.push({
+              partyName: o.partyName,
+              memoNo: memoDisplay,
+              qty: remQ
+            });
+            totalUnitsToPack += remQ;
+          }
+        }
+      });
+
+      const sortedProducts = Object.values(productMap).sort((a,b) => b.totalPendingQty - a.totalPendingQty);
+      const co = (typeof COMPANIES !== "undefined" && COMPANIES[activeCompany]) ? COMPANIES[activeCompany] : { name: "MADHAV ENTERPRISES", phone: "7499477581", address: "Nagpur" };
+
+      printArea.innerHTML = `
+        <div id="warehousePrintContainer" style="padding:14px;background:#fff;color:#0f172a;font-family:sans-serif;">
+          <div style="text-align:center;border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:14px;">
+            <h2 style="margin:0 0 4px 0;font-size:1.35rem;font-weight:900;letter-spacing:0.5px;">${co.name}</h2>
+            <div style="font-size:0.8rem;color:#475569;">${co.address} | Ph: ${co.phone}</div>
+            <div style="display:inline-block;background:#0284c7;color:#fff;font-weight:800;padding:4px 16px;border-radius:20px;font-size:0.95rem;margin-top:8px;text-transform:uppercase;letter-spacing:1px;">
+              📦 Warehouse Picking &amp; Packing Slip
+            </div>
+            <div style="font-size:0.8rem;color:#64748b;margin-top:6px;">
+              Generated: <strong>${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</strong> | Total Memos: <strong>${targetOrders.length}</strong> | Total Units to Pack: <strong style="color:#c2410c;">${totalUnitsToPack}</strong>
+            </div>
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:0.85rem;" border="1" cellpadding="6">
+            <thead>
+              <tr style="background:#f1f5f9;color:#0f172a;">
+                <th style="width:35px;text-align:center;">#</th>
+                <th style="text-align:left;">Item / Product Description</th>
+                <th style="width:90px;text-align:center;background:#fff7ed;color:#c2410c;font-weight:900;">To Pack</th>
+                <th style="text-align:left;">Dealer / Memo Breakdown</th>
+                <th style="width:60px;text-align:center;">Check (✓)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedProducts.map((p, idx) => `
+                <tr>
+                  <td style="text-align:center;font-weight:700;">${idx + 1}</td>
+                  <td style="font-weight:800;font-size:0.95rem;">${escapeHtml(p.productName)}</td>
+                  <td style="text-align:center;font-size:1.15rem;font-weight:900;color:#c2410c;background:#fffaf5;">${p.totalPendingQty}</td>
+                  <td style="font-size:0.8rem;line-height:1.4;">
+                    ${p.breakdown.map(b => `<span style="display:inline-block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:2px 6px;margin:2px 3px;"><strong>${escapeHtml(b.partyName)}</strong> (${b.memoNo}): <span style="color:#c2410c;font-weight:700;">${b.qty}</span></span>`).join("")}
+                  </td>
+                  <td style="text-align:center;font-size:1.2rem;color:#cbd5e1;">⬜</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid #cbd5e1;font-size:0.82rem;">
+            <div>
+              <strong>Packed By:</strong> _________________________
+            </div>
+            <div>
+              <strong>Verified By (Godown Incharge):</strong> _________________________
+            </div>
+            <div>
+              <strong>Dispatched By:</strong> _________________________
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal("warehousePickingSlipModal");
+    }
+
+    function generateBatchWarehouseSlip() {
+      if (selectedOrderIds.size === 0) {
+        alert("Please select at least one order using the checkboxes.");
+        return;
+      }
+      openWarehousePickingSlipModal(Array.from(selectedOrderIds));
+    }
+
+    function printWarehousePickingSlip() {
+      const printContent = document.getElementById("warehousePrintContainer");
+      if (!printContent) return;
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Warehouse Picking Slip</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { border: 1px solid #cbd5e1; padding: 7px 10px; }
+              th { background-color: #f1f5f9; }
+              @media print {
+                @page { margin: 10mm; size: A4 portrait; }
+              }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 300);
+    }
+
+    // ==================== COMBINE DISPATCH FOR SAME DEALER ====================
+    let combineDispatchOrderList = [];
+
+    function openCombinedDispatchModal() {
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canDispatch) {
+        alert("Only Owner and Manager (Prashik Hajare) are authorized to dispatch orders.");
+        return;
+      }
+
+      const selectedOrders = (state.orders || []).filter(o => selectedOrderIds.has(o.id));
+      if (selectedOrders.length < 2) {
+        alert("Please select at least 2 orders for the same dealer to combine dispatch.");
+        return;
+      }
+
+      const partyName = selectedOrders[0].partyName;
+      const diffParty = selectedOrders.some(o => (o.partyName || "").trim().toLowerCase() !== (partyName || "").trim().toLowerCase());
+      if (diffParty) {
+        alert("All selected orders must belong to the SAME dealer/party for combined dispatch.");
+        return;
+      }
+
+      combineDispatchOrderList = selectedOrders;
+
+      const subEl = document.getElementById("combineDispatchSubtitle");
+      if (subEl) {
+        subEl.textContent = `Combining ${selectedOrders.length} orders for dealer: ${partyName}`;
+      }
+
+      const dateInp = document.getElementById("combineDispatchDate");
+      if (dateInp) dateInp.value = new Date().toISOString().split("T")[0];
+
+      const bodyEl = document.getElementById("combineDispatchModalBody");
+      if (!bodyEl) return;
+
+      const consolidatedItems = {};
+      let totalPendingUnits = 0;
+
+      selectedOrders.forEach(o => {
+        const memoDisplay = o.memoNo ? o.memoNo : `OB-${o.orderNo}`;
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          o.items.forEach(it => {
+            const ordQ = Number(it.qty || 0);
+            const dispQ = Number(it.dispatchedQty || 0);
+            const remQ = Math.max(0, ordQ - dispQ);
+            if (remQ > 0) {
+              const key = it.productName.trim();
+              if (!consolidatedItems[key]) {
+                consolidatedItems[key] = { productName: key, pendingQty: 0, orderMemos: [] };
+              }
+              consolidatedItems[key].pendingQty += remQ;
+              consolidatedItems[key].orderMemos.push(`${memoDisplay} (${remQ})`);
+              totalPendingUnits += remQ;
+            }
+          });
+        } else {
+          const ordQ = Number(o.orderQty || 0);
+          const dispQ = Number(o.dispatchedQty || 0);
+          const remQ = Math.max(0, ordQ - dispQ);
+          if (remQ > 0) {
+            const key = (o.productName || "General Goods").trim();
+            if (!consolidatedItems[key]) {
+              consolidatedItems[key] = { productName: key, pendingQty: 0, orderMemos: [] };
+            }
+            consolidatedItems[key].pendingQty += remQ;
+            consolidatedItems[key].orderMemos.push(`${memoDisplay} (${remQ})`);
+            totalPendingUnits += remQ;
+          }
+        }
+      });
+
+      const memosStr = selectedOrders.map(o => o.memoNo ? o.memoNo : `OB-${o.orderNo}`).join(", ");
+
+      bodyEl.innerHTML = `
+        <div style="background:#fff7ed;padding:12px 14px;border-radius:10px;border:1px solid #fed7aa;margin-bottom:14px;">
+          <div style="font-weight:800;color:#9a3412;font-size:1.05rem;">Dealer: ${escapeHtml(partyName)}</div>
+          <div style="font-size:0.8rem;color:#78716c;margin-top:2px;">
+            Selected Memos (<strong>${selectedOrders.length}</strong>): <strong>${escapeHtml(memosStr)}</strong>
+          </div>
+          <div style="font-size:0.82rem;color:#c2410c;font-weight:700;margin-top:4px;">
+            Total Items to Dispatch: ${totalPendingUnits} units
+          </div>
+        </div>
+
+        <div style="border:1px solid #e2e8f0;border-radius:8px;overflow-x:auto;">
+          <table style="width:100%;font-size:0.83rem;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f1f5f9;color:#334155;border-bottom:1.5px solid #cbd5e1;">
+                <th style="padding:8px 10px;text-align:left;">Product</th>
+                <th style="padding:8px 10px;text-align:center;">Total Pending</th>
+                <th style="padding:8px 10px;text-align:left;">Memos Breakdown</th>
+                <th style="padding:8px 10px;text-align:center;background:#fff7ed;color:#c2410c;">Dispatching Now</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.values(consolidatedItems).map(it => `
+                <tr>
+                  <td style="padding:8px 10px;font-weight:700;">${escapeHtml(it.productName)}</td>
+                  <td class="text-center font-bold" style="padding:8px 10px;">${it.pendingQty}</td>
+                  <td style="padding:8px 10px;font-size:0.78rem;color:#475569;">${escapeHtml(it.orderMemos.join(", "))}</td>
+                  <td class="text-center font-bold" style="padding:8px 10px;color:#15803d;background:#fffaf5;">${it.pendingQty} (Full)</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:0.75rem;color:#64748b;margin-top:8px;">
+          ℹ️ Confirming will fully mark all pending items across the selected ${selectedOrders.length} memos as dispatched.
+        </div>
+      `;
+
+      openModal("combineDispatchModal");
+    }
+
+    async function submitCombinedDispatch(e) {
+      e.preventDefault();
+      const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
+      if (!canDispatch) {
+        alert("Only Owner and Manager (Prashik Hajare) are authorized to dispatch orders.");
+        return;
+      }
+
+      if (!combineDispatchOrderList || combineDispatchOrderList.length === 0) return;
+
+      const dispDate = document.getElementById("combineDispatchDate").value || new Date().toISOString().split("T")[0];
+      const vehicleNo = (document.getElementById("combineDispatchVehicle").value || "").trim();
+      const remarks = (document.getElementById("combineDispatchRemarks").value || "").trim();
+
+      showToast(`⏳ Dispatching ${combineDispatchOrderList.length} orders together...`);
+
+      let totalDispatchedCount = 0;
+      for (const ord of combineDispatchOrderList) {
+        if (Array.isArray(ord.items) && ord.items.length > 0) {
+          ord.items.forEach(it => {
+            it.dispatchedQty = Number(it.qty || 0);
+          });
+          ord.dispatchedQty = ord.items.reduce((s, it) => s + Number(it.dispatchedQty || 0), 0);
+        } else {
+          ord.dispatchedQty = Number(ord.orderQty || 0);
+        }
+
+        ord.dispatchDate = dispDate;
+        if (vehicleNo) ord.dispatchVehicle = vehicleNo;
+        if (remarks) ord.dispatchRemarks = remarks;
+
+        if (!ord.gstInvoiceNo) {
+          ord.gstInvoiceNo = generateNextGstInvoiceNo(activeCompany, ord.dispatchDate);
+        }
+        if (!ord.dcNo) {
+          const cleanInvSuffix = (ord.gstInvoiceNo.split("/").pop() || ord.orderNo || "001").replace(/\D/g, "") || "001";
+          ord.dcNo = `DC-${cleanInvSuffix.padStart(3, "0")}`;
+        }
+
+        totalDispatchedCount++;
+        await saveRecord("orders", ord);
+      }
+
+      closeModal("combineDispatchModal");
+      clearSelectedOrders();
+      renderOrdersTable();
+      showToast(`✅ Successfully dispatched ${totalDispatchedCount} combined orders for ${combineDispatchOrderList[0].partyName}!`);
+    }
+
+    // ==================== EXPORT TO EXCEL / CSV ====================
+    function exportOrdersToExcel() {
+      const list = getFilteredAndSortedOrdersList();
+      if (!list || list.length === 0) {
+        alert("No orders available to export.");
+        return;
+      }
+
+      const rows = [
+        ["Memo No", "Date", "Party Name", "Party Due", "Booked By", "Items Details", "Ord Qty", "Disp Qty", "Pending Qty", "Total Value", "Status", "Dispatch Date", "Invoice No"]
+      ];
+
+      const computedParties = (typeof computePartiesForState === "function") ? computePartiesForState(state) : (state.parties || []);
+
+      list.forEach(o => {
+        const ordQ = Number(o.orderQty || 0);
+        const dispQ = Number(o.dispatchedQty || 0);
+        const remQ = Math.max(0, ordQ - dispQ);
+        const lineTotal = Number(o.totalAmt || (ordQ * Number(o.rate || 0)) || 0);
+        const st = dispQ === 0 ? "Pending" : (remQ > 0 ? "Partial" : "Completed");
+        const partyInfo = computedParties.find(p => p.name && p.name.trim().toLowerCase() === (o.partyName || "").trim().toLowerCase());
+        const bal = partyInfo ? Number(partyInfo.netBalance || 0) : 0;
+        const memoDisplay = o.memoNo ? o.memoNo : `#${o.orderNo}`;
+
+        let itemsDesc = o.productName || "";
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          itemsDesc = o.items.map(it => `${it.productName} (${it.qty})`).join(", ");
+        }
+
+        rows.push([
+          memoDisplay,
+          o.date,
+          o.partyName,
+          bal,
+          o.salespersonName || "",
+          itemsDesc,
+          ordQ,
+          dispQ,
+          remQ,
+          lineTotal,
+          st,
+          o.dispatchDate || "",
+          o.gstInvoiceNo || ""
+        ]);
+      });
+
+      const csvContent = "\uFEFF" + rows.map(r => r.map(cell => {
+        let text = (cell === null || cell === undefined) ? "" : String(cell);
+        text = text.replace(/"/g, '""');
+        return `"${text}"`;
+      }).join(",")).join("\r\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().split("T")[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Orders_Register_${activeCompany}_${today}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`📊 Exported ${list.length} orders to Excel / CSV.`);
     }
 
     let currentEditingOrderId = null;
@@ -15292,7 +16243,8 @@ Thank you! Your payment has been received successfully.`;
     }
 
     function quickCollectFromDue(partyId) {
-      const p = getComputedParties().find(x => x.id === partyId);
+      const parties = (typeof getComputedParties === "function") ? getComputedParties() : (state.parties || []);
+      const p = parties.find(x => x.id === partyId || (x.name && x.name.trim().toLowerCase() === String(partyId).trim().toLowerCase()));
       if (!p) return;
 
       // 1. Switch to Collection Tab
@@ -16436,6 +17388,101 @@ Thank you! Your payment has been received successfully.`;
       <button type="button" class="btn btn-teal btn-block" onclick="closeMadhavQrModal()" style="font-weight:700;padding:10px;">
         ✓ Done / Close
       </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: QUICK ORDER PREVIEW ==================== -->
+  <div class="modal-backdrop" id="quickOrderPreviewModal" style="z-index:99999;" onclick="if(event.target===this) closeModal('quickOrderPreviewModal')">
+    <div class="modal modal-lg" style="max-width:760px;width:95%;border-radius:14px;background:#ffffff;box-sizing:border-box;max-height:92vh;overflow-y:auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.5rem;">📋</span>
+          <div>
+            <h3 style="margin:0;color:var(--primary);font-size:1.15rem;display:flex;align-items:center;gap:8px;">
+              <span id="quickPreviewMemoTitle">Order Details</span>
+              <span id="quickPreviewStatusBadge" class="pill pill-yellow">Pending</span>
+            </h3>
+            <div style="font-size:0.76rem;color:#64748b;" id="quickPreviewSubtitle">Booked on --</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeModal('quickOrderPreviewModal')" style="font-weight:700;padding:4px 10px;">✕ Close</button>
+        </div>
+      </div>
+
+      <div id="quickOrderPreviewContent"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickPreviewActionLeft"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="quickPreviewActionRight">
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeModal('quickOrderPreviewModal')">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: WAREHOUSE PICKING & PACKING SLIP ==================== -->
+  <div class="modal-backdrop" id="warehousePickingSlipModal" style="z-index:99999;" onclick="if(event.target===this) closeModal('warehousePickingSlipModal')">
+    <div class="modal modal-lg" style="max-width:850px;width:95%;border-radius:14px;background:#ffffff;box-sizing:border-box;max-height:92vh;overflow-y:auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.5rem;">📦</span>
+          <div>
+            <h3 style="margin:0;color:#0369a1;font-size:1.15rem;">Warehouse Picking &amp; Packing Slip</h3>
+            <div style="font-size:0.76rem;color:#64748b;" id="warehouseSlipSubtitle">Consolidated item summary for warehouse dispatch</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="printWarehousePickingSlip()" style="font-weight:700;padding:6px 14px;display:flex;align-items:center;gap:6px;">
+            🖨️ Print Slip
+          </button>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeModal('warehousePickingSlipModal')" style="font-weight:700;padding:6px 12px;">✕ Close</button>
+        </div>
+      </div>
+
+      <div id="warehousePickingSlipPrintArea" style="padding:4px;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: COMBINE DISPATCH FOR SAME DEALER ==================== -->
+  <div class="modal-backdrop" id="combineDispatchModal" style="z-index:99999;" onclick="if(event.target===this) closeModal('combineDispatchModal')">
+    <div class="modal modal-lg" style="max-width:760px;width:95%;border-radius:14px;background:#ffffff;box-sizing:border-box;max-height:92vh;overflow-y:auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.5rem;">🚚</span>
+          <div>
+            <h3 style="margin:0;color:#b45309;font-size:1.15rem;">Combined Order Dispatch</h3>
+            <div style="font-size:0.76rem;color:#64748b;" id="combineDispatchSubtitle">Dispatch multiple orders together for the same dealer</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline" onclick="closeModal('combineDispatchModal')" style="font-weight:700;padding:4px 10px;">✕ Close</button>
+      </div>
+
+      <form onsubmit="submitCombinedDispatch(event)">
+        <div id="combineDispatchModalBody"></div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-top:16px;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;">
+          <div class="form-group" style="margin:0;">
+            <label style="font-weight:700;font-size:0.8rem;">Dispatch Date</label>
+            <input type="date" id="combineDispatchDate" class="form-control" required />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label style="font-weight:700;font-size:0.8rem;">Transport / Vehicle No (Optional)</label>
+            <input type="text" id="combineDispatchVehicle" class="form-control" placeholder="e.g. MH 31 AB 1234 / Auto" />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label style="font-weight:700;font-size:0.8rem;">Dispatch Remarks / Notes</label>
+            <input type="text" id="combineDispatchRemarks" class="form-control" placeholder="e.g. Delivered together" />
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:16px;gap:10px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('combineDispatchModal')">Cancel</button>
+          <button type="submit" class="btn btn-amber btn-sm" style="font-weight:700;padding:8px 18px;display:flex;align-items:center;gap:6px;">
+            ✓ Confirm Combined Dispatch
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
