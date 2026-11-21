@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>MADHAV ENTERPRISES &amp; SHIVOM SALES - Dual ERP Portal v39</title>
   <script>
     // Instant Redirect if opened with ?doc=<DriveFileId> or ?bill=<DriveFileId>
@@ -405,7 +405,8 @@
       background: #fef2f2 !important;
       color: #991b1b !important;
     }
-    .table-wrap { overflow-x: auto; width: 100%; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+    .inv-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; margin-bottom: 12px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.81rem; text-align: left; }
     th {
       background: #f8fafc;
@@ -917,6 +918,16 @@
       z-index: 200;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
+    @media (max-width: 640px) {
+      .toast {
+        left: 16px !important;
+        right: 16px !important;
+        bottom: 20px !important;
+        text-align: center !important;
+        max-width: calc(100vw - 32px) !important;
+        box-sizing: border-box !important;
+      }
+    }
   
     /* Mobile-Friendly Order Booking Cart & Inputs */
     @media (max-width: 768px) {
@@ -1121,8 +1132,20 @@
         font-size: 0.95rem !important;
       }
       .brand-logo-wrap {
-        width: 30px !important;
-        height: 30px !important;
+        width: 36px !important;
+        height: 36px !important;
+        padding: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .brand-logo-wrap img {
+        max-height: 28px !important;
+        max-width: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        display: block !important;
+        object-fit: contain !important;
       }
       .top-actions {
         gap: 4px !important;
@@ -1143,11 +1166,6 @@
       .card-title {
         font-size: 0.88rem !important;
       }
-      @media (min-width: 769px) {
-      .memo-mobile-summary-card, #memoMobileSummaryCard {
-        display: none !important;
-      }
-    }
 
     /* Ensure cart table does not push page width on mobile */
       #memoCartTable, #memoCartTable tbody, #memoCartTable tr, #memoCartTable td {
@@ -1231,11 +1249,18 @@
         color: #ffffff !important;
         border-color: #1e3a5f !important;
       }
-      .nav-tab[data-tab="staff-cash"] {
-        flex: 1 1 100% !important; /* 5th tab takes full width centered */
+      .nav-tab[data-tab="staff-cash"],
+      .nav-tab[data-tab="admin-masters"] {
+        flex: 1 1 100% !important; /* 5th tab takes full width centered on mobile */
       }
     }
 
+    /* Prevent mobile cart components from leaking into desktop screens */
+    @media (min-width: 769px) {
+      .memo-mobile-summary-card, #memoMobileSummaryCard, .memo-cart-mobile-list, #memoCartMobileList {
+        display: none !important;
+      }
+    }
 
     /* Dedicated Mobile Cart Cards & Unified Summary */
     .memo-cart-mobile-list {
@@ -7584,7 +7609,31 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const matchingTab = document.querySelector('[data-tab="' + tabId + '"]');
         if (matchingTab) matchingTab.classList.add("active");
       }
-      if (tabId === "staff-cash") renderStaffCashTab();
+      // Dynamically refresh active tab view with latest data
+      if (tabId === "dashboard") {
+        if (typeof renderDashboard === "function") renderDashboard();
+      } else if (tabId === "open-stock") {
+        if (typeof renderOpenStockTable === "function") renderOpenStockTable();
+      } else if (tabId === "open-dues") {
+        if (typeof renderOpenDuesTable === "function") renderOpenDuesTable();
+      } else if (tabId === "admin-orders") {
+        if (typeof renderOrdersTable === "function") renderOrdersTable();
+        if (typeof updateSubTabBadges === "function") updateSubTabBadges();
+      } else if (tabId === "admin-collection") {
+        if (typeof renderCollectionTable === "function") renderCollectionTable();
+        if (typeof updateSubTabBadges === "function") updateSubTabBadges();
+      } else if (tabId === "staff-cash") {
+        if (typeof renderStaffCashTab === "function") renderStaffCashTab();
+      } else if (tabId === "admin-stock") {
+        if (typeof renderStockTable === "function") renderStockTable();
+      } else if (tabId === "admin-expenses") {
+        if (typeof renderExpensesTab === "function") renderExpensesTab();
+      } else if (tabId === "admin-gst") {
+        if (typeof renderGstHub === "function") renderGstHub();
+      } else if (tabId === "admin-masters") {
+        if (typeof renderMasterParties === "function") renderMasterParties();
+        if (typeof renderMasterSalespersons === "function") renderMasterSalespersons();
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -9803,7 +9852,8 @@ Thank you!`;
             </div>
           </div>
 
-          <table class="inv-table" style="width:100%;margin-bottom:14px;">
+          <div class="inv-table-wrap">
+          <table class="inv-table" style="width:100%;margin-bottom:0;">
             <thead>
               <tr style="background:#f1f5f9;">
                 <th style="width:40px;" class="text-center">#</th>
@@ -9825,6 +9875,7 @@ Thank you!`;
               </tr>
             </tfoot>
           </table>
+          </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);font-size:0.75rem;color:var(--muted);">
             <div>* Note: This is an order booking memo only. Final tax invoice will be provided upon dispatch from warehouse.</div>
@@ -9902,6 +9953,9 @@ Thank you!`;
 
       const menuWidth = 215;
       let left = rect.right - menuWidth;
+      if (left + menuWidth > window.innerWidth - 10) {
+        left = Math.max(10, window.innerWidth - menuWidth - 10);
+      }
       if (left < 10) left = 10;
 
       const menuHeight = menu.offsetHeight || 220;
@@ -10747,6 +10801,7 @@ Thank you!`;
             </div>
           </div>
 
+          <div class="inv-table-wrap">
           <table style="width:100%;border-collapse:collapse;font-size:0.85rem;" border="1" cellpadding="6">
             <thead>
               <tr style="background:#f1f5f9;color:#0f172a;">
@@ -10771,6 +10826,7 @@ Thank you!`;
               `).join("")}
             </tbody>
           </table>
+          </div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:14px;border-top:1px solid #cbd5e1;font-size:0.82rem;">
             <div>
@@ -16440,6 +16496,7 @@ Thank you! Your payment has been received successfully.`;
             Status: <span class="pill pill-yellow">Order Booked (Pending Dispatch)</span>
           </div>
         </div>
+        <div class="inv-table-wrap">
         <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
           <thead>
             <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
@@ -16460,6 +16517,7 @@ Thank you! Your payment has been received successfully.`;
             </tr>
           </tbody>
         </table>
+        </div>
         <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10px;">
           <strong>Notes:</strong><br/>
           1. Rates are agreed as per booking memo. Goods will be dispatched as per warehouse stock availability.<br/>
@@ -17034,6 +17092,7 @@ Thank you! Your payment has been received successfully.`;
             <span style="font-size:12.5px;font-weight:800;color:#dc2626;">Net Outstanding Due: ${fmtINR(p.netBalance)} (${p.pendingDays} Days)</span>
           </div>
         </div>
+        <div class="inv-table-wrap">
         <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
           <thead>
             <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
@@ -17065,6 +17124,7 @@ Thank you! Your payment has been received successfully.`;
             </tr>
           </tbody>
         </table>
+        </div>
         <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10.5px;display:flex;justify-content:space-between;align-items:flex-end;">
           <div>
             <strong>Bank &amp; Payment Details for Settlement:</strong><br/>
@@ -17167,6 +17227,7 @@ Thank you! Your payment has been received successfully.`;
             Dispatch Status: ${ord.dispatchedQty || totalQty}/${totalQty} Units Dispatched
           </div>
         </div>
+        <div class="inv-table-wrap">
         <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
           <thead>
             <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
@@ -17188,6 +17249,7 @@ Thank you! Your payment has been received successfully.`;
             </tr>
           </tbody>
         </table>
+        </div>
         <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10.5px;">
           <strong>Terms &amp; Declaration:</strong><br/>
           1. Goods dispatched for delivery / verification. Subject to acceptance upon delivery.<br/>
