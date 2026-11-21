@@ -1,13 +1,15 @@
-const CACHE_NAME = 'madhav-shivom-erp-v38';
+const CACHE_NAME = 'madhav-shivom-erp-v39';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/madhav-qr-code.jpeg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
   'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js',
   'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'
 ];
@@ -53,6 +55,7 @@ self.addEventListener('fetch', (event) => {
   const isAllowedCdn = (
     url.hostname === 'cdn.sheetjs.com' ||
     url.hostname === 'cdn.jsdelivr.net' ||
+    url.hostname === 'cdnjs.cloudflare.com' ||
     url.hostname === 'www.gstatic.com'
   );
 

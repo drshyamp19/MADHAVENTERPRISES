@@ -19,6 +19,7 @@ import android.util.Base64;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -39,13 +40,16 @@ import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String ERP_URL = "https://madhavshivom.vercel.app";
-    private static final String ERP_HOST = "madhavshivom.vercel.app";
+    private static final String ERP_URL = "https://madhaventerprises.vercel.app";
+    private static final String ERP_HOST = "madhaventerprises.vercel.app";
+    private static final String ERP_HOST_ALT = "madhavshivom.vercel.app";
+    private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
 
     private WebView webView;
     private ProgressBar progressBar;
     private LinearLayout offlineView;
     private long lastBackPressTime = 0L;
+    private ValueCallback<Uri[]> uploadMessage;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -106,6 +110,28 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 }
             }
+
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (uploadMessage != null) {
+                    uploadMessage.onReceiveValue(null);
+                    uploadMessage = null;
+                }
+                uploadMessage = filePathCallback;
+
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("image/*");
+
+                try {
+                    startActivityForResult(Intent.createChooser(intent, "Select Payment Proof / Cheque Photo"), FILE_CHOOSER_REQUEST_CODE);
+                } catch (ActivityNotFoundException e) {
+                    uploadMessage = null;
+                    Toast.makeText(MainActivity.this, "Cannot open file chooser", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+                return true;
+            }
         });
 
         webView.setWebViewClient(new WebViewClient() {
@@ -140,8 +166,9 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 }
 
-                // Keep our ERP portal inside the WebView
-                if (("https".equals(scheme) || "http".equals(scheme)) && host.endsWith(ERP_HOST)) {
+                // Keep our ERP portal inside the WebView (both domains supported)
+                if (("https".equals(scheme) || "http".equals(scheme))
+                        && (host.endsWith(ERP_HOST) || host.endsWith(ERP_HOST_ALT))) {
                     return false;
                 }
 
@@ -190,6 +217,29 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+            if (uploadMessage != null) {
+                Uri[] results = null;
+                if (resultCode == RESULT_OK && data != null) {
+                    if (data.getData() != null) {
+                        results = new Uri[]{data.getData()};
+                    } else if (data.getClipData() != null) {
+                        int count = data.getClipData().getItemCount();
+                        results = new Uri[count];
+                        for (int i = 0; i < count; i++) {
+                            results[i] = data.getClipData().getItemAt(i).getUri();
+                        }
+                    }
+                }
+                uploadMessage.onReceiveValue(results);
+                uploadMessage = null;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
