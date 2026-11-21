@@ -2017,16 +2017,16 @@
               </div>
             </div>
 
-            <!-- Smart Filter Tabs for Orders -->
+            <!-- Smart Filter Tabs for Orders (Default: Pending Only) -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
-              <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;">
-                📁 All Orders (<span id="countAllOrders">0</span>)
+              <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:6px 16px;background:#fff7ed;color:#c2410c;border:1.5px solid #f97316;box-shadow:0 1px 3px rgba(249,115,22,0.15);">
+                📦 Active Pending Orders (<span id="countPendingOrders">0</span>)
               </button>
-              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                📦 Pending Dispatch (<span id="countPendingOrders">0</span>)
+              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                ✓ Dispatched Archive (<span id="countCompletedOrders">0</span>)
               </button>
-              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                ✓ Dispatched / Completed (<span id="countCompletedOrders">0</span>)
+              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                📁 All Orders History (<span id="countAllOrders">0</span>)
               </button>
             </div>
           </div>
@@ -9676,28 +9676,42 @@ Thank you!`;
       openModal("orderMemoModal");
     }
 
-    let currentOrderRegisterTab = "All";
+    let currentOrderRegisterTab = "Pending";
     function setOrderRegisterTab(tab) {
       currentOrderRegisterTab = tab;
-      const allBtn = document.getElementById("orderTabAll");
       const penBtn = document.getElementById("orderTabPending");
       const compBtn = document.getElementById("orderTabCompleted");
+      const allBtn = document.getElementById("orderTabAll");
       
-      [allBtn, penBtn, compBtn].forEach(b => {
+      [penBtn, compBtn, allBtn].forEach(b => {
         if (b) {
           b.classList.remove("active");
           b.style.background = "#f1f5f9";
           b.style.color = "#475569";
           b.style.border = "1px solid #e2e8f0";
+          b.style.boxShadow = "none";
         }
       });
       
       const activeEl = tab === "Pending" ? penBtn : (tab === "Completed" ? compBtn : allBtn);
       if (activeEl) {
         activeEl.classList.add("active");
-        activeEl.style.background = "#e0f2fe";
-        activeEl.style.color = "#0369a1";
-        activeEl.style.border = "1px solid #7dd3fc";
+        if (tab === "Pending") {
+          activeEl.style.background = "#fff7ed";
+          activeEl.style.color = "#c2410c";
+          activeEl.style.border = "1.5px solid #f97316";
+          activeEl.style.boxShadow = "0 1px 3px rgba(249,115,22,0.15)";
+        } else if (tab === "Completed") {
+          activeEl.style.background = "#f0fdf4";
+          activeEl.style.color = "#15803d";
+          activeEl.style.border = "1.5px solid #22c55e";
+          activeEl.style.boxShadow = "0 1px 3px rgba(34,197,94,0.15)";
+        } else {
+          activeEl.style.background = "#eff6ff";
+          activeEl.style.color = "#1d4ed8";
+          activeEl.style.border = "1.5px solid #3b82f6";
+          activeEl.style.boxShadow = "0 1px 3px rgba(59,130,246,0.15)";
+        }
       }
       renderOrdersTable();
     }
@@ -15236,7 +15250,7 @@ Thank you! Your payment has been received successfully.`;
         if (regWrap) regWrap.style.display = "block";
         if (btnForm) { btnForm.classList.remove("active"); btnForm.classList.add("inactive"); }
         if (btnReg) { btnReg.classList.remove("inactive"); btnReg.classList.add("active"); }
-        renderOrdersTable();
+        setOrderRegisterTab("Pending");
       } else {
         if (formWrap) formWrap.style.display = "block";
         if (regWrap) regWrap.style.display = "none";
@@ -15269,7 +15283,10 @@ Thank you! Your payment has been received successfully.`;
 
     function updateSubTabBadges() {
       const ordBadge = document.getElementById("subtabOrderCountBadge");
-      if (ordBadge && state.orders) ordBadge.textContent = state.orders.length;
+      if (ordBadge && state.orders) {
+        const pendingCount = state.orders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0).length;
+        ordBadge.textContent = `${pendingCount} Pending`;
+      }
       const colBadge = document.getElementById("subtabColCountBadge");
       if (colBadge && state.collections) colBadge.textContent = state.collections.length;
     }
