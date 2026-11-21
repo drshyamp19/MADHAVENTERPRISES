@@ -1373,7 +1373,7 @@
           <button class="btn btn-amber btn-sm" onclick="openLoginModal()">🔐 Owner Login</button>
         </span>
         <span id="ownerLogoutBtnWrap" style="display:none;">
-          <button class="btn btn-white btn-sm" onclick="exportToExcel()">Export Excel</button>
+          <button class="btn btn-white btn-sm" onclick="handleExportClick(false)" title="Export Multi-Tab Excel Workbook">📥 Export Excel</button>
           <button class="btn btn-danger btn-sm" onclick="ownerLogout()">🚪 Logout</button>
         </span>
       </div>
@@ -1515,16 +1515,25 @@
         <!-- Owner Excel Data & Database Control Center -->
         <div class="card" style="border-left:4px solid var(--primary);margin-bottom:18px;">
           <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:10px;">
-            <div>
-              <span class="card-title" style="display:flex;align-items:center;gap:6px;">📊 Excel Data &amp; Database Control Center (All-in-One Single Sheet)</span>
-              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Export MADHAV + SHIVOM Parties, Orders, Collections, Outstanding &amp; Stock in ONE single sheet, download single-sheet template, upload data, or clear database (Owner Admin Only)</div>
+            <div style="flex:1;min-width:260px;">
+              <span class="card-title" style="display:flex;align-items:center;gap:6px;">📊 Unified Multi-Tab Excel &amp; Cloud Sync Center</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Export 7-tab structured Excel workbooks (Summary, Parties, Stock, Invoices, Collections, Purchases, Expenses), sync live to Google Drive / Sheets, or backup &amp; restore database.</div>
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
-              <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()" style="font-weight:700;">
-                📥 Export Single-Sheet Excel
+            <div style="display:flex;align-items:center;gap:10px;background:#fff;padding:6px 12px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.78rem;">
+              <span style="font-weight:700;color:var(--primary);">Scope:</span>
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600;"><input type="radio" name="excelExportCo" value="ALL" checked /> Both (Combined)</label>
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600;"><input type="radio" name="excelExportCo" value="MADHAV" /> Madhav Only</label>
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600;"><input type="radio" name="excelExportCo" value="SHIVOM" /> Shivom Only</label>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;margin-top:4px;">
+              <button type="button" class="btn btn-success btn-sm" onclick="handleExportClick(false)" style="font-weight:700;">
+                📥 Download Multi-Tab Excel (.xlsx)
+              </button>
+              <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="handleExportClick(true)">
+                ☁️ Sync to Google Drive / Sheets
               </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-weight:700;">
-                📄 Download Single-Sheet Template
+                📄 Download Template
               </button>
               <button type="button" class="btn btn-teal btn-sm" onclick="openExcelImportModal()" style="font-weight:700;">
                 📤 Upload / Import Excel
@@ -2676,12 +2685,13 @@
 
         <div class="card" style="border-left:4px solid var(--accent);">
           <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:10px;">
-            <div>
-              <span class="card-title">📊 Bulk Excel Import / Export &amp; Reset</span>
-              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Manage all Products, Parties, Orders, Collections &amp; Bank Deposits via Excel</div>
+            <div style="flex:1;min-width:260px;">
+              <span class="card-title">📊 Multi-Tab Excel Import / Export &amp; Cloud Sync</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Manage Products, Parties, Orders, Collections, Purchases &amp; Expenses via 7-Tab Excel or Google Drive</div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              <button type="button" class="btn btn-success btn-sm" onclick="exportToExcel()">📥 Export All Data</button>
+              <button type="button" class="btn btn-success btn-sm" onclick="handleExportClick(false)" style="font-weight:700;">📥 Download Multi-Tab Excel</button>
+              <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="handleExportClick(true)">☁️ Sync to Google Drive</button>
               <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()">📄 Download Template</button>
               <button type="button" class="btn btn-teal btn-sm" onclick="openExcelImportModal()">📤 Upload Excel</button>
               <button type="button" class="btn btn-danger btn-sm" onclick="openClearDataModal()">🗑️ Clear All Data</button>
@@ -7008,6 +7018,19 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       `;
     }
 
+    // Immediate Redirect Handler for WhatsApp / Shared Document Links (?doc=FILE_ID)
+    (function handleExternalDocParam() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = urlParams.get("doc");
+        if (docId && /^[a-zA-Z0-9_-]+$/.test(docId)) {
+          window.location.replace(`https://drive.google.com/file/d/${docId}/view`);
+        }
+      } catch (e) {
+        console.warn("External doc link redirect handler:", e);
+      }
+    })();
+
     function initApp() {
       if (typeof initCustomAutocompletes === "function") initCustomAutocompletes();
       document.getElementById("gatewayLogo1").src = SHOP_LOGO;
@@ -7203,10 +7226,25 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     }
 
     function persistLocal() {
+      const key = getStorageKey();
       try {
-        localStorage.setItem(getStorageKey(), JSON.stringify(state));
+        localStorage.setItem(key, JSON.stringify(state));
       } catch (err) {
-        console.warn("Storage quota warning or write failure:", err);
+        console.warn("Storage quota warning, optimizing storage copy:", err);
+        try {
+          const pruned = { ...state };
+          if (Array.isArray(pruned.collections)) {
+            pruned.collections = pruned.collections.map(c => {
+              if (c.proofImg && c.proofImg.length > 500) {
+                return { ...c, proofImg: null, _prunedImg: true };
+              }
+              return c;
+            });
+          }
+          localStorage.setItem(key, JSON.stringify(pruned));
+        } catch (innerErr) {
+          console.error("Critical: LocalStorage write failure after pruning:", innerErr);
+        }
       }
     }
 
@@ -7551,22 +7589,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             if (col === "orders" || col === "collections" || col === "parties" || col === "products" || col === "salespersons" || col === "cashHandovers" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
-              const localList = state[col] || [];
-              remoteItems.forEach(r => {
-                const idx = localList.findIndex(x => x.id === r.id);
-                if (idx >= 0) {
-                  localList[idx] = r;
-                } else {
-                  localList.push(r);
-                }
-              });
-              // Upload any local items not yet in Firestore (only if not right after a remote reset)
-              localList.forEach(loc => {
-                if (!remoteItems.some(r => r.id === loc.id)) {
-                  db.collection(prefix + col).doc(loc.id).set(loc).catch(e => console.warn(e));
-                }
-              });
-              state[col] = localList;
+              // Authoritative cloud sync: remoteItems from Firestore is authoritative source of truth
+              state[col] = remoteItems;
               if (col === "orders") {
                 state.orders.sort((a, b) => Number(b.orderNo || 0) - Number(a.orderNo || 0));
               }
@@ -9030,7 +9054,15 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       }
 
       const salespersonName = currentStaff ? currentStaff.name : (document.getElementById("ordSalesperson").value || "Direct");
-      const nextNum = 200 + state.orders.length;
+      let maxOrderNum = 199;
+      (state.orders || []).forEach(o => {
+        const m = String(o.memoNo || o.orderNo || "").match(/(\d+)$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (!isNaN(n) && n > maxOrderNum) maxOrderNum = n;
+        }
+      });
+      const nextNum = maxOrderNum + 1;
       const memoNo = "OB-" + nextNum;
       const gstPricingMode = document.getElementById("ordGstMode")?.value || "inclusive";
 
@@ -9626,6 +9658,11 @@ Thank you!`;
 
     function removeEditingOrderItem(idx) {
       syncEditingOrderItemsFromDOM();
+      const targetItem = editingOrderItems[idx];
+      if (targetItem && Number(targetItem.dispatchedQty || 0) > 0) {
+        alert("🔒 Cannot remove product item that has already been dispatched. Only undispatched items can be removed.");
+        return;
+      }
       if (editingOrderItems.length <= 1) {
         if (!confirm("Only one item remains in this memo. Removing it will leave the memo empty. Are you sure? (Or use 🗑️ to delete the entire memo)")) {
           return;
@@ -9828,6 +9865,7 @@ Thank you!`;
       ord.items = JSON.parse(JSON.stringify(editingOrderItems));
       ord.orderQty = totalUnits;
       ord.totalAmt = totalAmount;
+      ord.dispatchedQty = ord.items.reduce((s, it) => s + Number(it.dispatchedQty || 0), 0);
       ord.rate = totalUnits > 0 ? totalAmount / totalUnits : 0;
       ord.productName = editingOrderItems.map(it => `${it.productName} (${it.qty}${it.rate === 0 ? ' 🎁 FOC' : ''})`).join(", ");
 
@@ -11553,9 +11591,17 @@ Thank you! Your payment has been received successfully.`;
         ? isOfficeStaff
         : false;
 
+      let maxRcpNum = 99;
+      (state.collections || []).forEach(c => {
+        const m = String(c.receiptNo || "").match(/(\d+)$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (!isNaN(n) && n > maxRcpNum) maxRcpNum = n;
+        }
+      });
       const newCol = {
         id: "COL_" + Date.now(),
-        receiptNo: "RCP-" + String(100 + state.collections.length),
+        receiptNo: "RCP-" + String(maxRcpNum + 1),
         date: document.getElementById("colDate").value,
         partyId: party.id,
         partyName: party.name,
@@ -11589,6 +11635,8 @@ Thank you! Your payment has been received successfully.`;
               const waBtn = document.getElementById("succColWhatsAppBtn");
               if (waBtn && lastActiveColId === newCol.id) {
                 const updatedShort = getShortDocLink(res.fileUrl);
+                const computedParty = getComputedParties().find(cp => cp.id === newCol.partyId || (cp.name && newCol.partyName && cp.name.trim().toUpperCase() === newCol.partyName.trim().toUpperCase()));
+                const remBal = computedParty ? computedParty.netBalance : 0;
                 const updatedMsg = `*${COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : 'MADHAV ENTERPRISES'}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${newCol.receiptNo}\n*Date:* ${fmtDate(newCol.date)}\n*Received From:* ${newCol.partyName}\n*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})\n*Received By:* ${newCol.salespersonName}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${updatedShort}\n-----------------------------\nThank you! Your payment has been received successfully.`;
                 const cleanPhone = (party && party.mobile ? party.mobile.replace(/\D/g, "") : "");
                 waBtn.href = cleanPhone.length >= 10
@@ -11787,9 +11835,19 @@ Thank you! Your payment has been received successfully.`;
       const sellerStateCode = (COMPANIES[activeCompany] && COMPANIES[activeCompany].stateCode) || "27";
       const rawGstin = String((party && party.gstin) || "").trim().toUpperCase();
       const valid = isValidGstin(rawGstin);
-      const stateCode = valid ? rawGstin.slice(0, 2) : sellerStateCode;
-      const stateName = GST_STATE_CODES[stateCode] || "Maharashtra";
-      const isInterState = valid && stateCode !== sellerStateCode;
+      let stateCode = valid ? rawGstin.slice(0, 2) : (party && party.stateCode ? String(party.stateCode).padStart(2, "0") : "");
+      if (!stateCode) {
+        const areaUpper = String((party && (party.area || party.address || party.state)) || "").toUpperCase();
+        if (areaUpper.includes("MP") || areaUpper.includes("MADHYA PRADESH") || areaUpper.includes("CHHINDWARA") || areaUpper.includes("SEONI") || areaUpper.includes("BALAGHAT") || areaUpper.includes("BETUL") || areaUpper.includes("JABALPUR")) {
+          stateCode = "23";
+        } else if (areaUpper.includes("CG") || areaUpper.includes("CHHATTISGARH") || areaUpper.includes("RAIPUR")) {
+          stateCode = "22";
+        } else {
+          stateCode = sellerStateCode;
+        }
+      }
+      const stateName = GST_STATE_CODES[stateCode] || (stateCode === "23" ? "Madhya Pradesh" : (stateCode === "22" ? "Chhattisgarh" : "Maharashtra"));
+      const isInterState = stateCode !== sellerStateCode;
       return {
         gstin: valid ? rawGstin : "",
         rawGstin: rawGstin,
@@ -13183,33 +13241,97 @@ Thank you! Your payment has been received successfully.`;
     function computeStockForState(st) {
       const products = (st && st.products) || [];
       const orders = (st && st.orders) || [];
+      const returns = (st && st.salesReturns) || [];
+
+      const dispatchedByProd = {};
+      const bookedByProd = {};
+      const goodReturnByProd = {};
+      const damagedReturnByProd = {};
+
+      orders.forEach(o => {
+        if (Array.isArray(o.items) && o.items.length > 0) {
+          const anyItemDisp = o.items.some(it => Number(it.dispatchedQty || 0) > 0);
+          const legacyFullDisp = !anyItemDisp && Number(o.dispatchedQty || 0) >= Number(o.orderQty || 0) && Number(o.orderQty || 0) > 0;
+          const legacyRatio = (!anyItemDisp && !legacyFullDisp && Number(o.orderQty || 0) > 0)
+            ? Math.min(1, Number(o.dispatchedQty || 0) / Number(o.orderQty || 1))
+            : 0;
+
+          o.items.forEach(it => {
+            const pid = it.productId || (products.find(p => p.name && it.productName && p.name.trim().toLowerCase() === it.productName.trim().toLowerCase())?.id);
+            if (!pid) return;
+            const q = Number(it.qty || 0);
+            const dq = anyItemDisp
+              ? Number(it.dispatchedQty || 0)
+              : (legacyFullDisp ? q : Math.round(q * legacyRatio));
+            const pend = Math.max(0, q - dq);
+            dispatchedByProd[pid] = (dispatchedByProd[pid] || 0) + dq;
+            bookedByProd[pid] = (bookedByProd[pid] || 0) + pend;
+          });
+        } else {
+          const pid = o.productId || (products.find(p => p.name && o.productName && p.name.trim().toLowerCase() === o.productName.trim().toLowerCase())?.id);
+          if (pid) {
+            const q = Number(o.orderQty || 0);
+            const dq = Number(o.dispatchedQty || 0);
+            dispatchedByProd[pid] = (dispatchedByProd[pid] || 0) + dq;
+            bookedByProd[pid] = (bookedByProd[pid] || 0) + Math.max(0, q - dq);
+          }
+        }
+      });
+
+      returns.forEach(r => {
+        const pid = r.productId || (products.find(p => p.name && r.productName && p.name.trim().toLowerCase() === r.productName.trim().toLowerCase())?.id);
+        if (!pid) return;
+        const q = Number(r.qty || 0);
+        if (r.returnCondition === "Good") {
+          goodReturnByProd[pid] = (goodReturnByProd[pid] || 0) + q;
+        } else {
+          damagedReturnByProd[pid] = (damagedReturnByProd[pid] || 0) + q;
+        }
+      });
+
       return products.map(p => {
-        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0);
-        const dispatched = orders.filter(o => o.productId === p.id).reduce((s, o) => s + Number(o.dispatchedQty || 0), 0);
+        const returnedGood = goodReturnByProd[p.id] || 0;
+        const damagedReturned = damagedReturnByProd[p.id] || 0;
+        const totalIn = Number(p.openingStock || 0) + Number(p.inwardStock || 0) + returnedGood;
+        const dispatched = dispatchedByProd[p.id] || 0;
         const totalStock = Math.max(0, totalIn - dispatched);
-        const bookedStock = orders.filter(o => o.productId === p.id).reduce((s, o) => s + Math.max(0, Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)), 0);
+        const bookedStock = bookedByProd[p.id] || 0;
         const available = Math.max(0, totalStock - bookedStock);
-        return { ...p, totalIn, totalStock, bookedStock, dispatched, available };
+        return { ...p, totalIn, totalStock, bookedStock, dispatched, returnedGood, damagedReturned, available };
       });
     }
 
     function computePartiesForState(st) {
-      const refDate = new Date();
+      const now = new Date();
+      const refDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const parties = (st && st.parties) || [];
       const orders = (st && st.orders) || [];
       const collections = (st && st.collections) || [];
+      const salesReturns = (st && st.salesReturns) || [];
+
       return parties.map(party => {
-        const partyOrders = orders.filter(o => o.partyId === party.id || (o.partyName && party.name && o.partyName.toUpperCase() === party.name.toUpperCase()));
-        const dispatchedSales = partyOrders.reduce((s, o) => s + Number(o.dispatchedQty || 0) * Number(o.rate || 0), 0);
-        const partyCols = collections.filter(c => c.partyId === party.id || (c.partyName && party.name && c.partyName.toUpperCase() === party.name.toUpperCase()));
+        const pNameClean = (party.name || "").trim().toUpperCase();
+        const partyOrders = orders.filter(o => o.partyId === party.id || (o.partyName && o.partyName.trim().toUpperCase() === pNameClean));
+        const dispatchedSales = partyOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+
+        const partyCols = collections.filter(c => c.partyId === party.id || (c.partyName && c.partyName.trim().toUpperCase() === pNameClean));
         const cashPaid = partyCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
         const bankPaid = partyCols.filter(c => c.mode === "Bank").reduce((s, c) => s + Number(c.amount || 0), 0);
         const chequeCleared = partyCols.filter(c => c.mode === "Cheque" && c.chequeStatus === "Cleared").reduce((s, c) => s + Number(c.amount || 0), 0);
         const totalPaid = cashPaid + bankPaid + chequeCleared;
-        const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid;
+
+        const partyReturns = salesReturns.filter(r => r.partyId === party.id || (r.partyName && r.partyName.trim().toUpperCase() === pNameClean));
+        const totalReturns = partyReturns.reduce((s, r) => s + Number(r.totalCreditAmt || 0), 0);
+
+        const netBalance = Number(party.openingBalance || 0) + dispatchedSales - totalPaid - totalReturns;
+        const creditLimit = Number(party.creditLimit || 0);
 
         let lastDateStr = party.lastPaymentDate || "";
         partyCols.forEach(c => { if (c.date && c.date > lastDateStr) lastDateStr = c.date; });
+        if (!lastDateStr) {
+          partyOrders.forEach(o => { if (o.date && o.date > lastDateStr) lastDateStr = o.date; });
+        }
+
         let pendingDays = 0;
         if (netBalance > 0 && lastDateStr) {
           const d1 = new Date(lastDateStr + "T00:00:00");
@@ -13217,12 +13339,19 @@ Thank you! Your payment has been received successfully.`;
         }
 
         let category = "Settled";
-        if (netBalance > 0) {
-          if (pendingDays >= 60 || netBalance >= 20000) category = "Red Alert";
-          else if (pendingDays >= 30 || netBalance >= 10000) category = "Yellow Alert";
-          else category = "Green / Active";
+        if (netBalance <= 0) {
+          category = "Settled";
+        } else if (creditLimit > 0 && netBalance > creditLimit) {
+          category = "Over Credit Limit";
+        } else if (pendingDays >= 60 || netBalance >= 20000) {
+          category = "Red Alert";
+        } else if (pendingDays >= 30 || netBalance >= 10000) {
+          category = "Yellow Alert";
+        } else {
+          category = "Green / Active";
         }
-        return { ...party, dispatchedSales, totalPaid, netBalance, pendingDays, category };
+
+        return { ...party, dispatchedSales, totalPaid, totalReturns, netBalance, pendingDays, category };
       });
     }
 
@@ -13234,7 +13363,10 @@ Thank you! Your payment has been received successfully.`;
           orders: state.orders || [],
           collections: state.collections || [],
           cashHandovers: state.cashHandovers || [],
-          bankDeposits: state.bankDeposits || []
+          bankDeposits: state.bankDeposits || [],
+          purchaseBills: state.purchaseBills || [],
+          salesReturns: state.salesReturns || [],
+          expenses: state.expenses || []
         };
       }
       const key = STORAGE_KEY + "_" + coCode.toLowerCase();
@@ -13244,7 +13376,7 @@ Thank you! Your payment has been received successfully.`;
         try { coState = JSON.parse(raw); } catch (e) {}
       }
       if (!coState) {
-        coState = JSON.parse(JSON.stringify(SEED_DATA[coCode.toLowerCase()] || { products: [], parties: [], orders: [], collections: [], cashHandovers: [], bankDeposits: [] }));
+        coState = JSON.parse(JSON.stringify(SEED_DATA[coCode.toLowerCase()] || { products: [], parties: [], orders: [], collections: [], cashHandovers: [], bankDeposits: [], purchaseBills: [], salesReturns: [], expenses: [] }));
       }
       if (!coState.products) coState.products = [];
       if (!coState.parties) coState.parties = [];
@@ -13252,11 +13384,14 @@ Thank you! Your payment has been received successfully.`;
       if (!coState.collections) coState.collections = [];
       if (!coState.cashHandovers) coState.cashHandovers = [];
       if (!coState.bankDeposits) coState.bankDeposits = [];
+      if (!coState.purchaseBills) coState.purchaseBills = [];
+      if (!coState.salesReturns) coState.salesReturns = [];
+      if (!coState.expenses) coState.expenses = [];
 
       // Pull live Firebase data for the other company as well so BOTH companies are 100% up-to-date
       if (isFirebaseLive && db) {
         const prefix = coCode.toLowerCase() + "_";
-        const cols = ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits"];
+        const cols = ["products", "parties", "orders", "collections", "cashHandovers", "bankDeposits", "purchaseBills", "salesReturns", "expenses"];
         await Promise.all(cols.map(async col => {
           try {
             const snap = await db.collection(prefix + col).get();
@@ -13271,22 +13406,69 @@ Thank you! Your payment has been received successfully.`;
       return coState;
     }
 
-    async function exportToExcel(customFilename) {
+    async function exportToExcel(customFilename, targetCo = "ALL", syncToDrive = false) {
       if (!isAdminLoggedIn) { alert("Only Owner Admin can export Excel data."); return; }
+      if (typeof XLSX === "undefined") {
+        alert("Excel library (SheetJS) is still loading. Please check your internet connection.");
+        return;
+      }
       const todayStr = new Date().toISOString().split("T")[0];
-      showToast("⏳ Preparing All-in-One Excel (MADHAV + SHIVOM)...");
+      const coScope = targetCo || "ALL";
+      const coLabel = coScope === "ALL" ? "MADHAV + SHIVOM" : coScope;
+      showToast(`⏳ Preparing Multi-Tab Excel Workbook (${coLabel})...`);
 
-      const rows = [];
-      const companyList = ["MADHAV", "SHIVOM"];
+      const companyList = (coScope === "ALL") ? ["MADHAV", "SHIVOM"] : [coScope];
+
+      // Master collections across chosen companies
+      const summaryRows = [];
+      const partyRows = [];
+      const stockRows = [];
+      const orderRows = [];
+      const collectionRows = [];
+      const purchaseRows = [];
+      const expenseRows = [];
+      const flatAllInOneRows = [];
+
+      let totalGrossSales = 0;
+      let totalDispatchedSales = 0;
+      let totalCollections = 0;
+      let totalPurchases = 0;
+      let totalExpenses = 0;
+      let totalNetDues = 0;
+      let totalStockUnits = 0;
+      let partiesWithDuesCount = 0;
 
       for (const coCode of companyList) {
         const coState = await loadCompanySnapshotForExcel(coCode);
         const computedParties = computePartiesForState(coState);
         const computedStock = computeStockForState(coState);
 
-        // 1. OUTSTANDING PARTY ROWS (Party Master + Live Outstanding Due)
+        // 1. PARTIES DUE ROWS
         computedParties.forEach(p => {
-          rows.push({
+          const bal = Number(p.netBalance || 0);
+          if (bal > 0) {
+            totalNetDues += bal;
+            partiesWithDuesCount++;
+          }
+          const row = {
+            "Company": coCode,
+            "Party Name": p.name || "",
+            "Mobile": p.mobile || "",
+            "Area / City": p.area || "",
+            "GSTIN": p.gstin || "",
+            "Opening Bal (₹)": Number(Number(p.openingBalance || 0).toFixed(2)),
+            "Dispatched Sales (₹)": Number(Number(p.dispatchedSales || 0).toFixed(2)),
+            "Total Collections (₹)": Number(Number(p.totalPaid || 0).toFixed(2)),
+            "Credit Notes / Returns (₹)": Number(Number(p.totalReturns || 0).toFixed(2)),
+            "Net Balance Due (₹)": Number(bal.toFixed(2)),
+            "Credit Limit (₹)": Number(Number(p.creditLimit || 0).toFixed(2)),
+            "Overdue (Days)": p.pendingDays || 0,
+            "Status / Category": p.category || "Settled",
+            "Last Payment Date": p.lastPaymentDate || "-"
+          };
+          partyRows.push(row);
+
+          flatAllInOneRows.push({
             Company: coCode,
             Record_Type: "OUTSTANDING_PARTY",
             Date: todayStr,
@@ -13302,7 +13484,7 @@ Thank you! Your payment has been received successfully.`;
             MRP: "",
             Order_Bill_Amt: Number(Number(p.dispatchedSales || 0).toFixed(2)),
             Collection_Paid_Amt: Number(Number(p.totalPaid || 0).toFixed(2)),
-            Outstanding_Due: Number(Number(p.netBalance || 0).toFixed(2)),
+            Outstanding_Due: Number(bal.toFixed(2)),
             Mode_or_Account: "",
             Salesperson_Staff: "",
             Status: p.category || "Settled",
@@ -13310,15 +13492,87 @@ Thank you! Your payment has been received successfully.`;
           });
         });
 
-        // 2. ORDER / BILL ROWS
+        // 2. STOCK INVENTORY ROWS
+        computedStock.forEach(p => {
+          totalStockUnits += Number(p.available || 0);
+          const st = p.available <= 0 ? "Out of Stock" : (p.available <= (p.lowStockLimit || 3) ? "Low Stock" : "In Stock");
+          stockRows.push({
+            "Company": coCode,
+            "Product Code": p.code || "",
+            "Product Name": p.name || "",
+            "Category": p.category || "",
+            "HSN": p.hsn || "85166000",
+            "GST %": Number(p.gst != null ? p.gst : 18),
+            "Rate (₹)": Number(Number(p.rate || 0).toFixed(2)),
+            "Opening Stock": Number(p.openingStock || 0),
+            "Inward Stock": Number(p.inwardStock || 0),
+            "Returned Good": Number(p.returnedGood || 0),
+            "Dispatched": Number(p.dispatched || 0),
+            "Damaged Returns": Number(p.damagedReturned || 0),
+            "Warehouse Physical": Number(p.totalStock || 0),
+            "Pending Booked": Number(p.bookedStock || 0),
+            "Net Available": Number(p.available || 0),
+            "Stock Status": st
+          });
+
+          flatAllInOneRows.push({
+            Company: coCode,
+            Record_Type: "STOCK",
+            Date: todayStr,
+            Ref_Bill_Receipt_Code: p.code || p.id || "",
+            Party_Name: "",
+            Mobile: "",
+            Area: "",
+            Product_Name: p.name || "",
+            Category_HSN: p.hsn ? ("HSN: " + p.hsn) : (p.category || ""),
+            Qty_or_Avail_Stock: Number(p.available || 0),
+            Dispatched_or_Total_Stock: Number(p.totalStock || 0),
+            Rate: Number(Number(p.rate || 0).toFixed(2)),
+            MRP: Number(Number(p.mrp || 0).toFixed(2)),
+            Order_Bill_Amt: 0,
+            Collection_Paid_Amt: 0,
+            Outstanding_Due: "",
+            Mode_or_Account: "",
+            Salesperson_Staff: "",
+            Status: st,
+            Remark_Details: `Physical: ${p.totalStock} | Booked: ${p.bookedStock} | Available: ${p.available}`
+          });
+        });
+
+        // 3. SALES ORDERS & INVOICES
         (coState.orders || []).forEach(o => {
           const qty = Number(o.orderQty || 0);
           const disp = Number(o.dispatchedQty || 0);
           const pending = Math.max(0, qty - disp);
-          const amt = Number(o.totalAmt || (qty * Number(o.rate || 0)));
+          const amt = getOrderTotalAmount(o);
+          const dispAmt = getOrderDispatchedAmount(o);
+          totalGrossSales += amt;
+          totalDispatchedSales += dispAmt;
+
           const st = disp === 0 ? "Pending Dispatch" : (pending > 0 ? "Partial Dispatch" : "Dispatched");
-          const partyObj = computedParties.find(p => p.id === o.partyId || (o.partyName && p.name && p.name.toUpperCase() === o.partyName.toUpperCase()));
-          rows.push({
+          const partyObj = computedParties.find(p => p.id === o.partyId || (o.partyName && p.name && p.name.trim().toUpperCase() === o.partyName.trim().toUpperCase()));
+
+          orderRows.push({
+            "Company": coCode,
+            "Date": o.date || "",
+            "Memo / Order No": o.memoNo || ("#" + (o.orderNo || "")),
+            "GST Invoice No": o.gstInvoiceNo || "-",
+            "Delivery Challan": o.dcNo || "-",
+            "Party Name": o.partyName || "",
+            "Mobile": partyObj ? (partyObj.mobile || "") : "",
+            "Area": partyObj ? (partyObj.area || "") : "",
+            "Product Description": o.productName || "",
+            "Total Qty": qty,
+            "Dispatched Qty": disp,
+            "Pending Qty": pending,
+            "Pricing Mode": o.gstPricingMode || "inclusive",
+            "Total Amount (₹)": Number(amt.toFixed(2)),
+            "Dispatched Value (₹)": Number(dispAmt.toFixed(2)),
+            "Salesperson": o.salespersonName || "",
+            "Dispatch Status": st
+          });
+
+          flatAllInOneRows.push({
             Company: coCode,
             Record_Type: "ORDER",
             Date: o.date || "",
@@ -13342,17 +13596,35 @@ Thank you! Your payment has been received successfully.`;
           });
         });
 
-        // 3. PAYMENT COLLECTION & CHEQUE ROWS
+        // 4. PAYMENT COLLECTIONS
         (coState.collections || []).forEach(c => {
+          const colAmt = Number(c.amount || 0);
+          totalCollections += colAmt;
           const modeAcc = c.mode === "Bank"
             ? ("Bank - " + (c.depositAccount || "IOB"))
             : (c.mode === "Cheque" ? ("Cheque - " + (c.depositAccount || "IOB")) : "Cash");
           const st = c.mode === "Cheque" ? (c.chequeStatus || "Pending") : "Received";
-          const partyObj = computedParties.find(p => p.id === c.partyId || (c.partyName && p.name && p.name.toUpperCase() === c.partyName.toUpperCase()));
-          const chqDetails = c.mode === "Cheque"
-            ? `Chq #${c.chequeNo || "-"} | ${c.chequeBank || "Bank"} | Chq Date: ${c.chequeDate || c.date || ""} | ${c.bankRef || ""}`
-            : (c.bankRef || "");
-          rows.push({
+          const partyObj = computedParties.find(p => p.id === c.partyId || (c.partyName && p.name && p.name.trim().toUpperCase() === c.partyName.trim().toUpperCase()));
+
+          collectionRows.push({
+            "Company": coCode,
+            "Date": c.date || "",
+            "Receipt No": c.receiptNo || "",
+            "Party Name": c.partyName || "",
+            "Mobile": partyObj ? (partyObj.mobile || "") : "",
+            "Amount (₹)": Number(colAmt.toFixed(2)),
+            "Payment Mode": c.mode || "Cash",
+            "Account / Bank": c.depositAccount || (c.mode === "Cash" ? "Cash" : "IOB"),
+            "Cheque No": c.chequeNo || "-",
+            "Cheque Bank": c.chequeBank || "-",
+            "Cheque Date": c.chequeDate || "-",
+            "Cheque Status": st,
+            "Cheque Location": c.chequeLocation || "-",
+            "Collected By": c.salespersonName || "",
+            "Bank Ref / Note": c.bankRef || ""
+          });
+
+          flatAllInOneRows.push({
             Company: coCode,
             Record_Type: "COLLECTION",
             Date: c.date || "",
@@ -13367,50 +13639,60 @@ Thank you! Your payment has been received successfully.`;
             Rate: "",
             MRP: "",
             Order_Bill_Amt: 0,
-            Collection_Paid_Amt: Number(Number(c.amount || 0).toFixed(2)),
+            Collection_Paid_Amt: Number(colAmt.toFixed(2)),
             Outstanding_Due: "",
             Mode_or_Account: modeAcc,
             Salesperson_Staff: c.salespersonName || "",
             Status: st,
-            Remark_Details: chqDetails
+            Remark_Details: c.bankRef || ""
           });
         });
 
-        // 4. STOCK INVENTORY ROWS
-        computedStock.forEach(p => {
-          const st = p.available <= 0 ? "Out of Stock" : (p.available <= (p.lowStockLimit || 3) ? "Low Stock" : "In Stock");
-          rows.push({
-            Company: coCode,
-            Record_Type: "STOCK",
-            Date: todayStr,
-            Ref_Bill_Receipt_Code: p.code || p.id || "",
-            Party_Name: "",
-            Mobile: "",
-            Area: "",
-            Product_Name: p.name || "",
-            Category_HSN: `${p.group || "General"} | HSN: ${p.hsn || ""} | GST: ${Number(p.gst || 0)}%`,
-            Qty_or_Avail_Stock: Number(p.available || 0),
-            Dispatched_or_Total_Stock: Number(p.totalIn || 0),
-            Rate: Number(Number(p.rate || 0).toFixed(2)),
-            MRP: Number(Number(p.mrp || 0).toFixed(2)),
-            Order_Bill_Amt: "",
-            Collection_Paid_Amt: "",
-            Outstanding_Due: "",
-            Mode_or_Account: "",
-            Salesperson_Staff: "",
-            Status: st,
-            Remark_Details: `Dispatched: ${p.dispatched || 0} | Booked: ${p.bookedStock || 0}${p.scheme ? (" | Scheme: " + p.scheme) : ""}`
+        // 5. PURCHASE BILLS & ITC
+        (coState.purchaseBills || []).forEach(b => {
+          const bAmt = Number(b.totalAmt || 0);
+          totalPurchases += bAmt;
+          purchaseRows.push({
+            "Company": coCode,
+            "Bill Date": b.date || "",
+            "Bill / Inv No": b.billNo || "",
+            "Supplier Name": b.supplierName || "",
+            "Supplier GSTIN": b.supplierGstin || "",
+            "Product / Note": b.productName || b.note || "",
+            "Quantity": Number(b.qty || 0),
+            "Taxable Value (₹)": Number(Number(b.taxableAmt || 0).toFixed(2)),
+            "GST %": Number(b.gstPct || 18),
+            "CGST (₹)": Number(Number(b.cgst || 0).toFixed(2)),
+            "SGST (₹)": Number(Number(b.sgst || 0).toFixed(2)),
+            "IGST (₹)": Number(Number(b.igst || 0).toFixed(2)),
+            "Total Bill Amt (₹)": Number(bAmt.toFixed(2))
           });
         });
 
-        // 5. CASH HANDOVER ROWS
+        // 6. DAILY EXPENSES
+        (coState.expenses || []).forEach(x => {
+          const xAmt = Number(x.amount || 0);
+          totalExpenses += xAmt;
+          expenseRows.push({
+            "Company": coCode,
+            "Date": x.date || "",
+            "Expense ID": x.id || "",
+            "Category": x.category || "Other",
+            "Payment Mode": x.mode || "Cash",
+            "Amount (₹)": Number(xAmt.toFixed(2)),
+            "Logged By": x.staff || "Owner",
+            "Note / Remarks": x.note || ""
+          });
+        });
+
+        // 7. CASH HANDOVERS & BANK DEPOSITS in Flat Sheet
         (coState.cashHandovers || []).forEach(h => {
-          rows.push({
+          flatAllInOneRows.push({
             Company: coCode,
-            Record_Type: "HANDOVER",
+            Record_Type: "CASH_HANDOVER",
             Date: h.date || "",
             Ref_Bill_Receipt_Code: h.id || "",
-            Party_Name: h.fromStaffName || "",
+            Party_Name: "",
             Mobile: "",
             Area: "",
             Product_Name: "",
@@ -13429,9 +13711,8 @@ Thank you! Your payment has been received successfully.`;
           });
         });
 
-        // 6. BANK DEPOSIT ROWS
         (coState.bankDeposits || []).forEach(b => {
-          rows.push({
+          flatAllInOneRows.push({
             Company: coCode,
             Record_Type: "BANK_DEPOSIT",
             Date: b.date || "",
@@ -13456,12 +13737,80 @@ Thank you! Your payment has been received successfully.`;
         });
       }
 
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(rows, SINGLE_SHEET_HEADERS), "Madhav_Shivom_All_Data");
+      // Summary KPI Sheet
+      summaryRows.push(
+        { "Metric / Report Parameter": "Export Scope", "Value": coLabel },
+        { "Metric / Report Parameter": "Generated Date", "Value": todayStr },
+        { "Metric / Report Parameter": "Total Registered Parties", "Value": partyRows.length },
+        { "Metric / Report Parameter": "Parties With Pending Dues", "Value": partiesWithDuesCount },
+        { "Metric / Report Parameter": "Total Outstanding Dues Receivable (₹)", "Value": Number(totalNetDues.toFixed(2)) },
+        { "Metric / Report Parameter": "Total Net Available Stock (Units)", "Value": totalStockUnits },
+        { "Metric / Report Parameter": "Total Sales Booked (₹)", "Value": Number(totalGrossSales.toFixed(2)) },
+        { "Metric / Report Parameter": "Total Sales Dispatched (₹)", "Value": Number(totalDispatchedSales.toFixed(2)) },
+        { "Metric / Report Parameter": "Total Payments Collected (₹)", "Value": Number(totalCollections.toFixed(2)) },
+        { "Metric / Report Parameter": "Total Purchases / ITC Recorded (₹)", "Value": Number(totalPurchases.toFixed(2)) },
+        { "Metric / Report Parameter": "Total Business Expenses (₹)", "Value": Number(totalExpenses.toFixed(2)) },
+        { "Metric / Report Parameter": "Net Operational Cashflow (Collections - Expenses) (₹)", "Value": Number((totalCollections - totalExpenses).toFixed(2)) }
+      );
 
-      const filename = customFilename || `MADHAV_SHIVOM_ALL_IN_ONE_${todayStr}.xlsx`;
-      saveWorkbookAsXlsx(wb, filename, `✅ Exported 1 Single Sheet (${rows.length} rows — MADHAV & SHIVOM)!`);
+      // Build Multi-Tab Workbook
+      const wb = XLSX.utils.book_new();
+
+      const appendJsonSheet = (sheetData, sheetName) => {
+        const ws = (sheetData && sheetData.length > 0)
+          ? XLSX.utils.json_to_sheet(sheetData)
+          : XLSX.utils.aoa_to_sheet([["No records available for this section."]]);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      };
+
+      appendJsonSheet(summaryRows, "Executive_Summary");
+      appendJsonSheet(partyRows, "Parties_Due");
+      appendJsonSheet(stockRows, "Stock_Inventory");
+      appendJsonSheet(orderRows, "Sales_Invoices");
+      appendJsonSheet(collectionRows, "Collections");
+      appendJsonSheet(purchaseRows, "Purchases_ITC");
+      appendJsonSheet(expenseRows, "Daily_Expenses");
+      // 8th sheet: Single-sheet flat master for legacy tools / full-table filters
+      XLSX.utils.book_append_sheet(wb, makeFormattedSheet(flatAllInOneRows, SINGLE_SHEET_HEADERS), "All_In_One_Master");
+
+      const baseName = customFilename || `${coScope}_MULTI_TAB_ERP_${todayStr}.xlsx`;
+
+      if (syncToDrive) {
+        showToast("☁️ Syncing Multi-Tab Excel to Google Drive...");
+        try {
+          const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+          const uploadRes = await uploadDocToGoogleDrive(
+            coScope === "ALL" ? activeCompany : coScope,
+            "Excel_Backups",
+            baseName,
+            b64,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          );
+          if (uploadRes && uploadRes.fileUrl) {
+            showToast("✅ Successfully Synced to Google Drive!");
+            const win = window.open(uploadRes.fileUrl, "_blank");
+            if (!win) {
+              alert(`✅ Multi-Tab Excel synced to Google Drive successfully!\\n\\nOpen here:\\n${uploadRes.fileUrl}`);
+            }
+          } else {
+            showToast("⚠️ Cloud upload finished. Downloading local Excel file as backup...");
+            saveWorkbookAsXlsx(wb, baseName, `✅ Downloaded Multi-Tab Excel (${coLabel})!`);
+          }
+        } catch (cloudErr) {
+          console.error("Cloud sync error:", cloudErr);
+          saveWorkbookAsXlsx(wb, baseName, `✅ Downloaded Multi-Tab Excel (${coLabel})!`);
+        }
+      } else {
+        saveWorkbookAsXlsx(wb, baseName, `✅ Exported 7-Tab Workbook (${coLabel})!`);
+      }
     }
+
+    function handleExportClick(syncToDrive) {
+      const sel = document.querySelector('input[name="excelExportCo"]:checked');
+      const co = sel ? sel.value : "ALL";
+      exportToExcel(null, co, syncToDrive);
+    }
+
 
     function downloadExcelTemplate() {
       if (!isAdminLoggedIn) { alert("Only Owner Admin can download the data entry template."); return; }
