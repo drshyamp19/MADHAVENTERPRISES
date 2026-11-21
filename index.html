@@ -329,6 +329,30 @@
       background: #fafafa;
     }
     .card-title { font-size: 0.92rem; font-weight: 700; color: var(--primary); }
+    .order-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 14px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      color: #1e293b;
+      text-decoration: none;
+      transition: background 0.12s ease;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .order-menu-item:hover {
+      background: #f8fafc;
+      color: #0284c7;
+    }
+    .order-menu-item-danger {
+      color: #dc2626 !important;
+    }
+    .order-menu-item-danger:hover {
+      background: #fef2f2 !important;
+      color: #991b1b !important;
+    }
     .table-wrap { overflow-x: auto; width: 100%; }
     table { width: 100%; border-collapse: collapse; font-size: 0.81rem; text-align: left; }
     th {
@@ -1946,11 +1970,53 @@
         <div id="orderRegisterWrap" style="display:none;">
         <!-- Order Booking Memos Register -->
         <div class="card">
-          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px;">
+          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-              <span class="card-title">Order Booking Memos Register</span>
-              <input type="text" id="orderSearch" class="form-control" style="width:250px;" placeholder="Search Memo No, Party..." oninput="renderOrdersTable()" />
+              <span class="card-title" style="display:flex;align-items:center;gap:6px;">
+                📋 Order Booking Memos Register
+              </span>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <input 
+                  type="text" 
+                  id="orderSearch" 
+                  class="form-control" 
+                  style="width:280px;min-width:200px;" 
+                  placeholder="🔍 Search Party, Memo No, Salesperson..." 
+                  oninput="renderOrdersTable()" 
+                />
+              </div>
             </div>
+
+            <!-- Live Orders Summary KPI Strip -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; width:100%;" id="ordersKpiStrip">
+              <div style="background:#fff7ed; border-radius:10px; padding:10px 14px; border:1px solid #fed7aa; display:flex; align-items:center; gap:10px;">
+                <div style="font-size:1.6rem; line-height:1;">📦</div>
+                <div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#9a3412; text-transform:uppercase;">Pending Dispatch</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#c2410c;" id="kpiPendingValue">₹0</div>
+                  <div style="font-size:0.68rem; color:#78716c;"><span id="kpiPendingCount">0</span> Memos</div>
+                </div>
+              </div>
+
+              <div style="background:#f0fdf4; border-radius:10px; padding:10px 14px; border:1px solid #bbf7d0; display:flex; align-items:center; gap:10px;">
+                <div style="font-size:1.6rem; line-height:1;">🚚</div>
+                <div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#166534; text-transform:uppercase;">Dispatched Value</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#15803d;" id="kpiDispatchedValue">₹0</div>
+                  <div style="font-size:0.68rem; color:#78716c;"><span id="kpiDispatchedCount">0</span> Memos</div>
+                </div>
+              </div>
+
+              <div style="background:#eff6ff; border-radius:10px; padding:10px 14px; border:1px solid #bfdbfe; display:flex; align-items:center; gap:10px;">
+                <div style="font-size:1.6rem; line-height:1;">📊</div>
+                <div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#1e40af; text-transform:uppercase;">Total Orders Booked</div>
+                  <div style="font-size:1.1rem; font-weight:800; color:#1d4ed8;" id="kpiTotalOrdersValue">₹0</div>
+                  <div style="font-size:0.68rem; color:#78716c;"><span id="kpiTotalOrdersCount">0</span> Total Memos</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Smart Filter Tabs for Orders -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
               <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:5px 14px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;">
@@ -1970,12 +2036,15 @@
                 <tr>
                   <th>Memo No</th>
                   <th>Date</th>
-                  <th>Party Name</th>
+                  <th>Party Name &amp; Balance</th>
                   <th>Booked By</th>
-                  <th>Items / Qty</th>
+                  <th>Items Details</th>
+                  <th class="text-right">Ord Qty</th>
+                  <th class="text-right">Disp Qty</th>
+                  <th class="text-right">Pending</th>
                   <th class="text-right">Total Value</th>
-                  <th class="text-center">Dispatch Status</th>
-                  <th class="text-center">Actions</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center" style="min-width:180px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody"></tbody>
@@ -3406,7 +3475,13 @@ function toBase64Utf8(str) {
       </tbody></table>
       <h3 style="text-align:right;margin-top:14px;">Total Amount: ₹${Number(ord.totalAmt || 0).toLocaleString('en-IN')}</h3>
       <p style="font-size:12px;color:#64748b;">Saved to Google Drive on ${new Date().toLocaleString()}</p>
-      </body></html>`;
+        <!-- Floating Portal Action Dropdown Menu for Orders Table -->
+  <div 
+    id="orderFloatingActionMenu" 
+    class="order-dropdown-menu" 
+    style="display:none; position:fixed; min-width:210px; background:#ffffff; box-shadow:0 12px 30px rgba(0,0,0,0.22); border-radius:10px; border:1px solid #e2e8f0; z-index:999999; text-align:left; overflow:hidden;"
+  ></div>
+</body></html>`;
 
 const base64Data = toBase64Utf8(memoHtml);
       const fileName = `${activeCompany}_OrderMemo_${memoNo}_${ord.partyName.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
@@ -9633,22 +9708,212 @@ Thank you!`;
       renderOrdersTable();
     }
 
+    // ==================== FLOATING PORTAL ACTION DROPDOWN FOR ORDERS ====================
+    let activeFloatingOrderMenu = null;
+
+    function toggleOrderActionMenu(e, ordId) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      const btn = e.currentTarget;
+      const menu = document.getElementById("orderFloatingActionMenu");
+      if (!menu) return;
+
+      if (activeFloatingOrderMenu === ordId && menu.style.display === "block") {
+        closeAllOrderMenus();
+        return;
+      }
+
+      renderFloatingOrderMenu(ordId);
+
+      const rect = btn.getBoundingClientRect();
+      menu.style.display = "block";
+      menu.style.position = "fixed";
+      menu.style.zIndex = "999999";
+
+      const menuWidth = 215;
+      let left = rect.right - menuWidth;
+      if (left < 10) left = 10;
+
+      const menuHeight = menu.offsetHeight || 220;
+      let top = rect.bottom + 4;
+      if (top + menuHeight > window.innerHeight) {
+        top = Math.max(10, rect.top - menuHeight - 4);
+      }
+
+      menu.style.top = top + "px";
+      menu.style.left = left + "px";
+      activeFloatingOrderMenu = ordId;
+    }
+
+    function closeAllOrderMenus() {
+      const menu = document.getElementById("orderFloatingActionMenu");
+      if (menu) menu.style.display = "none";
+      activeFloatingOrderMenu = null;
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#orderFloatingActionMenu") && !e.target.closest(".order-more-btn")) {
+        closeAllOrderMenus();
+      }
+    });
+
+    window.addEventListener("scroll", () => {
+      if (activeFloatingOrderMenu) {
+        closeAllOrderMenus();
+      }
+    }, true);
+
+    function renderFloatingOrderMenu(orderId) {
+      const menu = document.getElementById("orderFloatingActionMenu");
+      if (!menu) return;
+      const o = (state.orders || []).find(x => x.id === orderId);
+      if (!o) return;
+
+      const isDispatched = Number(o.dispatchedQty || 0) > 0;
+      const canEditOrder = isDispatched ? isAdminLoggedIn : true;
+      const driveLink = o.driveUrl || o.invoiceDriveUrl;
+
+      let items = [];
+
+      // 1. Memo PDF
+      items.push(`
+        <a href="javascript:void(0)" onclick="openOrderBookingMemo('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+          <span>📄</span> <span>View Memo PDF</span>
+        </a>
+      `);
+
+      // 2. Delivery Challan (DC)
+      if (isDispatched) {
+        items.push(`
+          <a href="javascript:void(0)" onclick="openDeliveryChallan('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+            <span>🚚</span> <span>Delivery Challan (DC)</span>
+          </a>
+        `);
+      } else {
+        items.push(`
+          <a href="javascript:void(0)" onclick="alert('Delivery Challan (DC) will be generated after goods are dispatched.');closeAllOrderMenus();" class="order-menu-item" style="opacity:0.5;cursor:not-allowed;">
+            <span>🔒</span> <span>DC (After Dispatch)</span>
+          </a>
+        `);
+      }
+
+      // 3. Tax Invoice Bill (if dispatched)
+      if (isDispatched) {
+        items.push(`
+          <a href="javascript:void(0)" onclick="openTaxInvoice('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+            <span>🧾</span> <span>View Tax Invoice Bill</span>
+          </a>
+        `);
+      } else {
+        items.push(`
+          <a href="javascript:void(0)" onclick="alert('Tax Invoice Bill will be generated after goods are dispatched.');closeAllOrderMenus();" class="order-menu-item" style="opacity:0.5;cursor:not-allowed;">
+            <span>🔒</span> <span>Bill (After Dispatch)</span>
+          </a>
+        `);
+      }
+
+      // 4. Direct PDF Share
+      items.push(`
+        <a href="javascript:void(0)" onclick="shareOrderPdfOnWhatsApp('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+          <span>📤</span> <span>Share PDF on WhatsApp</span>
+        </a>
+      `);
+
+      // 5. Open in Google Drive
+      if (driveLink) {
+        items.push(`
+          <a href="${driveLink}" target="_blank" rel="noopener noreferrer" onclick="closeAllOrderMenus();" class="order-menu-item">
+            <span>📁</span> <span>Open in Google Drive</span>
+          </a>
+        `);
+      }
+
+      // Divider
+      items.push(`<div style="border-top:1px solid #e2e8f0;margin:3px 0;"></div>`);
+
+      // 6. Edit Details
+      if (canEditOrder) {
+        items.push(`
+          <a href="javascript:void(0)" onclick="openEditOrderModal('${o.id}');closeAllOrderMenus();" class="order-menu-item">
+            <span>✏️</span> <span>Edit Order Details</span>
+          </a>
+        `);
+      } else {
+        items.push(`
+          <a href="javascript:void(0)" onclick="alert('🔒 Dispatched Bill Locked: Only Owner Admin can edit dispatched orders.');closeAllOrderMenus();" class="order-menu-item" style="opacity:0.5;cursor:not-allowed;">
+            <span>🔒</span> <span>Edit Locked</span>
+          </a>
+        `);
+      }
+
+      // 7. Delete Order (Owner Admin only)
+      if (isAdminLoggedIn) {
+        items.push(`
+          <a href="javascript:void(0)" onclick="deleteOrderMemo('${o.id}');closeAllOrderMenus();" class="order-menu-item order-menu-item-danger">
+            <span>🗑️</span> <span>Delete Order</span>
+          </a>
+        `);
+      }
+
+      menu.innerHTML = items.join("");
+    }
+
     function renderOrdersTable() {
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       const q = (document.getElementById("orderSearch").value || "").toLowerCase();
 
-      // Update Tab Counter Badges across all orders
+      // Compute KPI totals across all orders
       const allOrders = state.orders || [];
-      const totalAll = allOrders.length;
-      const totalPending = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0).length;
-      const totalCompleted = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0).length;
+      const computedParties = (typeof computePartiesForState === "function") ? computePartiesForState(state) : (state.parties || []);
 
+      let pendingVal = 0;
+      let dispatchedVal = 0;
+      let totalBookedVal = 0;
+      let totalPendingCount = 0;
+      let totalCompletedCount = 0;
+
+      allOrders.forEach(o => {
+        const ordQ = Number(o.orderQty || 0);
+        const dispQ = Number(o.dispatchedQty || 0);
+        const lineTotal = Number(o.totalAmt || (ordQ * Number(o.rate || 0)) || 0);
+        totalBookedVal += lineTotal;
+
+        const remQ = ordQ - dispQ;
+        if (remQ > 0) {
+          totalPendingCount++;
+          pendingVal += (ordQ > 0 ? (remQ / ordQ) * lineTotal : 0);
+        } else {
+          totalCompletedCount++;
+        }
+        if (dispQ > 0) {
+          dispatchedVal += (ordQ > 0 ? (dispQ / ordQ) * lineTotal : 0);
+        }
+      });
+
+      // Update KPI counters in UI
+      const kpiPendValEl = document.getElementById("kpiPendingValue");
+      const kpiPendCntEl = document.getElementById("kpiPendingCount");
+      const kpiDispValEl = document.getElementById("kpiDispatchedValue");
+      const kpiDispCntEl = document.getElementById("kpiDispatchedCount");
+      const kpiTotValEl = document.getElementById("kpiTotalOrdersValue");
+      const kpiTotCntEl = document.getElementById("kpiTotalOrdersCount");
+
+      if (kpiPendValEl) kpiPendValEl.textContent = fmtINR(pendingVal);
+      if (kpiPendCntEl) kpiPendCntEl.textContent = totalPendingCount;
+      if (kpiDispValEl) kpiDispValEl.textContent = fmtINR(dispatchedVal);
+      if (kpiDispCntEl) kpiDispCntEl.textContent = totalCompletedCount;
+      if (kpiTotValEl) kpiTotValEl.textContent = fmtINR(totalBookedVal);
+      if (kpiTotCntEl) kpiTotCntEl.textContent = allOrders.length;
+
+      // Update Tab Counter Badges across all orders
       const cAllEl = document.getElementById("countAllOrders");
       const cPenEl = document.getElementById("countPendingOrders");
       const cCompEl = document.getElementById("countCompletedOrders");
-      if (cAllEl) cAllEl.textContent = totalAll;
-      if (cPenEl) cPenEl.textContent = totalPending;
-      if (cCompEl) cCompEl.textContent = totalCompleted;
+      if (cAllEl) cAllEl.textContent = allOrders.length;
+      if (cPenEl) cPenEl.textContent = totalPendingCount;
+      if (cCompEl) cCompEl.textContent = totalCompletedCount;
 
       // Filter by active smart tab
       let filteredOrders = allOrders;
@@ -9661,6 +9926,7 @@ Thank you!`;
       // Filter by search query
       const list = filteredOrders.filter(o =>
         (o.orderNo || "").toLowerCase().includes(q) ||
+        (o.memoNo || "").toLowerCase().includes(q) ||
         (o.partyName || "").toLowerCase().includes(q) ||
         (o.productName || "").toLowerCase().includes(q) ||
         (o.salespersonName || "").toLowerCase().includes(q)
@@ -9670,7 +9936,7 @@ Thank you!`;
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:20px;color:var(--muted);">No orders found in '${currentOrderRegisterTab}' tab.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching '${q ? q : currentOrderRegisterTab}'.</td></tr>`;
         return;
       }
 
@@ -9678,39 +9944,69 @@ Thank you!`;
         const pending = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
         const st = Number(o.dispatchedQty || 0) === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
         const isDispatched = Number(o.dispatchedQty || 0) > 0;
-        // Dispatched orders (Bill generated) can ONLY be edited or deleted by Owner.
-        // Pending dispatch orders can be edited by sales staff prior to dispatch.
-        const canEditOrder = isDispatched ? isAdminLoggedIn : true;
+        const isCompleted = (pending === 0 && Number(o.orderQty || 0) > 0);
+        const isPartial = (pending > 0 && isDispatched);
+        const lineTotal = Number(o.totalAmt || (Number(o.orderQty || 0) * Number(o.rate || 0)) || 0);
+
+        // Party Live Due Calculation
+        const partyInfo = computedParties.find(p => p.name && p.name.trim().toLowerCase() === (o.partyName || "").trim().toLowerCase());
+        let partyDueHtml = "";
+        if (partyInfo) {
+          const bal = Number(partyInfo.netBalance || 0);
+          if (bal > 0) {
+            partyDueHtml = `<div style="font-size:0.71rem;color:#b45309;font-weight:700;margin-top:2px;">🔴 Due: ${fmtINR(bal)}</div>`;
+          } else if (bal === 0) {
+            partyDueHtml = `<div style="font-size:0.71rem;color:#15803d;font-weight:600;margin-top:2px;">🟢 Nil Due</div>`;
+          } else {
+            partyDueHtml = `<div style="font-size:0.71rem;color:#0284c7;font-weight:600;margin-top:2px;">🔵 Adv: ${fmtINR(Math.abs(bal))}</div>`;
+          }
+        }
+
+        // Smart Primary Actions (Option 1 + Option 2 Hybrid)
+        let primaryBtn1 = "";
+        let primaryBtn2 = "";
+
+        if (isCompleted) {
+          primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" style="font-weight:700;padding:5px 9px;" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send Bill to Party">💬 Send Bill</button>`;
+        } else if (isPartial) {
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;" title="Dispatch remaining items">🚚 Dispatch</button>` : `<span class="pill pill-yellow" style="font-size:0.72rem;">Partial</span>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send WhatsApp">💬 WhatsApp</button>`;
+        } else {
+          // Pending
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;" title="Dispatch order">🚚 Dispatch</button>` : `<span class="pill pill-red" style="font-size:0.72rem;">Pending</span>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send Order Memo to Party">💬 WhatsApp</button>`;
+        }
+
+        const moreBtn = `
+          <button type="button" class="btn btn-sm order-more-btn" onclick="toggleOrderActionMenu(event, '${o.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-weight:800;font-size:1.1rem;padding:3px 9px;border-radius:6px;line-height:1;cursor:pointer;" title="More Options">
+            ⋮
+          </button>
+        `;
+
+        const memoDisplay = o.memoNo ? o.memoNo : `#${o.orderNo}`;
+
         return `
           <tr>
-            <td class="font-bold">#${o.orderNo}</td>
-            <td>${fmtDate(o.date)}</td>
-            <td>${o.partyName}</td>
-            <td>${o.salespersonName}</td>
-            <td>${o.productName}</td>
-            <td class="text-right">${o.orderQty}</td>
-            <td class="text-right">${o.dispatchedQty}</td>
-            <td class="text-right font-bold">${pending}</td>
-            <td class="text-right font-bold">${fmtINR(o.orderQty * o.rate)}</td>
+            <td class="font-bold" style="white-space:nowrap;">${memoDisplay}</td>
+            <td style="white-space:nowrap;">${fmtDate(o.date)}</td>
+            <td>
+              <div class="font-bold" style="color:#0f172a;">${o.partyName}</div>
+              ${partyDueHtml}
+            </td>
+            <td style="font-size:0.78rem;font-weight:600;color:#475569;">${o.salespersonName}</td>
+            <td style="max-width:220px;font-size:0.78rem;">${o.productName}</td>
+            <td class="text-right font-bold">${o.orderQty}</td>
+            <td class="text-right" style="color:#15803d;font-weight:600;">${o.dispatchedQty}</td>
+            <td class="text-right font-bold" style="color:#ea580c;">${pending}</td>
+            <td class="text-right font-bold" style="color:#0f172a;">${fmtINR(lineTotal)}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
-            <td class="text-center" style="white-space:nowrap;display:flex;gap:4px;justify-content:center;align-items:center;">
-              ${(canDispatch && pending > 0) ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')">Dispatch</button>` : ""}
-              <button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>
-              <button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="openOrderBookingMemo('${o.id}')" title="View Order Booking Memo">Memo PDF</button>
-              ${o.driveUrl || o.invoiceDriveUrl ? `<a href="${o.driveUrl || o.invoiceDriveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;font-weight:700;display:inline-flex;align-items:center;gap:3px;text-decoration:none;" title="Open in Google Drive">📁 Drive</a>` : ''}
-              <button class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="shareOrderPdfOnWhatsApp('${o.id}')" title="Share PDF document directly on WhatsApp">📤 Share PDF</button>
-              ${isDispatched ? `
-                <button class="btn btn-teal btn-sm" onclick="openDeliveryChallan('${o.id}')" title="View Delivery Challan">DC PDF</button>
-                <button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Tax Invoice">Bill PDF</button>
-              ` : `
-                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;" title="DC & Bill generate only after dispatch" onclick="alert('Delivery Challan (DC) and Tax Invoice Bill can only be generated after goods are dispatched from warehouse.')">🔒 DC / Bill</button>
-              `}
-              ${canEditOrder ? `
-                <button class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:700;" onclick="openEditOrderModal('${o.id}')" title="Edit Order Memo (Rate / Qty)">✏️ Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteOrderMemo('${o.id}')" title="Delete Order Memo">🗑️</button>
-              ` : `
-                <button class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;cursor:not-allowed;font-size:0.75rem;" disabled title="Dispatched &amp; Bill Generated - Edit locked (Only Owner can edit)">🔒 Dispatched</button>
-              `}
+            <td class="text-center" style="white-space:nowrap;vertical-align:middle;">
+              <div style="display:inline-flex;align-items:center;gap:5px;">
+                ${primaryBtn1}
+                ${primaryBtn2}
+                ${moreBtn}
+              </div>
             </td>
           </tr>
         `;
