@@ -232,32 +232,84 @@
     .btn-call { background: #0284c7; color: #fff; }
     .btn-danger { background: #dc2626; color: #fff; }
 
-    /* Navigation Tabs */
+    /* Navigation Tabs: Option 1 - Clean 2-Tier Grouped Layout */
     .nav-bar {
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      padding: 0 16px;
+      background: #ffffff;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 8px 16px;
       display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.04);
+    }
+    .nav-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      width: 100%;
+    }
+    .nav-row-admin {
+      padding-top: 6px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    .nav-group-tag {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
       gap: 4px;
-      overflow-x: auto;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      -webkit-overflow-scrolling: touch;
+    }
+    .tag-field {
+      background: #f0fdfa;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+    }
+    .tag-admin {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
     }
     .nav-tab {
-      padding: 12px 14px;
-      font-size: 0.83rem;
+      padding: 6px 12px;
+      font-size: 0.81rem;
       font-weight: 600;
-      color: var(--muted);
-      border: none;
-      background: transparent;
-      border-bottom: 3px solid transparent;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-    .nav-tab:hover { color: var(--primary); }
-    .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .nav-tab.open-tab { color: #0f766e; font-weight: 700; }
-    .nav-tab.open-tab.active { color: #0f766e; border-bottom-color: #0f766e; }
+    .nav-tab:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+    .nav-tab.active {
+      background: #0f766e !important;
+      color: #ffffff !important;
+      border-color: #0f766e !important;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(15,118,110,0.28);
+    }
+    .admin-nav-item.nav-tab.active {
+      background: #1e3a5f !important;
+      border-color: #1e3a5f !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 5px rgba(30,58,95,0.28);
+    }
     .admin-only-item { display: none; }
 
     /* Layout Container */
@@ -1133,17 +1185,29 @@
     @media (max-width: 768px) {
       .nav-bar {
         display: flex !important;
-        flex-wrap: wrap !important;
-        overflow-x: visible !important;
+        flex-direction: column !important;
         padding: 8px 6px !important;
-        gap: 6px !important;
+        gap: 8px !important;
         background: #f8fafc !important;
         border-bottom: 2px solid #e2e8f0 !important;
       }
+      .nav-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        width: 100% !important;
+      }
+      .nav-group-tag {
+        width: 100% !important;
+        justify-content: center !important;
+        margin-bottom: 2px !important;
+        padding: 5px 10px !important;
+      }
       .nav-tab {
         flex: 1 1 calc(50% - 6px) !important;
-        min-width: 140px !important;
+        min-width: 130px !important;
         text-align: center !important;
+        justify-content: center !important;
         padding: 9px 8px !important;
         font-size: 0.8rem !important;
         font-weight: 600 !important;
@@ -1161,6 +1225,11 @@
         border-color: #0f766e !important;
         font-weight: 700 !important;
         box-shadow: 0 2px 4px rgba(15,118,110,0.25) !important;
+      }
+      .admin-nav-item.nav-tab.active {
+        background: #1e3a5f !important;
+        color: #ffffff !important;
+        border-color: #1e3a5f !important;
       }
       .nav-tab[data-tab="staff-cash"] {
         flex: 1 1 100% !important; /* 5th tab takes full width centered */
@@ -1461,20 +1530,27 @@
       </div>
     </header>
 
-    <!-- Navigation Bar: Protected Role-Based Access (Option 1) -->
+    <!-- Navigation Bar: 2-Tier Grouped Layout (Option 1) -->
     <nav class="nav-bar">
-      <!-- Staff & Admin Shared Tabs (Protected) -->
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 Live Stock &amp; Rates</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 Dealer Outstandings</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 Book Order</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 Record Collection</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="staff-cash" onclick="switchTab('staff-cash', this)">🤝 Cash Handover &amp; Bank</button>
-      <!-- Admin Only Tabs -->
-      <button class="nav-tab admin-only-item" style="display:none;" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
-      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
-      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
-      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
-      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
+      <!-- Row 1: Sales, Field & Counter Operations (Staff & Admin) -->
+      <div class="nav-row nav-row-field" id="fieldNavRow">
+        <span class="nav-group-tag tag-field">🛒 Field &amp; Sales</span>
+        <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 Live Stock &amp; Rates</button>
+        <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 Dealer Outstandings</button>
+        <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 Book Order</button>
+        <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 Record Collection</button>
+        <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="staff-cash" onclick="switchTab('staff-cash', this)">🤝 Cash Handover &amp; Bank</button>
+      </div>
+
+      <!-- Row 2: Owner Administration, Accounts & GST (Owner Only) -->
+      <div class="nav-row nav-row-admin" id="adminNavRow" style="display:none;">
+        <span class="nav-group-tag tag-admin">👑 Owner Admin</span>
+        <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+        <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
+        <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
+        <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
+        <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
+      </div>
     </nav>
 
     <main class="container">
@@ -7807,6 +7883,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         el.style.display = isAdmin ? "inline-block" : "none";
       });
 
+      const adminNavRow = document.getElementById("adminNavRow");
+      if (adminNavRow) adminNavRow.style.display = isAdmin ? "flex" : "none";
+
       const ordSp = document.getElementById("ordSalesperson");
       const colSp = document.getElementById("colSalesperson");
       const colModeEl = document.getElementById("colMode");
@@ -7866,6 +7945,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       adminItems.forEach(el => {
         el.style.display = isAdminLoggedIn ? "inline-block" : "none";
       });
+
+      const adminNavRow = document.getElementById("adminNavRow");
+      if (adminNavRow) adminNavRow.style.display = isAdminLoggedIn ? "flex" : "none";
 
       document.getElementById("adminBadgeWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
       document.getElementById("ownerLoginBtnWrap").style.display = (isAdminLoggedIn || currentStaff) ? "none" : "inline-block";
