@@ -1713,7 +1713,6 @@
             </table>
           </div>
         </div>
-        </div>
       </section>
 
       <!-- ==================== ADMIN TAB 2: INWARD STOCK ==================== -->
@@ -2125,6 +2124,7 @@
               <tbody id="ordersTableBody"></tbody>
             </table>
           </div>
+        </div>
         </div>
       </section>
 
@@ -7238,7 +7238,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (typeof initCustomAutocompletes === "function") initCustomAutocompletes();
       const gwLogo = document.getElementById("gatewayLogo1"); if (gwLogo) gwLogo.src = SHOP_LOGO;
 
-      const today = "2026-11-16";
+      const today = new Date().toISOString().split("T")[0];
       document.getElementById("ordDate").value = today;
       document.getElementById("colDate").value = today;
 
@@ -11539,7 +11539,7 @@ Thank you!`;
       currentEditingColId = colId;
       document.getElementById("editColReceiptNo").textContent = "#" + col.receiptNo;
       document.getElementById("editColPartyName").textContent = col.partyName;
-      document.getElementById("editColDate").value = col.date || today;
+      document.getElementById("editColDate").value = col.date || (new Date().toISOString().split("T")[0]);
       document.getElementById("editColAmount").value = col.amount;
       document.getElementById("editColMode").value = col.mode || "Cash";
       document.getElementById("editColRef").value = col.bankRef || "";

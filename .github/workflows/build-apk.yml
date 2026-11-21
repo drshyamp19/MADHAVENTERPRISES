@@ -72,7 +72,7 @@ jobs:
           body: |
             ### 📲 Madhav Enterprises & Shivom Sales — Android ERP App
             - **Direct APK Setup File:** Download `MadhavShivomERP.apk` below and tap to install on Android mobile.
-            - **Live Sync:** Connected to `https://madhavshivom.vercel.app` & Firebase.
+            - **Live Sync:** Connected to `https://madhaventerprises.vercel.app` & Firebase.
             - **Built-in Support:** Native WhatsApp sharing, Print/PDF Invoices & Receipts, Excel Backup to Downloads.
           files: MadhavShivomERP.apk
           make_latest: true

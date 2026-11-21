@@ -1,4 +1,4 @@
-const CACHE_NAME = 'madhav-shivom-erp-v47';
+const CACHE_NAME = 'madhav-shivom-erp-v48';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -57,7 +57,9 @@ self.addEventListener('fetch', (event) => {
     url.hostname === 'cdn.sheetjs.com' ||
     url.hostname === 'cdn.jsdelivr.net' ||
     url.hostname === 'cdnjs.cloudflare.com' ||
-    url.hostname === 'www.gstatic.com'
+    url.hostname === 'www.gstatic.com' ||
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com'
   );
 
   if (!isSameOrigin && !isAllowedCdn) {
