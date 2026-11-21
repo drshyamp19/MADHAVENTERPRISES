@@ -7786,14 +7786,17 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const staffBadgeWrap = document.getElementById("staffBadgeWrap");
       const staffLoginBtn = document.getElementById("staffLoginBtnWrap");
       const staffNameEl = document.getElementById("staffUserName");
+      const ownerLoginBtn = document.getElementById("ownerLoginBtnWrap");
 
       if (isStaff) {
         if (staffBadgeWrap) staffBadgeWrap.style.display = "inline-flex";
         if (staffLoginBtn) staffLoginBtn.style.display = "none";
+        if (ownerLoginBtn) ownerLoginBtn.style.display = "none";
         if (staffNameEl) staffNameEl.textContent = `👤 ${currentStaff.name} (${currentStaff.role})`;
       } else {
         if (staffBadgeWrap) staffBadgeWrap.style.display = "none";
         if (staffLoginBtn) staffLoginBtn.style.display = isAdmin ? "none" : "inline-block";
+        if (ownerLoginBtn) ownerLoginBtn.style.display = isAdmin ? "none" : "inline-block";
       }
 
       document.querySelectorAll(".admin-or-staff-item").forEach(el => {
@@ -7865,7 +7868,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       });
 
       document.getElementById("adminBadgeWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
-      document.getElementById("ownerLoginBtnWrap").style.display = isAdminLoggedIn ? "none" : "inline-block";
+      document.getElementById("ownerLoginBtnWrap").style.display = (isAdminLoggedIn || currentStaff) ? "none" : "inline-block";
       document.getElementById("ownerLogoutBtnWrap").style.display = isAdminLoggedIn ? "inline-flex" : "none";
       updateStaffUI();
     }
