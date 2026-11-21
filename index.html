@@ -2630,7 +2630,7 @@
               </div>
               <div class="form-group">
                 <label>Mobile Number</label>
-                <input type="text" id="mPartyMobile" class="form-control" placeholder="10-digit mobile" required />
+                <input type="tel" id="mPartyMobile" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required />
               </div>
               <div class="form-group">
                 <label>Area / Market</label>
@@ -10087,11 +10087,33 @@ Thank you!`;
       const col = state.collections.find(c => c.id === currentEditingColId);
       if (!col) return;
 
+      const newMode = document.getElementById("editColMode").value;
+      const newSp = document.getElementById("editColSalesperson").value;
+
+      // Vikram Cash Prohibition Check
+      const isVikram = (newSp || "").toUpperCase().includes("VIKARAM") || (newSp || "").toUpperCase().includes("VIKRAM") || (currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM")));
+      if (isVikram && newMode === "Cash") {
+        alert("⚠️ Vikram Singh Thakur is prohibited from collecting Cash payments. Gopal or Prashik must accompany for cash collections.");
+        return;
+      }
+
+      const depositAccountVal = (newMode === "Bank") ? (document.getElementById("editColDepositAccount").value || (activeCompany === "MADHAV" ? "MADHAV_QR" : "ROSHAN")) : null;
+
+      // Strict Company Separation Validation
+      if (activeCompany === "SHIVOM" && (depositAccountVal === "IOB" || depositAccountVal === "MADHAV_QR")) {
+        alert("⚠️ Security Rule: Madhav Enterprises accounts cannot be used for Shivom payments. Please select a Shivom account.");
+        return;
+      }
+      if (activeCompany === "MADHAV" && (depositAccountVal === "ROSHAN" || depositAccountVal === "PRASHIK" || depositAccountVal === "SAVITA")) {
+        alert("⚠️ Security Rule: Madhav payments must only be deposited to Madhav's Official QR or IOB Bank account.");
+        return;
+      }
+
       col.date = document.getElementById("editColDate").value;
       col.amount = Number(document.getElementById("editColAmount").value);
-      col.mode = document.getElementById("editColMode").value;
-      col.depositAccount = (col.mode === "Bank") ? (document.getElementById("editColDepositAccount").value || "IOB") : null;
-      col.salespersonName = document.getElementById("editColSalesperson").value;
+      col.mode = newMode;
+      col.depositAccount = depositAccountVal;
+      col.salespersonName = newSp;
       col.bankRef = document.getElementById("editColRef").value;
 
       persistLocal();
@@ -11357,10 +11379,20 @@ Thank you! Your payment has been received successfully.`;
         const sgstAmt = isInterState ? 0 : Number((totalGst - cgstAmt).toFixed(2));
         const billTotal = Number((taxableAmt + totalGst).toFixed(2));
 
+        let maxPurNum = 99;
+        (state.purchaseBills || []).forEach(b => {
+          const m = String(b.billNo || "").match(/(\d+)$/);
+          if (m) {
+            const n = parseInt(m[1], 10);
+            if (!isNaN(n) && n > maxPurNum) maxPurNum = n;
+          }
+        });
+        const autoPurNo = "PUR-" + String(maxPurNum + 1);
+
         const billRec = {
           id: "PB_" + Date.now(),
           date: billDate,
-          billNo: billNo || ("PUR-" + String(100 + (state.purchaseBills || []).length)),
+          billNo: billNo || autoPurNo,
           supplierName: supplierName || "Stock Supplier",
           supplierGstin: supplierGstin,
           supplyType: isInterState ? "Inter-State (IGST)" : "Intra-State (CGST+SGST)",
@@ -11695,6 +11727,28 @@ Thank you! Your payment has been received successfully.`;
     async function handleAddParty(e) {
       e.preventDefault();
       if (!isAdminLoggedIn) { alert("Only Owner can add parties."); return; }
+      const pName = document.getElementById("mPartyName").value.trim();
+      if (!pName) {
+        alert("Please enter a valid Party Name.");
+        document.getElementById("mPartyName")?.focus();
+        return;
+      }
+      // Check duplicate party name
+      const existing = state.parties.find(p => (p.name || "").trim().toUpperCase() === pName.toUpperCase());
+      if (existing) {
+        alert(`A party named "${pName}" already exists! Please use a unique name or add an area suffix.`);
+        document.getElementById("mPartyName")?.focus();
+        return;
+      }
+
+      const rawMobile = (document.getElementById("mPartyMobile").value || "").trim().replace(/\D/g, "");
+      const cleanMobile = rawMobile.length >= 10 ? rawMobile.slice(-10) : rawMobile;
+      if (cleanMobile.length !== 10) {
+        alert("Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).");
+        document.getElementById("mPartyMobile")?.focus();
+        return;
+      }
+
       const gstin = (document.getElementById("mPartyGstin").value || "").trim().toUpperCase();
       if (gstin && !isValidGstin(gstin)) {
         alert("Invalid 15-character Party GSTIN format! Example: 27ABCDE1234F1Z5 (or leave blank for B2C).");
@@ -11703,8 +11757,8 @@ Thank you! Your payment has been received successfully.`;
       }
       const newParty = {
         id: "P" + Date.now(),
-        name: document.getElementById("mPartyName").value.trim(),
-        mobile: document.getElementById("mPartyMobile").value.trim(),
+        name: pName,
+        mobile: cleanMobile,
         area: document.getElementById("mPartyArea").value.trim(),
         gstin: gstin,
         openingBalance: Number(document.getElementById("mPartyOpen").value),
@@ -15743,12 +15797,14 @@ Thank you! Your payment has been received successfully.`;
         for (const coCode of ["MADHAV", "SHIVOM"]) {
           if (pendingRestoreData.companies && pendingRestoreData.companies[coCode]) {
             const coData = pendingRestoreData.companies[coCode];
-            const storeKey = "erp_state_" + coCode.toLowerCase();
+            const storeKey = STORAGE_KEY + "_" + coCode.toLowerCase();
             localStorage.setItem(storeKey, JSON.stringify(coData));
+            // Clean up any legacy keys to avoid conflicts
+            getLegacyStorageKeys(coCode).forEach(pk => { if (pk !== storeKey) localStorage.removeItem(pk); });
 
             if (isFirebaseLive && db) {
               const prefix = coCode.toLowerCase() + "_";
-              for (const col of ["orders", "collections", "products", "parties", "expenses", "cashHandovers", "bankDeposits", "salesReturns"]) {
+              for (const col of ["orders", "collections", "products", "parties", "expenses", "cashHandovers", "bankDeposits", "salesReturns", "purchaseBills"]) {
                 if (Array.isArray(coData[col])) {
                   const batch = db.batch();
                   let count = 0;
@@ -15767,7 +15823,7 @@ Thank you! Your payment has been received successfully.`;
           }
         }
 
-        state = loadCompanyState(activeCompany);
+        loadCompanyState();
         refreshAll();
         closeModal("jsonRestoreModal");
         showToast("✅ Database Restored Successfully!");
