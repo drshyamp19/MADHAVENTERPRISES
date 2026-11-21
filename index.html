@@ -90,6 +90,27 @@
     .gateway-card img { height: 75px; width: auto; margin-bottom: 16px; object-fit: contain; }
     .gateway-card h2 { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
     .gateway-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+    .gateway-login-box {
+      background: rgba(255, 255, 255, 0.98);
+      color: #0f172a;
+      border-radius: 18px;
+      padding: 30px 24px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-sizing: border-box;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    @keyframes loginShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .login-shake {
+      animation: loginShake 0.4s ease;
+    }
 
     /* Top Header */
     .topbar {
@@ -1416,7 +1437,9 @@
     <!-- ==================== UNIFIED GATEWAY & AUTHENTICATION PORTAL ==================== -->
   <div id="gatewayScreen">
     <div style="text-align:center; max-width:580px; width:100%; margin-bottom:18px;">
-      <div style="font-size:2.4rem;margin-bottom:6px;">🏢⚡</div>
+      <div style="display:inline-flex;align-items:center;justify-content:center;background:#ffffff;padding:8px 20px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.3);margin-bottom:12px;border:1px solid rgba(255,255,255,0.4);">
+        <img id="gatewayLogo1" alt="MADHAV ENTERPRISES &amp; SHIVOM SALES" style="height:52px;max-width:220px;object-fit:contain;display:block;" />
+      </div>
       <h1 style="font-size:2.1rem; font-weight:800; margin-bottom:6px; letter-spacing:-0.5px;">MADHAV &amp; SHIVOM ERP</h1>
       <p style="font-size:0.9rem; opacity:0.9; margin-bottom:10px;">Cloud ERP: Stock, Orders, GST Billing &amp; Payment Recovery Portal</p>
       <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:4px 14px;border-radius:999px;font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#38bdf8;">
@@ -1425,10 +1448,10 @@
     </div>
 
     <!-- Unified Login Card -->
-    <div class="gateway-login-box" style="background:#ffffff; color:#0f172a; border-radius:16px; padding:28px 24px; max-width:440px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2); box-sizing:border-box;">
+    <div class="gateway-login-box">
       <div style="text-align:center; margin-bottom:20px;">
         <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin-bottom:4px;">Sign In to Enterprise</h2>
-        <p style="font-size:0.8rem; color:#64748b;">Admin Email (Firebase Auth) or Sales Team Username</p>
+        <p style="font-size:0.8rem; color:#64748b;">Secure Cloud Access for Owner Admin &amp; Sales Team</p>
       </div>
 
       <form id="unifiedLoginForm" onsubmit="handleUnifiedLogin(event)">
@@ -1440,42 +1463,45 @@
             type="text" 
             id="unifiedLoginIdentifier" 
             class="form-control" 
-            placeholder="e.g. admin email or sales username" 
+            placeholder="Enter username or admin email" 
             required 
             autocomplete="username"
             style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem; box-sizing:border-box;"
           />
-          <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
-            Admin: <code>madhaventerprises.care@gmail.com</code> | Sales: <code>prashik</code> / <code>gopal</code> / <code>vikram</code>
-          </div>
         </div>
 
-        <div style="margin-bottom:18px; text-align:left;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label for="unifiedLoginPassword" style="font-size:0.78rem; font-weight:700; color:#334155;">
-              🔑 Password or PIN
-            </label>
-            <a href="javascript:void(0)" onclick="handleForgotPassword()" style="font-size:0.75rem; color:#0284c7; text-decoration:none; font-weight:600;">
-              Forgot Password?
-            </a>
-          </div>
+        <div style="margin-bottom:14px; text-align:left;">
+          <label for="unifiedLoginPassword" style="display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:6px;">
+            🔑 Password or PIN
+          </label>
           <div style="position:relative;">
             <input 
               type="password" 
               id="unifiedLoginPassword" 
               class="form-control" 
-              placeholder="Enter password or PIN" 
+              placeholder="Enter password or 4-digit PIN" 
               required 
               autocomplete="current-password"
               style="width:100%; padding:11px 42px 11px 14px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.9rem; box-sizing:border-box;"
             />
             <button 
               type="button" 
+              id="togglePassBtn"
               onclick="toggleUnifiedPasswordVisibility()" 
               style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; color:#64748b; padding:4px;"
               title="Show/Hide Password"
             >👁️</button>
           </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+          <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#334155; font-weight:600; cursor:pointer; user-select:none;">
+            <input type="checkbox" id="unifiedLoginRememberMe" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" />
+            <span>Remember Me</span>
+          </label>
+          <a href="javascript:void(0)" onclick="handleForgotPassword()" style="font-size:0.75rem; color:#0284c7; text-decoration:none; font-weight:600;">
+            Forgot Password?
+          </a>
         </div>
 
         <button 
@@ -1486,9 +1512,21 @@
         >
           🚀 Sign In to ERP Portal
         </button>
-      </form>
 
-      <div id="unifiedLoginStatus" style="display:none; margin-top:12px; font-size:0.8rem; text-align:center; padding:8px; border-radius:6px;"></div>
+        <div id="unifiedLoginStatus" style="display:none; margin-top:12px; font-size:0.8rem; text-align:center; padding:10px; border-radius:8px;"></div>
+
+        <div style="margin-top:16px; padding-top:14px; border-top:1px solid #e2e8f0; text-align:center;">
+          <a 
+            href="https://wa.me/919309543825?text=Hello%20Admin%2C%20I%20need%20help%20logging%20in%20to%20Madhav%20Shivom%20ERP%20Portal." 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="btn btn-whatsapp"
+            style="width:100%; justify-content:center; padding:11px 14px; font-size:0.84rem; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:8px; text-decoration:none; box-shadow:0 3px 10px rgba(34,197,94,0.3); box-sizing:border-box;"
+          >
+            <span>💬</span> <span>Need Help? Contact Admin on WhatsApp (9309543825)</span>
+          </a>
+        </div>
+      </form>
     </div>
 
     <div style="margin-top:20px; text-align:center; max-width:580px; font-size:0.75rem; opacity:0.8; line-height:1.5;">
@@ -7339,6 +7377,15 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (typeof initCustomAutocompletes === "function") initCustomAutocompletes();
       const gwLogo = document.getElementById("gatewayLogo1"); if (gwLogo) gwLogo.src = SHOP_LOGO;
 
+      // Restore Remembered Username on Gateway Screen
+      const remId = localStorage.getItem("erp_remember_id");
+      const idEl = document.getElementById("unifiedLoginIdentifier");
+      const remChk = document.getElementById("unifiedLoginRememberMe");
+      if (remId && idEl) {
+        idEl.value = remId;
+        if (remChk) remChk.checked = true;
+      }
+
       const today = new Date().toISOString().split("T")[0];
       document.getElementById("ordDate").value = today;
       document.getElementById("colDate").value = today;
@@ -7645,8 +7692,44 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     // ==================== UNIFIED LOGIN & AUTHENTICATION ====================
     function toggleUnifiedPasswordVisibility() {
       const el = document.getElementById("unifiedLoginPassword");
+      const btn = document.getElementById("togglePassBtn");
       if (el) {
-        el.type = el.type === "password" ? "text" : "password";
+        const isPass = el.type === "password";
+        el.type = isPass ? "text" : "password";
+        if (btn) btn.innerHTML = isPass ? "🙈" : "👁️";
+      }
+    }
+
+    function handleRememberMeSave(rawId) {
+      const remChk = document.getElementById("unifiedLoginRememberMe");
+      if (remChk && remChk.checked) {
+        localStorage.setItem("erp_remember_id", rawId);
+        localStorage.setItem("erp_remember_me", "true");
+      } else {
+        localStorage.removeItem("erp_remember_id");
+        localStorage.removeItem("erp_remember_me");
+      }
+    }
+
+    function showLoginError(msg) {
+      const statusEl = document.getElementById("unifiedLoginStatus");
+      const card = document.querySelector(".gateway-login-box");
+      if (card) {
+        card.classList.remove("login-shake");
+        void card.offsetWidth;
+        card.classList.add("login-shake");
+      }
+      if (statusEl) {
+        statusEl.style.display = "block";
+        statusEl.style.background = "#fef2f2";
+        statusEl.style.border = "1px solid #fecaca";
+        statusEl.style.borderRadius = "8px";
+        statusEl.style.color = "#991b1b";
+        statusEl.style.fontWeight = "600";
+        statusEl.style.padding = "10px 14px";
+        statusEl.innerHTML = `⚠️ ${msg}`;
+      } else {
+        alert(msg);
       }
     }
 
@@ -7674,11 +7757,14 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
     async function handleUnifiedLogin(e) {
       if (e) e.preventDefault();
+      const statusEl = document.getElementById("unifiedLoginStatus");
+      if (statusEl) statusEl.style.display = "none";
+
       const rawId = document.getElementById("unifiedLoginIdentifier").value.trim();
       const enteredPass = document.getElementById("unifiedLoginPassword").value.trim();
 
       if (!rawId || !enteredPass) {
-        alert("Please enter both Username/Email and Password.");
+        showLoginError("Please enter both Username/Email and Password.");
         return;
       }
 
@@ -7727,6 +7813,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         }
 
         if (fbSuccess || (isMasterPinMatch && isEmailOrAdmin)) {
+          handleRememberMeSave(rawId);
           // SUCCESS: Admin / Owner Logged in with FULL CONTROL
           isAdminLoggedIn = true;
           sessionStorage.setItem(AUTH_SESSION_KEY, "true");
@@ -7761,6 +7848,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           }
 
           if (isStaffMatch) {
+            handleRememberMeSave(rawId);
             // SUCCESS: Sales Staff Logged In
             currentStaff = member;
             sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
@@ -7772,16 +7860,16 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
             showToast(`Welcome ${member.name} (${member.role})! Field Portal Unlocked.`);
             return;
           } else {
-            alert("Incorrect password for " + member.name + ". Please try again.");
+            showLoginError("Incorrect password or PIN for " + member.name + ". Please try again.");
             return;
           }
         }
 
         // If credentials did not match:
         if (fbErrorMsg) {
-          alert("Login Failed: " + fbErrorMsg);
+          showLoginError("Login Failed: " + fbErrorMsg);
         } else {
-          alert("Invalid Username or Password. Please check your credentials.");
+          showLoginError("Invalid Username or Password. Please check your credentials or tap WhatsApp Help below.");
         }
       } finally {
         if (btn) {
