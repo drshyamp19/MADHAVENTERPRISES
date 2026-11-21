@@ -1294,35 +1294,51 @@
 </head>
 <body>
 
-  <!-- ==================== GATEWAY / COMPANY SELECTOR SCREEN ==================== -->
+  <!-- ==================== GATEWAY / SECURE LOGIN SCREEN (OPTION 1) ==================== -->
   <div id="gatewayScreen">
     <div style="text-align:center; max-width:680px;">
-      <h1 style="font-size:2.1rem; font-weight:800; margin-bottom:10px;">Select Enterprise Portal</h1>
-      <p style="font-size:0.95rem; opacity:0.85;">Stock, Orders, GST Billing &amp; Recovery ERP across your business units.</p>
+      <div style="font-size:2.4rem;margin-bottom:8px;">🏢⚡</div>
+      <h1 style="font-size:2.2rem; font-weight:800; margin-bottom:10px; letter-spacing:-0.5px;">MADHAV &amp; SHIVOM ERP</h1>
+      <p style="font-size:0.95rem; opacity:0.9; margin-bottom:10px;">Dual-Firm Cloud ERP: Stock, Orders, GST Billing &amp; Payment Recovery Portal</p>
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);padding:5px 16px;border-radius:999px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#38bdf8;">
+        🔒 Authorized Access Only &bull; Public Browsing Disabled
+      </span>
     </div>
+
     <div class="gateway-card-wrap">
-      <div class="gateway-card" onclick="selectCompany('MADHAV')">
+      <!-- Card 1: Owner Admin Portal -->
+      <div class="gateway-card" onclick="openLoginModal()" style="border-top:5px solid #f59e0b;">
         <div>
-          <div class="brand-logo-wrap" style="display:inline-flex;margin-bottom:14px;padding:8px 16px;">
-            <img id="gatewayLogo1" alt="Madhav Logo" />
-          </div>
-          <h2>MADHAV ENTERPRISES</h2>
-          <p>Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur<br/><strong>Stock: Greenchef Cookware &amp; Appliances</strong></p>
+          <div style="font-size:3rem;margin-bottom:12px;">👑</div>
+          <h2 style="color:#b45309;">Owner Admin Portal</h2>
+          <p>Full Owner Access: Executive Dashboard, Multi-Tab Excel, Live Profits, GST &amp; GSTR-1, Expenses, Staff Supervision &amp; Master Controls.</p>
         </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px;">Open Madhav ERP</button>
+        <button type="button" class="btn btn-amber" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;" onclick="event.stopPropagation();openLoginModal();">
+          🔐 Login as Owner Admin
+        </button>
       </div>
-      <div class="gateway-card" onclick="selectCompany('SHIVOM')">
+
+      <!-- Card 2: Sales & Field Team Portal -->
+      <div class="gateway-card" onclick="openStaffLoginModal()" style="border-top:5px solid #0f766e;">
         <div>
-          <div style="font-size:3rem;margin-bottom:14px;">⚡</div>
-          <h2>SHIVOM SALES &amp; SERVICES</h2>
-          <p>10 No Puliya, Near Samadhan Decoration, Indora Bazonbagh, Nagpur<br/><strong>Active Parties: 63 | Market Dues: ₹3,24,350 | Stock: Fans, Gas Pipes, Mixers</strong></p>
+          <div style="font-size:3rem;margin-bottom:12px;">📱</div>
+          <h2 style="color:#0f766e;">Sales Team Portal</h2>
+          <p>Field Staff Access for <strong>Prashik Hajare (Manager), Gopal Ambagade &amp; Vikram Singh Thakur</strong>: Book Orders, Record Collections &amp; Handover Cash.</p>
         </div>
-        <button class="btn btn-success" style="width:100%;justify-content:center;margin-top:10px;">Open Shivom ERP</button>
+        <button type="button" class="btn btn-teal" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;" onclick="event.stopPropagation();openStaffLoginModal();">
+          👥 Login as Sales Team
+        </button>
       </div>
     </div>
-    <div id="pwaInstallBannerGateway" style="display:none;margin-top:24px;text-align:center;">
+
+    <div style="margin-top:28px;text-align:center;max-width:680px;font-size:0.75rem;opacity:0.75;line-height:1.6;">
+      <div><strong>MADHAV ENTERPRISES</strong> (Plot No 408, Besan Bag, Indora, Nagpur) &bull; <strong>SHIVOM SALES</strong> (10 No Puliya, Indora, Nagpur)</div>
+      <div style="margin-top:4px;">Protected Enterprise Management System &bull; All customer data, debt balances &amp; stock numbers are encrypted and private.</div>
+    </div>
+
+    <div id="pwaInstallBannerGateway" style="display:none;margin-top:16px;text-align:center;">
       <button type="button" class="btn btn-white" onclick="triggerPwaInstall()" style="padding:10px 22px;font-weight:700;font-size:0.9rem;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
-        📲 Install Madhav ERP App on Mobile
+        📲 Install ERP App on Mobile
       </button>
     </div>
   </div>
@@ -1379,20 +1395,20 @@
       </div>
     </header>
 
-    <!-- Navigation Bar: Open Portal has ONLY 2 TABS. Admin Login unlocks the rest! -->
+    <!-- Navigation Bar: Protected Role-Based Access (Option 1) -->
     <nav class="nav-bar">
-      <button class="nav-tab open-tab active" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 1. Live Stock &amp; Rates</button>
-      <button class="nav-tab open-tab" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 2. Outstanding Dues</button>
-      <!-- Staff & Admin Shared Tabs -->
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 3. Book Order</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 4. Record Collection</button>
-      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="staff-cash" onclick="switchTab('staff-cash', this)">🤝 5. Cash Handover &amp; Bank</button>
+      <!-- Staff & Admin Shared Tabs (Protected) -->
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 Live Stock &amp; Rates</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 Dealer Outstandings</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 Book Order</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-collection" onclick="switchTab('admin-collection', this)">💵 Record Collection</button>
+      <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="staff-cash" onclick="switchTab('staff-cash', this)">🤝 Cash Handover &amp; Bank</button>
       <!-- Admin Only Tabs -->
-      <button class="nav-tab admin-only-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
-      <button class="nav-tab admin-only-item" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
+      <button class="nav-tab admin-only-item" style="display:none;" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
+      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
+      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-gst" onclick="switchTab('admin-gst', this)">🧾 GST &amp; GSTR-1</button>
+      <button class="nav-tab admin-only-item" style="display:none;" data-tab="admin-masters" onclick="switchTab('admin-masters', this)">👥 Masters &amp; Team</button>
     </nav>
 
     <main class="container">
@@ -7033,7 +7049,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
     function initApp() {
       if (typeof initCustomAutocompletes === "function") initCustomAutocompletes();
-      document.getElementById("gatewayLogo1").src = SHOP_LOGO;
+      const gwLogo = document.getElementById("gatewayLogo1"); if (gwLogo) gwLogo.src = SHOP_LOGO;
 
       const today = "2026-11-16";
       document.getElementById("ordDate").value = today;
@@ -7052,16 +7068,30 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           currentStaff = null;
         }
       }
-      updateStaffUI();
-
-      const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
-      selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "SHIVOM");
 
       initFirebase();
       updateInstallButtonsVisibility();
+
+      // Enforce Option 1: Must be authenticated to enter App Shell
+      if (isAdminLoggedIn || currentStaff) {
+        const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+        selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
+        updateAdminUI();
+        if (isAdminLoggedIn) {
+          switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
+        } else {
+          switchTab("open-stock", document.querySelector('[data-tab="open-stock"]'));
+        }
+      } else {
+        returnToGateway();
+      }
     }
 
     function selectCompany(coKey) {
+      if (!isAdminLoggedIn && !currentStaff) {
+        returnToGateway();
+        return;
+      }
       activeCompany = coKey;
       localStorage.setItem(ACTIVE_CO_KEY, coKey);
 
@@ -7273,8 +7303,12 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     }
 
     function switchTab(tabId, btnEl) {
-      const isStaffAllowed = currentStaff && (tabId === "admin-orders" || tabId === "admin-collection" || tabId === "staff-cash");
-      if (!isAdminLoggedIn && !isStaffAllowed && (tabId === "dashboard" || tabId.startsWith("admin-") || tabId === "staff-cash")) {
+      if (!isAdminLoggedIn && !currentStaff) {
+        returnToGateway();
+        return;
+      }
+      const isStaffAllowed = currentStaff && (tabId === "open-stock" || tabId === "open-dues" || tabId === "admin-orders" || tabId === "admin-collection" || tabId === "staff-cash");
+      if (!isAdminLoggedIn && !isStaffAllowed) {
         tabId = "open-stock";
         btnEl = document.querySelector('[data-tab="open-stock"]');
       }
@@ -7330,6 +7364,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         isAdminLoggedIn = true;
         sessionStorage.setItem(AUTH_SESSION_KEY, "true");
         closeModal("ownerLoginModal");
+        const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+        selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
         updateAdminUI();
         switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
         showToast("Welcome Owner! Full Admin Controls Unlocked.");
@@ -7344,8 +7380,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       isAdminLoggedIn = false;
       sessionStorage.removeItem(AUTH_SESSION_KEY);
       updateAdminUI();
-      switchTab("open-stock", document.querySelector('[data-tab=open-stock]'));
-      showToast("Logged out to Open Portal View.");
+      returnToGateway();
+      showToast("Owner logged out securely.");
     }
 
     
@@ -7382,6 +7418,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
         localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
         closeModal("staffLoginModal");
+        const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+        selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "SHIVOM");
         updateStaffUI();
         switchTab("admin-orders", document.querySelector('[data-tab="admin-orders"]'));
         showToast(`Welcome ${member.name} (${member.role})! Field Portal Unlocked.`);
@@ -7397,8 +7435,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       sessionStorage.removeItem(STAFF_SESSION_KEY);
       localStorage.removeItem(STAFF_SESSION_KEY);
       updateStaffUI();
-      switchTab("open-stock", document.querySelector('[data-tab="open-stock"]'));
-      showToast("Logged out of Sales Team Portal.");
+      returnToGateway();
+      showToast("Sales staff logged out securely.");
     }
 
     function updateStaffUI() {
