@@ -2220,7 +2220,7 @@
               <div style="background:#fff7ed; border-radius:10px; padding:10px 14px; border:1px solid #fed7aa; display:flex; align-items:center; gap:10px;">
                 <div style="font-size:1.6rem; line-height:1;">📦</div>
                 <div>
-                  <div style="font-size:0.7rem; font-weight:700; color:#9a3412; text-transform:uppercase;">Pending Dispatch</div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#9a3412; text-transform:uppercase;" id="kpiPendingLabel">Pending Dispatch</div>
                   <div style="font-size:1.1rem; font-weight:800; color:#c2410c;" id="kpiPendingValue">₹0</div>
                   <div style="font-size:0.68rem; color:#78716c;"><span id="kpiPendingCount">0</span> Memos</div>
                 </div>
@@ -2229,7 +2229,7 @@
               <div style="background:#f0fdf4; border-radius:10px; padding:10px 14px; border:1px solid #bbf7d0; display:flex; align-items:center; gap:10px;">
                 <div style="font-size:1.6rem; line-height:1;">🚚</div>
                 <div>
-                  <div style="font-size:0.7rem; font-weight:700; color:#166534; text-transform:uppercase;">Dispatched Value</div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#166534; text-transform:uppercase;" id="kpiDispatchedLabel">Dispatched Value</div>
                   <div style="font-size:1.1rem; font-weight:800; color:#15803d;" id="kpiDispatchedValue">₹0</div>
                   <div style="font-size:0.68rem; color:#78716c;"><span id="kpiDispatchedCount">0</span> Memos</div>
                 </div>
@@ -2238,7 +2238,7 @@
               <div style="background:#eff6ff; border-radius:10px; padding:10px 14px; border:1px solid #bfdbfe; display:flex; align-items:center; gap:10px;">
                 <div style="font-size:1.6rem; line-height:1;">📊</div>
                 <div>
-                  <div style="font-size:0.7rem; font-weight:700; color:#1e40af; text-transform:uppercase;">Total Orders Booked</div>
+                  <div style="font-size:0.7rem; font-weight:700; color:#1e40af; text-transform:uppercase;" id="kpiTotalOrdersLabel">Total Orders Booked</div>
                   <div style="font-size:1.1rem; font-weight:800; color:#1d4ed8;" id="kpiTotalOrdersValue">₹0</div>
                   <div style="font-size:0.68rem; color:#78716c;"><span id="kpiTotalOrdersCount">0</span> Total Memos</div>
                 </div>
@@ -2476,9 +2476,65 @@
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Collection Ledger (Cash / Bank Receipts)</span>
-            <input type="text" id="colSearch" class="form-control" style="width:240px;" placeholder="Search party, remark..." oninput="renderCollectionTable()" />
+          <div class="card-header" style="flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;">
+            <div>
+              <span class="card-title" style="display:flex;align-items:center;gap:6px;">
+                <span>💵</span> Collection Ledger (Cash / Bank Receipts)
+              </span>
+              <div id="colSummarySub" style="font-size:0.75rem;color:var(--muted);margin-top:2px;font-weight:600;">
+                Receipts &amp; Payments Record
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="colSearch" class="form-control" style="width:180px;margin:0;font-size:0.8rem;padding:5px 8px;" placeholder="🔍 Search Party, Ref..." oninput="renderCollectionTable()" />
+
+              <select id="colDateFilter" class="form-control" style="width:145px;margin:0;font-weight:600;font-size:0.8rem;padding:5px 8px;" onchange="handleColDateFilterChange()">
+                <option value="ALL">📅 All Dates</option>
+                <option value="TODAY">⚡ Today</option>
+                <option value="YESTERDAY">⏮️ Yesterday</option>
+                <option value="THIS_WEEK">📆 This Week</option>
+                <option value="THIS_MONTH" selected>🗓️ This Month</option>
+                <option value="CUSTOM">🎯 Custom Range...</option>
+              </select>
+
+              <div id="colCustomDateWrap" style="display:none;align-items:center;gap:4px;background:#f8fafc;padding:2px 6px;border:1px solid #cbd5e1;border-radius:6px;">
+                <input type="date" id="colDateFrom" class="form-control" style="width:125px;padding:3px 5px;font-size:0.75rem;" onchange="renderCollectionTable()" />
+                <span style="font-size:0.72rem;color:#64748b;font-weight:700;">to</span>
+                <input type="date" id="colDateTo" class="form-control" style="width:125px;padding:3px 5px;font-size:0.75rem;" onchange="renderCollectionTable()" />
+              </div>
+
+              <!-- Salesperson Filter: Manager & Admin see all salespersons; Salespersons only see their own -->
+              <select id="colSalespersonFilter" class="form-control" style="width:160px;margin:0;font-weight:600;font-size:0.8rem;padding:5px 8px;" onchange="renderCollectionTable()">
+                <option value="ALL">👤 All Salespersons</option>
+              </select>
+
+              <button type="button" class="btn btn-sm btn-outline" onclick="resetColFilters()" style="padding:4px 8px;font-size:0.75rem;font-weight:700;" title="Reset collection filters">
+                ↺ Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Collection KPI Strip (Shows Period Total, Cash, Bank, Count) -->
+          <div id="colKpiStrip" style="display:flex;gap:12px;padding:8px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;align-items:center;font-size:0.8rem;">
+            <div style="font-weight:700;color:#0f172a;">
+              <span id="colKpiTotalLabel">Total Collected</span>: <span id="colKpiTotal" style="color:#0f766e;font-size:0.95rem;font-weight:800;">₹0</span>
+            </div>
+            <div style="color:#cbd5e1;">|</div>
+            <div style="font-weight:600;color:#16a34a;">
+              Cash: <span id="colKpiCash" style="font-weight:700;">₹0</span>
+            </div>
+            <div style="color:#cbd5e1;">|</div>
+            <div style="font-weight:600;color:#2563eb;">
+              Bank / UPI: <span id="colKpiBank" style="font-weight:700;">₹0</span>
+            </div>
+            <div style="color:#cbd5e1;">|</div>
+            <div style="color:#64748b;font-weight:600;">
+              Receipts: <span id="colKpiCount" style="font-weight:700;">0</span>
+            </div>
+            <div style="margin-left:auto;">
+              <span id="colActiveFilterBadge" class="pill pill-blue" style="font-size:0.7rem;padding:3px 8px;font-weight:700;">This Month</span>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -16774,6 +16830,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           colSp.disabled = false;
         }
       }
+      if (typeof populateOrderSalespersonFilter === "function") populateOrderSalespersonFilter();
+      if (typeof populateColSalespersonFilter === "function") populateColSalespersonFilter();
     }
 
     // ==================== OPEN PORTAL: LIVE STOCK ====================
@@ -19011,7 +19069,7 @@ Thank you!`;
       if (!orderDatePreset || orderDatePreset === "all") return true;
 
       const now = new Date();
-      const todayStr = now.toISOString().split("T")[0];
+      const todayStr = getDashLocalDateStr(now);
 
       if (orderDatePreset === "today") {
         return orderDateStr === todayStr;
@@ -19019,14 +19077,17 @@ Thank you!`;
       if (orderDatePreset === "yesterday") {
         const y = new Date(now);
         y.setDate(y.getDate() - 1);
-        const yStr = y.toISOString().split("T")[0];
+        const yStr = getDashLocalDateStr(y);
         return orderDateStr === yStr;
       }
       if (orderDatePreset === "thisWeek") {
-        const w = new Date(now);
-        w.setDate(w.getDate() - 7);
-        const wStr = w.toISOString().split("T")[0];
-        return orderDateStr >= wStr && orderDateStr <= todayStr;
+        const day = now.getDay();
+        const diffToMon = now.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(now.getFullYear(), now.getMonth(), diffToMon);
+        const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+        const monStr = getDashLocalDateStr(mon);
+        const sunStr = getDashLocalDateStr(sun);
+        return orderDateStr >= monStr && orderDateStr <= sunStr;
       }
       if (orderDatePreset === "thisMonth") {
         const mStr = todayStr.substring(0, 7);
@@ -19071,9 +19132,9 @@ Thank you!`;
       // 3. Filter by Date range
       list = list.filter(o => isOrderInSelectedDateRange(o.date));
 
-      // 4. Filter by Salesperson (Only filter Active Pending Orders to own orders for Salesperson; All Orders History & Dispatched Archive show all salespersons)
+      // 4. Filter by Salesperson (Salespersons always see only their own orders across all register views; Admin/Manager can filter by selected salesperson)
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
-      if (isSalesperson && currentOrderRegisterTab === "Pending" && currentStaff && currentStaff.name) {
+      if (isSalesperson && currentStaff && currentStaff.name) {
         const myName = currentStaff.name.toUpperCase();
         const isGopal = myName.includes("GOPAL");
         const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
@@ -19143,9 +19204,16 @@ Thank you!`;
         }
       }
 
-      // Toggle KPI Strip: Hide bulky company-wide stats for Salespersons
+      // Toggle KPI Strip: Keep visible for everyone (personalized for Salespersons, team-wide for Admin/Manager)
       const kpiStrip = document.getElementById("ordersKpiStrip");
-      if (kpiStrip) kpiStrip.style.display = isSalesperson ? "none" : "grid";
+      if (kpiStrip) kpiStrip.style.display = "grid";
+
+      const kpiPendLblEl = document.getElementById("kpiPendingLabel");
+      const kpiDispLblEl = document.getElementById("kpiDispatchedLabel");
+      const kpiTotLblEl = document.getElementById("kpiTotalOrdersLabel");
+      if (kpiPendLblEl) kpiPendLblEl.textContent = isSalesperson ? "My Pending Dispatch" : "Pending Dispatch";
+      if (kpiDispLblEl) kpiDispLblEl.textContent = isSalesperson ? "My Dispatched Value" : "Dispatched Value";
+      if (kpiTotLblEl) kpiTotLblEl.textContent = isSalesperson ? "My Orders Booked" : "Total Orders Booked";
 
       // Toggle Compact View Classes & Headers on Main Orders Table
       const tableEl = document.getElementById("ordersMainTable");
@@ -19174,7 +19242,7 @@ Thank you!`;
         if (batchToolbar) batchToolbar.style.display = "none";
       }
 
-      // Determine visible orders for stats & tab counts (personal for Salesperson, company-wide for Admin/Manager)
+      // Determine visible orders for stats & tab counts (personal for Salesperson, company-wide or selected salesperson for Admin/Manager)
       let visibleOrdersForStats = allOrders;
       if (isSalesperson && currentStaff && currentStaff.name) {
         const myName = currentStaff.name.toUpperCase();
@@ -19187,7 +19255,13 @@ Thank you!`;
           const firstName = myName.split(" ")[0];
           return sp === myName || (firstName.length >= 3 && sp.includes(firstName));
         });
+      } else if (spFilterEl && spFilterEl.value && spFilterEl.value !== "all") {
+        const sel = spFilterEl.value.trim().toLowerCase();
+        visibleOrdersForStats = allOrders.filter(o => (o.salespersonName || "").trim().toLowerCase() === sel);
       }
+
+      // Respect active date range in KPI counters too!
+      visibleOrdersForStats = visibleOrdersForStats.filter(o => isOrderInSelectedDateRange(o.date));
 
       // Compute KPI totals across visible orders
       let pendingVal = 0;
@@ -20387,33 +20461,191 @@ Thank you!`;
       showToast(`🗑️ Order Memo #${memoDisplayNo} deleted successfully.`);
     }
 
+    function populateColSalespersonFilter() {
+      const selectEl = document.getElementById("colSalespersonFilter");
+      if (!selectEl) return;
+      const currentVal = selectEl.value || "ALL";
+      const spSet = new Set();
+      (state.collections || []).forEach(c => {
+        if (c.salespersonName && c.salespersonName.trim()) spSet.add(c.salespersonName.trim());
+      });
+      (state.salespersons || []).forEach(s => {
+        if (s.name && s.name.trim()) spSet.add(s.name.trim());
+      });
+      const sortedSp = Array.from(spSet).sort();
+      let html = `<option value="ALL">👤 All Salespersons</option>`;
+      sortedSp.forEach(name => {
+        html += `<option value="${name}" ${currentVal === name ? "selected" : ""}>${name}</option>`;
+      });
+      selectEl.innerHTML = html;
+    }
+
+    function handleColDateFilterChange() {
+      const filterEl = document.getElementById("colDateFilter");
+      const filterType = filterEl ? filterEl.value : "THIS_MONTH";
+      const customWrap = document.getElementById("colCustomDateWrap");
+      if (filterType === "CUSTOM") {
+        if (customWrap) customWrap.style.display = "inline-flex";
+        const todayStr = getDashLocalDateStr(new Date());
+        const fromEl = document.getElementById("colDateFrom");
+        const toEl = document.getElementById("colDateTo");
+        if (fromEl && !fromEl.value) fromEl.value = todayStr;
+        if (toEl && !toEl.value) toEl.value = todayStr;
+      } else {
+        if (customWrap) customWrap.style.display = "none";
+      }
+      renderCollectionTable();
+    }
+
+    function resetColFilters() {
+      const searchEl = document.getElementById("colSearch");
+      if (searchEl) searchEl.value = "";
+      const dateEl = document.getElementById("colDateFilter");
+      if (dateEl) dateEl.value = "THIS_MONTH";
+      const customWrap = document.getElementById("colCustomDateWrap");
+      if (customWrap) customWrap.style.display = "none";
+      const dFrom = document.getElementById("colDateFrom");
+      if (dFrom) dFrom.value = "";
+      const dTo = document.getElementById("colDateTo");
+      if (dTo) dTo.value = "";
+      const spEl = document.getElementById("colSalespersonFilter");
+      if (spEl) spEl.value = "ALL";
+      renderCollectionTable();
+    }
+
+    function isColInSelectedDateRange(colDateStr, filterType) {
+      if (!colDateStr) return true;
+      if (!filterType || filterType === "ALL") return true;
+
+      const now = new Date();
+      const todayStr = getDashLocalDateStr(now);
+
+      if (filterType === "TODAY") {
+        return colDateStr === todayStr;
+      }
+      if (filterType === "YESTERDAY") {
+        const y = new Date(now);
+        y.setDate(y.getDate() - 1);
+        const yStr = getDashLocalDateStr(y);
+        return colDateStr === yStr;
+      }
+      if (filterType === "THIS_WEEK") {
+        const day = now.getDay();
+        const diffToMon = now.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(now.getFullYear(), now.getMonth(), diffToMon);
+        const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+        const monStr = getDashLocalDateStr(mon);
+        const sunStr = getDashLocalDateStr(sun);
+        return colDateStr >= monStr && colDateStr <= sunStr;
+      }
+      if (filterType === "THIS_MONTH") {
+        const mStr = todayStr.substring(0, 7);
+        return colDateStr.startsWith(mStr);
+      }
+      if (filterType === "CUSTOM") {
+        const fromVal = document.getElementById("colDateFrom") ? document.getElementById("colDateFrom").value : "";
+        const toVal = document.getElementById("colDateTo") ? document.getElementById("colDateTo").value : "";
+        if (fromVal && colDateStr < fromVal) return false;
+        if (toVal && colDateStr > toVal) return false;
+        return true;
+      }
+      return true;
+    }
+
     function renderCollectionTable() {
-      const q = (document.getElementById("colSearch").value || "").toLowerCase();
+      const q = (document.getElementById("colSearch") ? document.getElementById("colSearch").value : "").toLowerCase().trim();
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
-      const isAdmin = !!isAdminLoggedIn || (currentStaff && currentStaff.role === "Owner");
+      const isAdmin = !!isAdminLoggedIn || (currentStaff && (currentStaff.role === "Owner" || currentStaff.role === "Co-Owner"));
 
-      let list = state.collections || [];
-
-      // Salespersons only see their own collections
-      if (isSalesperson) {
-        const myName = currentStaff.name.toUpperCase();
-        list = list.filter(c => (c.salespersonName || "").toUpperCase().includes(myName.includes("GOPAL") ? "GOPAL" : "VIK"));
+      // 1. Manage Salesperson Filter visibility
+      const spFilterEl = document.getElementById("colSalespersonFilter");
+      if (spFilterEl) {
+        spFilterEl.style.display = isSalesperson ? "none" : "inline-block";
+        if (!isSalesperson && spFilterEl.options.length <= 1) {
+          populateColSalespersonFilter();
+        }
       }
 
-      // Filter by search query
-      list = list.filter(c =>
-        (c.receiptNo || "").toLowerCase().includes(q) ||
-        (c.partyName || "").toLowerCase().includes(q) ||
-        (c.salespersonName || "").toLowerCase().includes(q) ||
-        (c.mode || "").toLowerCase().includes(q) ||
-        (c.bankRef || "").toLowerCase().includes(q)
-      );
+      // 2. Resolve Active Date Filter
+      const dateFilterEl = document.getElementById("colDateFilter");
+      const dateFilterType = dateFilterEl ? dateFilterEl.value : "THIS_MONTH";
+      const selectedSp = (spFilterEl && spFilterEl.value) ? spFilterEl.value : "ALL";
+
+      let allCols = state.collections || [];
+
+      // 3. Filter by Role & Salesperson
+      let list = allCols;
+      if (isSalesperson && currentStaff && currentStaff.name) {
+        const myName = currentStaff.name.toUpperCase();
+        const isGopal = myName.includes("GOPAL");
+        const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
+        list = list.filter(c => {
+          const sp = (c.salespersonName || "").toUpperCase();
+          if (isGopal) return sp.includes("GOPAL");
+          if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
+          const firstName = myName.split(" ")[0];
+          return sp === myName || (firstName.length >= 3 && sp.includes(firstName));
+        });
+      } else if (selectedSp !== "ALL") {
+        list = list.filter(c => (c.salespersonName || "").trim().toLowerCase() === selectedSp.trim().toLowerCase());
+      }
+
+      // 4. Filter by Date
+      list = list.filter(c => isColInSelectedDateRange(c.date, dateFilterType));
+
+      // 5. Update KPI Summary Strip
+      const periodTotal = list.reduce((s, c) => s + Number(c.amount || 0), 0);
+      const cashTotal = list.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const bankTotal = list.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount || 0), 0);
+
+      const totEl = document.getElementById("colKpiTotal");
+      if (totEl) totEl.textContent = fmtINR(periodTotal);
+      const cashEl = document.getElementById("colKpiCash");
+      if (cashEl) cashEl.textContent = fmtINR(cashTotal);
+      const bankEl = document.getElementById("colKpiBank");
+      if (bankEl) bankEl.textContent = fmtINR(bankTotal);
+      const cntEl = document.getElementById("colKpiCount");
+      if (cntEl) cntEl.textContent = list.length;
+
+      const totLabelEl = document.getElementById("colKpiTotalLabel");
+      if (totLabelEl) {
+        totLabelEl.textContent = isSalesperson ? "My Total Collected" : (selectedSp !== "ALL" ? `${selectedSp} Total` : "Team Total Collected");
+      }
+
+      const activeBadgeEl = document.getElementById("colActiveFilterBadge");
+      if (activeBadgeEl) {
+        const dateLabels = {
+          ALL: "All Dates",
+          TODAY: "⚡ Today",
+          YESTERDAY: "⏮️ Yesterday",
+          THIS_WEEK: "📆 This Week",
+          THIS_MONTH: "🗓️ This Month",
+          CUSTOM: "🎯 Custom Range"
+        };
+        activeBadgeEl.textContent = dateLabels[dateFilterType] || dateFilterType;
+      }
+
+      const summarySubEl = document.getElementById("colSummarySub");
+      if (summarySubEl) {
+        summarySubEl.textContent = `${list.length} receipts (${isSalesperson ? 'Personal' : (selectedSp !== 'ALL' ? selectedSp : 'All Staff')})`;
+      }
+
+      // 6. Filter by search query
+      if (q) {
+        list = list.filter(c =>
+          (c.receiptNo || "").toLowerCase().includes(q) ||
+          (c.partyName || "").toLowerCase().includes(q) ||
+          (c.salespersonName || "").toLowerCase().includes(q) ||
+          (c.mode || "").toLowerCase().includes(q) ||
+          (c.bankRef || "").toLowerCase().includes(q)
+        );
+      }
 
       const tbody = document.getElementById("collectionTableBody");
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:16px;color:var(--muted);">${isSalesperson ? 'No collection receipts found under your name.' : 'No collection receipts found.'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:22px;color:var(--muted);font-weight:600;">${isSalesperson ? 'No collection receipts found for this period under your name.' : 'No collection receipts found for the selected filter.'}</td></tr>`;
         return;
       }
 
