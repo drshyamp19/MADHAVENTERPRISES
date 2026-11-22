@@ -1771,6 +1771,9 @@
               <button type="button" class="btn btn-sm" style="background:#7c3aed;color:#fff;font-weight:700;" onclick="openDailySummaryReportModal()">
                 📑 Daily Summary PDF Report
               </button>
+              <a href="https://drive.google.com/drive/folders/1Rpl2zwQTUU5K4bKm5cfm2w07o6BIRabn" target="_blank" class="btn btn-sm" style="background:#059669;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;">
+                📁 Open Google Drive Cloud Folder
+              </a>
               <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-weight:700;">
                 📄 Download Template
               </button>
@@ -4036,6 +4039,44 @@ function toBase64Utf8(str) {
         }
       } catch (err) {
         console.error("Auto backup order memo error:", err);
+      }
+    }
+
+    async function autoBackupPaymentReceiptToDrive(col) {
+      if (!col || col.receiptDriveUrl || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      try {
+        const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
+        const safeParty = (col.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+        const pdfFileName = `${activeCompany}_Receipt_${col.receiptNo}_${safeParty}.pdf`;
+
+        const rEl = document.getElementById("receiptPrintArea");
+        const receiptHtml = (rEl && rEl.innerHTML.trim().length > 50) ? rEl.innerHTML : `<h2>${co.name}</h2><h3>Payment Receipt #${col.receiptNo}</h3>`;
+
+        let pdfB64 = await generateDocPdfBase64(receiptHtml, pdfFileName);
+        let res = null;
+
+        if (pdfB64) {
+          res = await uploadDocToGoogleDrive(activeCompany, "Payment_Receipts", pdfFileName, pdfB64, "application/pdf");
+        } else {
+          const htmlFileName = `${activeCompany}_Receipt_${col.receiptNo}_${safeParty}.html`;
+          const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt #${col.receiptNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}</style></head><body>${receiptHtml}</body></html>`;
+          const base64Data = toBase64Utf8(fullDoc);
+          res = await uploadDocToGoogleDrive(activeCompany, "Payment_Receipts", htmlFileName, base64Data, "text/html");
+        }
+
+        if (res && res.fileUrl) {
+          col.receiptDriveUrl = res.fileUrl;
+          if (!col.driveUrl) col.driveUrl = res.fileUrl;
+          persistLocal();
+          if (isFirebaseLive && db) {
+            const prefix = activeCompany.toLowerCase() + "_";
+            db.collection(prefix + "collections").doc(col.id).update({ receiptDriveUrl: res.fileUrl, driveUrl: col.driveUrl || res.fileUrl }).catch(e => console.warn(e));
+          }
+          renderCollectionTable();
+          console.log(`Auto-backed up Payment Receipt PDF #${col.receiptNo} to Drive:`, res.fileUrl);
+        }
+      } catch (err) {
+        console.error("Auto backup payment receipt error:", err);
       }
     }
 
@@ -12449,6 +12490,7 @@ Thank you!`;
       `;
 
       openModal("paymentReceiptModal");
+      autoBackupPaymentReceiptToDrive(col);
     }
 
         function getCashSummary() {
@@ -14844,7 +14886,6 @@ Thank you! Your payment has been received successfully.`;
 
       const roundOffSign = gst.roundOff >= 0 ? "+" : "";
 
-      autoBackupTaxInvoiceToDrive(ord);
       document.getElementById("invoicePrintArea").innerHTML = `
         <div class="inv-top">
           ${logoHtml}
