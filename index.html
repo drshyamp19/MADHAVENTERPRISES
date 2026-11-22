@@ -1232,10 +1232,14 @@
         border-bottom: 2px solid #e2e8f0 !important;
       }
       .nav-row {
-        display: flex !important;
+        display: flex;
         flex-wrap: wrap !important;
         gap: 6px !important;
         width: 100% !important;
+      }
+      .nav-row[style*="display: none"],
+      .nav-row[style*="display:none"] {
+        display: none !important;
       }
       .nav-group-tag {
         width: 100% !important;
@@ -1607,7 +1611,6 @@
 
       <!-- Row 2: Owner Administration, Accounts & GST (Owner Only) -->
       <div class="nav-row nav-row-admin" id="adminNavRow" style="display:none;">
-        <span class="nav-group-tag tag-admin">👑 Owner Admin</span>
         <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
         <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-stock" onclick="switchTab('admin-stock', this)">📥 Add Purchase Stock</button>
         <button class="nav-tab admin-nav-item admin-only-item" style="display:none;" data-tab="admin-expenses" onclick="switchTab('admin-expenses', this)">💸 Expenses &amp; Profit</button>
