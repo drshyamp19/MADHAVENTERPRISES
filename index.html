@@ -2478,10 +2478,11 @@
           </div>
         </div>
 
-        <!-- History Tables: Handovers & Bank Deposits -->
+        <!-- History Tables: Handovers, Online & Cheques / Bank Deposits -->
         <div class="grid-2" id="staffCashHistoryGrid">
+          <!-- Table 1: Cash Handover to Prashik History -->
           <div class="card" id="salesmenHandoverHistoryCard">
-            <div class="card-header"><span class="card-title" id="salesmenHandoverHistoryTitle">📜 Salesmen Handover to Prashik History</span></div>
+            <div class="card-header"><span class="card-title" id="salesmenHandoverHistoryTitle">🤝 Cash Handover History</span></div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -2499,6 +2500,27 @@
             </div>
           </div>
 
+          <!-- Table 2 (For Salesperson): My Online (UPI) & Cheque Collections -->
+          <div class="card" id="salespersonOnlineChequeCard" style="display:none;">
+            <div class="card-header"><span class="card-title" id="salespersonOnlineChequeTitle">📱 My Online (UPI) &amp; Cheque Collections</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Party / Dealer</th>
+                    <th>Mode</th>
+                    <th>Ref / Cheque Details</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-center">Status / Tracking</th>
+                  </tr>
+                </thead>
+                <tbody id="salespersonOnlineChequeTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Table 2 (For Manager/Admin): Bank / Account Deposit History -->
           <div class="card" id="bankDepositHistoryCard">
             <div class="card-header"><span class="card-title">🏦 Bank / Account Deposit History</span></div>
             <div class="table-wrap">
@@ -12149,8 +12171,11 @@ Thank you!`;
       const bankDepCard = document.getElementById("bankDepositHistoryCard");
       if (bankDepCard) bankDepCard.style.display = canViewAllCash ? "block" : "none";
 
+      const spOnlineChequeCard = document.getElementById("salespersonOnlineChequeCard");
+      if (spOnlineChequeCard) spOnlineChequeCard.style.display = isSalesperson ? "block" : "none";
+
       const historyGrid = document.getElementById("staffCashHistoryGrid");
-      if (historyGrid) historyGrid.className = canViewAllCash ? "grid-2" : "grid-1";
+      if (historyGrid) historyGrid.className = "grid-2";
 
       // 1. Populate Sales Team Market Collections & Handover Balance Table
       if (spOverviewTbody) {
@@ -12767,6 +12792,71 @@ Thank you!`;
                 <td><strong>${accName}</strong></td>
                 <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(b.amount)}</td>
                 <td>${b.depositedBy}</td>
+              </tr>
+            `;
+          }).join("");
+        }
+      }
+
+      // 5b. Render Salesperson's Own Online & Cheque Collections Table (Salesperson Only)
+      const spOcTbody = document.getElementById("salespersonOnlineChequeTbody");
+      const spOcTitle = document.getElementById("salespersonOnlineChequeTitle");
+      if (spOcTbody && isSalesperson && currentStaff) {
+        const myNameUpper = currentStaff.name.trim().toUpperCase();
+        if (spOcTitle) {
+          spOcTitle.innerHTML = `📱 My Online (UPI) &amp; Cheque Collections (${currentStaff.name})`;
+        }
+        const myOcList = (state.collections || []).filter(c => {
+          const sp = (c.salespersonName || c.salesperson || "").trim().toUpperCase();
+          const matches = sp && (sp.includes(myNameUpper) || myNameUpper.includes(sp) || (myNameUpper.includes("VIKRAM") && sp.includes("VIKARAM")) || (myNameUpper.includes("VIKARAM") && sp.includes("VIKRAM")));
+          return matches && (c.mode === "Bank" || c.mode === "Cheque");
+        });
+
+        if (myOcList.length === 0) {
+          spOcTbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:var(--muted);padding:14px;">No online or cheque collections recorded yet for ${currentStaff.name}.</td></tr>`;
+        } else {
+          spOcTbody.innerHTML = myOcList.map(c => {
+            const isBank = (c.mode === "Bank");
+            const isCheque = (c.mode === "Cheque");
+
+            const modeBadge = isBank
+              ? '<span class="pill pill-green" style="font-weight:700;">📱 Online (UPI)</span>'
+              : '<span class="pill pill-blue" style="font-weight:700;">📝 Cheque</span>';
+
+            let refDetails = '-';
+            if (isCheque) {
+              refDetails = `<strong>#${c.chequeNo || '-'}</strong><br><small style="color:var(--muted);">${c.chequeBank || 'Bank'}</small>`;
+            } else {
+              refDetails = `<span style="font-size:0.8rem;color:var(--text);">${c.bankRef || c.ref || c.depositAccount || 'Direct Bank'}</span>`;
+            }
+
+            let statusHtml = '';
+            if (isBank) {
+              statusHtml = '<span class="pill pill-green">🟢 Direct Bank</span>';
+            } else {
+              if (c.chequeStatus === "Cleared") {
+                statusHtml = '<span class="pill pill-green">🟢 Cleared in Bank</span>';
+              } else if (c.chequeHandedToPrashik || c.chequeLocation === "AT_OFFICE") {
+                statusHtml = '<span class="pill pill-blue">🏢 Handed to Prashik</span>';
+              } else if (c.chequeHandoverRequested) {
+                statusHtml = '<span class="pill pill-yellow">⏳ Handover Pending</span>';
+              } else {
+                statusHtml = `
+                  <button type="button" class="btn btn-sm btn-teal" onclick="handoverChequeToPrashik('${c.id}')" style="padding:3px 8px;font-size:0.75rem;font-weight:700;white-space:nowrap;">
+                    🤝 Handover to Prashik
+                  </button>
+                `;
+              }
+            }
+
+            return `
+              <tr>
+                <td>${fmtDate(c.date)}</td>
+                <td class="font-bold">${c.partyName || "Unknown Party"}</td>
+                <td>${modeBadge}</td>
+                <td>${refDetails}</td>
+                <td class="text-right font-bold" style="color:${isBank ? '#0f766e' : '#2563eb'};">${fmtINR(c.amount)}</td>
+                <td class="text-center">${statusHtml}</td>
               </tr>
             `;
           }).join("");
