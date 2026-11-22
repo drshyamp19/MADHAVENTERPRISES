@@ -1436,8 +1436,10 @@
 
     /* Compact Orders Register view for Salespersons */
     .salesperson-orders-view .order-admin-col,
-    .salesperson-orders-view .order-disp-col,
-    .salesperson-orders-view .order-sp-col {
+    .salesperson-orders-view .order-disp-col {
+      display: none !important;
+    }
+    .salesperson-orders-view.hide-sp-col .order-sp-col {
       display: none !important;
     }
 
@@ -10486,9 +10488,9 @@ Thank you!`;
       // 3. Filter by Date range
       list = list.filter(o => isOrderInSelectedDateRange(o.date));
 
-      // 4. Filter by Salesperson (Role-Based for Salesperson, dropdown for Admin/Manager)
+      // 4. Filter by Salesperson (Only filter Active Pending Orders to own orders for Salesperson; All Orders History & Dispatched Archive show all salespersons)
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
-      if (isSalesperson && currentStaff && currentStaff.name) {
+      if (isSalesperson && currentOrderRegisterTab === "Pending" && currentStaff && currentStaff.name) {
         const myName = currentStaff.name.toUpperCase();
         const isGopal = myName.includes("GOPAL");
         const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
@@ -10566,8 +10568,15 @@ Thank you!`;
       if (tableEl) {
         if (isSalesperson) {
           tableEl.classList.add("salesperson-orders-view");
+          // Hide salesperson column in Active Pending Orders (since all are own); show in Completed & All Orders History
+          if (currentOrderRegisterTab === "Pending") {
+            tableEl.classList.add("hide-sp-col");
+          } else {
+            tableEl.classList.remove("hide-sp-col");
+          }
         } else {
           tableEl.classList.remove("salesperson-orders-view");
+          tableEl.classList.remove("hide-sp-col");
         }
       }
       const colOrdQtyHeader = document.getElementById("colHeaderOrdQty");
@@ -10635,13 +10644,32 @@ Thank you!`;
       if (kpiTotValEl) kpiTotValEl.textContent = fmtINR(totalBookedVal);
       if (kpiTotCntEl) kpiTotCntEl.textContent = visibleOrdersForStats.length;
 
-      // Update Tab Counter Badges
+      // Update Tab Counter Badges (Pending reflects personal for Salesperson; All & Dispatched reflect full history)
+      let myPendingCount = 0;
+      allOrders.forEach(o => {
+        const remQ = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
+        if (remQ > 0) {
+          if (isSalesperson && currentStaff && currentStaff.name) {
+            const myName = currentStaff.name.toUpperCase();
+            const isGopal = myName.includes("GOPAL");
+            const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
+            const sp = (o.salespersonName || "").toUpperCase();
+            if ((isGopal && sp.includes("GOPAL")) || (isVikram && (sp.includes("VIKARAM") || sp.includes("VIKRAM")))) {
+              myPendingCount++;
+            }
+          } else {
+            myPendingCount++;
+          }
+        }
+      });
+      const totalCompletedOrdersCount = allOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) === 0).length;
+
       const cAllEl = document.getElementById("countAllOrders");
       const cPenEl = document.getElementById("countPendingOrders");
       const cCompEl = document.getElementById("countCompletedOrders");
-      if (cAllEl) cAllEl.textContent = visibleOrdersForStats.length;
-      if (cPenEl) cPenEl.textContent = totalPendingCount;
-      if (cCompEl) cCompEl.textContent = totalCompletedCount;
+      if (cAllEl) cAllEl.textContent = allOrders.length;
+      if (cPenEl) cPenEl.textContent = myPendingCount;
+      if (cCompEl) cCompEl.textContent = totalCompletedOrdersCount;
 
       updateOrderSortHeaders();
 
@@ -10651,7 +10679,8 @@ Thank you!`;
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${isSalesperson ? '8' : '12'}" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
+        const colSpan = isSalesperson ? (currentOrderRegisterTab === "Pending" ? 8 : 9) : 12;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
         updateSelectedOrdersBar();
         return;
       }
