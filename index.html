@@ -1597,7 +1597,6 @@
     <nav class="nav-bar">
       <!-- Row 1: Sales, Field & Counter Operations (Staff & Admin) -->
       <div class="nav-row nav-row-field" id="fieldNavRow">
-        <span class="nav-group-tag tag-field">🛒 Field &amp; Sales</span>
         <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-stock" onclick="switchTab('open-stock', this)">📦 Live Stock &amp; Rates</button>
         <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="open-dues" onclick="switchTab('open-dues', this)">🔴 Dealer Outstandings</button>
         <button class="nav-tab admin-or-staff-item" style="display:none;" data-tab="admin-orders" onclick="switchTab('admin-orders', this)">🛒 Book Order</button>
@@ -1620,14 +1619,6 @@
 
       <!-- ==================== OPEN TAB 1: LIVE STOCK & RATES (READ-ONLY) ==================== -->
       <section id="tab-open-stock" class="tab-panel active">
-        <div class="open-notice-banner">
-          <div>
-            <strong>📦 Warehouse Live Stock &amp; Dealer Rate Card</strong>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Real-time available inventory, dealer net rates &amp; active trade schemes</div>
-          </div>
-          <span class="pill pill-green">✓ Read-Only View</span>
-        </div>
-
         <div class="card">
           <div class="card-header">
             <div>
@@ -1661,18 +1652,11 @@
 
       <!-- ==================== OPEN TAB 2: OUTSTANDING BALANCES (READ-ONLY) ==================== -->
       <section id="tab-open-dues" class="tab-panel">
-        <div class="open-notice-banner">
-          <div>
-            <strong>🔴 Outstanding Market Dues &amp; Receivables</strong>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Track dealer pending balances, direct phone call &amp; WhatsApp payment reminders</div>
-          </div>
-          <span class="pill pill-red" id="openTotalDuePill">Total Due: ₹0.00</span>
-        </div>
-
         <div class="card">
           <div class="card-header">
-            <div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <span class="card-title">Dealer Outstanding Balances</span>
+              <span class="pill pill-red font-bold" id="openTotalDuePill" style="font-size:0.75rem;">Total Due: ₹0.00</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <select id="openDueFilter" class="form-control" style="width:215px;" onchange="renderOpenDealers()">
@@ -2441,15 +2425,7 @@
       
       <!-- ==================== STAFF TAB 5: CASH HANDOVER & BANK ==================== -->
       <section id="tab-staff-cash" class="tab-panel">
-        <div class="open-notice-banner" style="background:#f0fdf4;border-color:#bbf7d0;">
-          <div>
-            <strong style="color:#166534;">🤝 Cash Handover &amp; Bank Clearance Pipeline</strong>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">
-              Salesmen handover market cash to Prashik Hajare (Manager), and Prashik deposits cash into Company Bank/Accounts.
-            </div>
-          </div>
-          <span class="pill pill-green" id="cashTabRoleBadge">Staff View</span>
-        </div>
+        <span id="cashTabRoleBadge" style="display:none;"></span>
 
         <!-- Dynamic Cash Summary Cards -->
         <div class="kpi-grid" id="staffCashCardsGrid" style="margin-bottom:16px;"></div>
