@@ -3083,14 +3083,27 @@
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Management &amp; Sales Team</span>
-            <button class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="openModal('firebaseModal')">Cloud Sync Config</button>
+          <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+            <div>
+              <span class="card-title">👥 Management &amp; Sales Team</span>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Manage Co-Owners, Managers &amp; Salespersons with custom roles and cash collection permissions</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="openStaffUserModal()" style="font-weight:700;">➕ Add New Member / Staff</button>
+              <button type="button" class="btn btn-outline btn-sm" style="color:var(--primary);border-color:var(--border);" onclick="openModal('firebaseModal')">Cloud Sync Config</button>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Name</th><th>Role</th><th>Mobile</th><th>Assigned Area</th></tr>
+                <tr>
+                  <th>Team Member</th>
+                  <th>Role</th>
+                  <th>Mobile (Login ID)</th>
+                  <th>Assigned Area</th>
+                  <th>Cash Rights</th>
+                  <th>Actions</th>
+                </tr>
               </thead>
               <tbody id="masterSalespersonBody"></tbody>
             </table>
@@ -3119,6 +3132,84 @@
 
 
   
+  <!-- ==================== ADD / EDIT STAFF & USER MODAL ==================== -->
+  <div class="modal-backdrop" id="staffUserModal">
+    <div class="modal" style="max-width:480px;text-align:left;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;">
+        <h3 id="staffUserModalTitle" style="margin:0;color:var(--primary);font-size:1.18rem;display:flex;align-items:center;gap:8px;">
+          <span>👤</span> Add New Team Member
+        </h3>
+        <button type="button" class="modal-close" onclick="closeModal('staffUserModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      </div>
+
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
+        Register Salespersons, Managers, or Co-Owners with custom login credentials and cash collection permissions.
+      </p>
+
+      <form id="staffUserForm" onsubmit="handleSaveStaffUser(event)">
+        <input type="hidden" id="staffUserId" value="" />
+
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:4px;display:block;">Full Name *</label>
+          <input type="text" id="staffUserNameInput" class="form-control" placeholder="e.g. Rahul Patil" required />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="form-group">
+            <label style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:4px;display:block;">Role *</label>
+            <select id="staffUserRoleInput" class="form-control" required onchange="handleStaffRoleChange()">
+              <option value="Salesperson" selected>🛵 Salesperson (Field Route)</option>
+              <option value="Manager">👔 Manager (Supervisory &amp; Ledger)</option>
+              <option value="Co-Owner">👑 Co-Owner (Full Admin Controls)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:4px;display:block;">Mobile (Login ID) *</label>
+            <input type="tel" id="staffUserMobileInput" class="form-control" placeholder="10-digit mobile" maxlength="10" required />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:4px;display:block;">Assigned Area / Route</label>
+          <input type="text" id="staffUserAreaInput" class="form-control" placeholder="e.g. Nagpur &amp; Wardha Route" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:4px;display:block;">
+            🔑 Login Password / 4-Digit PIN *
+          </label>
+          <input type="text" id="staffUserPinInput" class="form-control" placeholder="Enter password or 4-digit PIN" required />
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">User will use this PIN/Password along with their Mobile Number to login.</div>
+        </div>
+
+        <!-- CASH COLLECTION PERMISSION BOX -->
+        <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:8px;padding:12px;margin-bottom:16px;">
+          <label style="font-size:0.8rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <span>💵</span> Cash Collection Rights (कॅश घेण्याची परवानगी)
+          </label>
+          <div style="font-size:0.74rem;color:#475569;margin-bottom:8px;">
+            Choose whether this member is allowed to accept physical Cash payments or must take payments strictly via Online QR / Cheque.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;cursor:pointer;color:#166534;background:#f0fdf4;padding:8px 10px;border-radius:6px;border:1px solid #bbf7d0;">
+              <input type="radio" name="staffCashPermRadio" id="staffCashPermAllowed" value="allowed" checked />
+              <span>✅ <strong>Allowed (Cash + Online):</strong> Can collect physical Cash and Bank/UPI payments.</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;cursor:pointer;color:#991b1b;background:#fef2f2;padding:8px 10px;border-radius:6px;border:1px solid #fecaca;">
+              <input type="radio" name="staffCashPermRadio" id="staffCashPermRestricted" value="restricted" />
+              <span>🚫 <strong>Restricted (Online Only):</strong> Cannot collect Cash. Must accept payment only via Official QR / UPI / Cheque.</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('staffUserModal')">Cancel</button>
+          <button type="submit" id="saveStaffUserBtn" class="btn btn-primary btn-sm" style="font-weight:700;">💾 Save Team Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ==================== SALES TEAM LOGIN MODAL ==================== -->
   <div class="modal-backdrop" id="staffLoginModal">
     <div class="modal" style="max-width:390px;text-align:center;">
@@ -14228,6 +14319,125 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     const PIN_HASH = "ba258b5a7eb00f1bb2da1943f42c46d45ae030163ba9fdfad4eefad0d9cb2319";
     const PIN_NUM = 1753594;
 
+    // Helper to retrieve all unified team members (combining base credentials with dynamic state.salespersons)
+    function getAllStaffMembers() {
+      const map = new Map();
+      
+      // 1. Master Owner Account
+      map.set("7499477581_ROSHAN", {
+        id: "SP00",
+        name: "ROSHAN THAKRE",
+        mobile: "7499477581",
+        role: "Owner",
+        area: "Nagpur & Vidarbha H.O.",
+        allowCash: true,
+        sha: PIN_HASH,
+        simple: PIN_NUM,
+        active: true
+      });
+
+      // 2. Base registered staff credentials
+      STAFF_CREDENTIALS.forEach(s => {
+        const isVikram = s.name.toUpperCase().includes("VIKRAM");
+        map.set(s.mobile, {
+          ...s,
+          allowCash: (typeof s.allowCash !== "undefined") ? s.allowCash : !isVikram,
+          active: true
+        });
+      });
+
+      // 3. Dynamic salespersons from state.salespersons
+      if (state && Array.isArray(state.salespersons)) {
+        state.salespersons.forEach(s => {
+          if (!s || !s.mobile) return;
+          const key = (s.role === "Owner" && s.mobile === "7499477581") ? "7499477581_ROSHAN" : s.mobile;
+          const existing = map.get(key) || map.get(s.mobile);
+          if (existing) {
+            map.set(existing.mobile === "7499477581" && existing.role === "Owner" ? "7499477581_ROSHAN" : existing.mobile, {
+              ...existing,
+              ...s,
+              allowCash: (typeof s.allowCash !== "undefined") ? s.allowCash : existing.allowCash,
+              sha: s.sha || existing.sha,
+              simple: s.simple || existing.simple,
+              pin: s.pin || existing.pin
+            });
+          } else {
+            const isVikram = (s.name || "").toUpperCase().includes("VIKRAM");
+            map.set(s.mobile, {
+              id: s.id || ("SP" + String(map.size + 1).padStart(2, "0")),
+              name: s.name,
+              mobile: s.mobile,
+              role: s.role || "Salesperson",
+              area: s.area || "Field Route",
+              allowCash: (typeof s.allowCash !== "undefined") ? s.allowCash : !isVikram,
+              sha: s.sha || "",
+              simple: s.simple || 0,
+              pin: s.pin || "",
+              active: s.active !== false
+            });
+          }
+        });
+      }
+
+      return Array.from(map.values());
+    }
+
+    // Helper to verify PIN or Password
+    async function verifyUserPin(member, enteredPass) {
+      if (!member || !enteredPass) return false;
+      const cleanPass = String(enteredPass).trim();
+
+      // Direct PIN / Password match
+      if (member.pin && String(member.pin).trim() === cleanPass) return true;
+
+      // Master PIN fallback for Owner/Co-Owner
+      if ((member.role === "Owner" || member.role === "Co-Owner") && (cleanPass === "7499" || cleanPass === "1753594")) {
+        return true;
+      }
+
+      // SHA-256 match
+      if (member.sha && window.crypto && crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(cleanPass));
+          const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+          if (hex.toLowerCase() === member.sha.toLowerCase()) return true;
+        } catch (e) {}
+      }
+
+      // Simple hash match
+      if (member.simple && typeof simpleHash === "function") {
+        if (simpleHash(cleanPass) === member.simple) return true;
+      }
+
+      return false;
+    }
+
+    // Helper to check if a staff member or salesperson is restricted from collecting Cash
+    function isCashCollectionRestricted(spName, staffObj) {
+      const allMembers = getAllStaffMembers();
+      let target = staffObj;
+      if (!target && spName) {
+        const cleanName = String(spName).trim().toUpperCase();
+        target = allMembers.find(m => 
+          (m.name && m.name.trim().toUpperCase() === cleanName) || 
+          (m.name && cleanName.includes(m.name.trim().toUpperCase())) ||
+          (cleanName && m.name && m.name.trim().toUpperCase().includes(cleanName)) ||
+          m.mobile === spName
+        );
+      }
+      if (!target && currentStaff) target = currentStaff;
+
+      if (target) {
+        if (typeof target.allowCash !== "undefined") return !target.allowCash;
+      }
+
+      // Hardcoded fallback for Vikram Sing Thakur
+      const name = (spName || (target ? target.name : "") || "").toUpperCase();
+      if (name.includes("VIKARAM") || name.includes("VIKRAM")) return true;
+
+      return false;
+    }
+
     let activeCompany = "SHIVOM";
     let activeArea = "ALL";
     let activeCategory = "ALL";
@@ -14392,9 +14602,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const proofLabel = document.getElementById("colProofLabel");
       const proofHint = document.getElementById("colProofHint");
 
-      const isVikram = currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM"));
-      if (isVikram && modeEl && modeEl.value === "Cash") {
-        alert("⚠️ Rule: Vikram Singh Thakur is not permitted to accept Cash. Please take payment via Online or Cheque.");
+      const isRestrictedStaff = currentStaff && isCashCollectionRestricted(currentStaff.name, currentStaff);
+      if (isRestrictedStaff && modeEl && modeEl.value === "Cash") {
+        alert("⚠️ Security Rule: " + (currentStaff.name || "This staff member") + " is not authorized to accept Cash payments. Please collect payment via Official QR / Online UPI or Cheque.");
         modeEl.value = "Bank";
       }
 
@@ -14943,14 +15153,36 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         }
       }
 
-      // Ensure full registered team is in state.salespersons
-      if (!state.salespersons || state.salespersons.length === 0 || !state.salespersons.find(s => s.mobile === "9075479839")) {
+      // Ensure full registered team is in state.salespersons without overwriting custom added members
+      if (!state.salespersons || !Array.isArray(state.salespersons) || state.salespersons.length === 0) {
         state.salespersons = [
-          { id: "SP01", name: "PRASHIK HAJARE", role: "Manager", mobile: "7499477581", area: "Nagpur & Vidarbha H.O." },
-          { id: "SP02", name: "GOPAL AMBAGADE", role: "Salesperson", mobile: "9075479839", area: "Field Route" },
-          { id: "SP03", name: "VIKARAM SING THAKUR", role: "Salesperson", mobile: "7028287698", area: "Field Route" }
+          { id: "SP00", name: "ROSHAN THAKRE", role: "Owner", mobile: "7499477581", area: "Nagpur & Vidarbha H.O.", allowCash: true },
+          { id: "SP01", name: "PRASHIK HAJARE", role: "Manager", mobile: "7499477581", area: "Nagpur & Vidarbha H.O.", allowCash: true },
+          { id: "SP02", name: "GOPAL AMBAGADE", role: "Salesperson", mobile: "9075479839", area: "Field Route", allowCash: true },
+          { id: "SP03", name: "VIKARAM SING THAKUR", role: "Salesperson", mobile: "7028287698", area: "Field Route", allowCash: false }
         ];
         persistLocal();
+      } else {
+        const coreTeam = [
+          { id: "SP00", name: "ROSHAN THAKRE", role: "Owner", mobile: "7499477581", area: "Nagpur & Vidarbha H.O.", allowCash: true },
+          { id: "SP01", name: "PRASHIK HAJARE", role: "Manager", mobile: "7499477581", area: "Nagpur & Vidarbha H.O.", allowCash: true },
+          { id: "SP02", name: "GOPAL AMBAGADE", role: "Salesperson", mobile: "9075479839", area: "Field Route", allowCash: true },
+          { id: "SP03", name: "VIKARAM SING THAKUR", role: "Salesperson", mobile: "7028287698", area: "Field Route", allowCash: false }
+        ];
+        let changed = false;
+        coreTeam.forEach(ct => {
+          const found = state.salespersons.find(s => s.mobile === ct.mobile && s.name && s.name.toUpperCase().includes(ct.name.split(" ")[0]));
+          if (!found) {
+            state.salespersons.push(ct);
+            changed = true;
+          } else {
+            if (typeof found.allowCash === "undefined") {
+              found.allowCash = ct.allowCash;
+              changed = true;
+            }
+          }
+        });
+        if (changed) persistLocal();
       }
 
       // Auto-clean trial cash collection and handover records for Vikram Singh Thakur (RCP-157 / ₹1,700)
@@ -15206,31 +15438,38 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           return;
         }
 
-        // 3. Check Sales Team Staff Credentials
-        const member = STAFF_CREDENTIALS.find(u => 
+        // 3. Check Sales Team / Co-Owner / Manager Staff Credentials
+        const allStaff = getAllStaffMembers();
+        const member = allStaff.find(u => 
           u.mobile === rawId || 
-          u.name.toLowerCase().includes(idLower) ||
-          (idLower === "prashik" && u.name.toUpperCase().includes("PRASHIK")) ||
-          (idLower === "gopal" && u.name.toUpperCase().includes("GOPAL")) ||
-          (idLower === "vikram" && u.name.toUpperCase().includes("VIKRAM"))
+          (u.name && u.name.toLowerCase().includes(idLower)) ||
+          (idLower === "prashik" && u.name && u.name.toUpperCase().includes("PRASHIK")) ||
+          (idLower === "gopal" && u.name && u.name.toUpperCase().includes("GOPAL")) ||
+          (idLower === "vikram" && u.name && u.name.toUpperCase().includes("VIKRAM"))
         );
 
         if (member) {
-          let isStaffMatch = false;
-          if (window.crypto && crypto.subtle) {
-            try {
-              const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(enteredPass));
-              const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-              if (hex === member.sha) isStaffMatch = true;
-            } catch (err) {}
-          }
-          if (!isStaffMatch && simpleHash(enteredPass) === member.simple) {
-            isStaffMatch = true;
-          }
+          const isStaffMatch = await verifyUserPin(member, enteredPass);
 
           if (isStaffMatch) {
             handleRememberMeSave(rawId);
-            // SUCCESS: Sales Staff Logged In
+
+            // If role is Co-Owner or Owner: Full Admin Access
+            if (member.role === "Co-Owner" || member.role === "Owner") {
+              isAdminLoggedIn = true;
+              currentStaff = member;
+              sessionStorage.setItem(AUTH_SESSION_KEY, "true");
+              sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+              localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+              const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+              selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
+              updateAdminUI();
+              switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
+              showToast(`Welcome ${member.role} ${member.name}! Full Controls Unlocked.`);
+              return;
+            }
+
+            // SUCCESS: Sales Staff or Manager Logged In
             currentStaff = member;
             sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
             localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
@@ -15329,25 +15568,31 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const mobile = document.getElementById("staffMobileInput").value.trim();
       const enteredPass = document.getElementById("staffPassInput").value.trim();
 
-      const member = STAFF_CREDENTIALS.find(u => u.mobile === mobile);
+      const allStaff = getAllStaffMembers();
+      const member = allStaff.find(u => u.mobile === mobile);
       if (!member) {
-        alert("Mobile number not registered in Sales Team. Please enter a valid registered mobile number.");
+        alert("Mobile number not registered in Team. Please enter a valid registered mobile number.");
         return;
       }
 
-      let isMatch = false;
-      if (window.crypto && crypto.subtle) {
-        try {
-          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(enteredPass));
-          const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-          if (hex === member.sha) isMatch = true;
-        } catch (err) {}
-      }
-      if (!isMatch && simpleHash(enteredPass) === member.simple) {
-        isMatch = true;
-      }
+      const isMatch = await verifyUserPin(member, enteredPass);
 
       if (isMatch) {
+        if (member.role === "Co-Owner" || member.role === "Owner") {
+          isAdminLoggedIn = true;
+          currentStaff = member;
+          sessionStorage.setItem(AUTH_SESSION_KEY, "true");
+          sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+          localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
+          closeModal("staffLoginModal");
+          const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
+          selectCompany(savedCo && COMPANIES[savedCo] ? savedCo : "MADHAV");
+          updateAdminUI();
+          switchTab("dashboard", document.querySelector('[data-tab=dashboard]'));
+          showToast(`Welcome ${member.role} ${member.name}! Full Controls Unlocked.`);
+          return;
+        }
+
         currentStaff = member;
         sessionStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
         localStorage.setItem(STAFF_SESSION_KEY, JSON.stringify(member));
@@ -15440,10 +15685,12 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         }
       }
 
-      // Vikram Cash Prohibition in UI
+      const isStaffRestricted = isStaff && isCashCollectionRestricted(currentStaff.name, currentStaff);
+
+      // Cash Collection Permission Enforcement in UI
       if (colModeEl) {
         const cashOpt = colModeEl.querySelector('option[value="Cash"]');
-        if (isVikram) {
+        if (isStaffRestricted) {
           if (cashOpt) cashOpt.disabled = true;
           if (colModeEl.value === "Cash") colModeEl.value = "Bank";
         } else {
@@ -18272,6 +18519,9 @@ Thank you!`;
       (state.staff || []).forEach(s => {
         if (s.name && s.name.trim()) spSet.add(s.name.trim());
       });
+      (state.salespersons || []).forEach(s => {
+        if (s.name && s.name.trim()) spSet.add(s.name.trim());
+      });
       const sortedSp = Array.from(spSet).sort();
       let html = `<option value="all">👤 All Salespersons</option>`;
       sortedSp.forEach(sp => {
@@ -18488,7 +18738,8 @@ Thank you!`;
           const sp = (o.salespersonName || "").toUpperCase();
           if (isGopal) return sp.includes("GOPAL");
           if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
-          return sp === myName;
+          const firstName = myName.split(" ")[0];
+          return sp === myName || (firstName.length >= 3 && sp.includes(firstName));
         });
       } else if (selectedSp !== "all") {
         list = list.filter(o => (o.salespersonName || "").trim().toLowerCase() === selectedSp.trim().toLowerCase());
@@ -18590,7 +18841,8 @@ Thank you!`;
           const sp = (o.salespersonName || "").toUpperCase();
           if (isGopal) return sp.includes("GOPAL");
           if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
-          return sp === myName;
+          const firstName = myName.split(" ")[0];
+          return sp === myName || (firstName.length >= 3 && sp.includes(firstName));
         });
       }
 
@@ -19968,9 +20220,9 @@ Thank you!`;
       const newSp = document.getElementById("editColSalesperson").value;
 
       // Vikram Cash Prohibition Check
-      const isVikram = (newSp || "").toUpperCase().includes("VIKARAM") || (newSp || "").toUpperCase().includes("VIKRAM") || (currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM")));
-      if (isVikram && newMode === "Cash") {
-        alert("⚠️ Vikram Singh Thakur is prohibited from collecting Cash payments. Gopal or Prashik must accompany for cash collections.");
+      const isSpRestricted = isCashCollectionRestricted(newSp, currentStaff);
+      if (isSpRestricted && newMode === "Cash") {
+        alert("⚠️ Security Rule: " + (newSp || "Selected team member") + " is prohibited from collecting Cash payments. Please select Bank/UPI or Cheque.");
         return;
       }
 
@@ -21425,14 +21677,202 @@ Thank you!`;
     }
 
     function renderMasterSalespersons() {
-      document.getElementById("masterSalespersonBody").innerHTML = state.salespersons.map(s => `
-        <tr>
-          <td class="font-bold">${s.name}</td>
-          <td><span class="pill ${s.role === 'Owner' ? 'pill-red' : (s.role === 'Manager' ? 'pill-yellow' : 'pill-gray')}">${s.role}</span></td>
-          <td>${s.mobile}</td>
-          <td>${s.area}</td>
-        </tr>
-      `).join("");
+      const tbody = document.getElementById("masterSalespersonBody");
+      if (!tbody) return;
+      const allMembers = getAllStaffMembers();
+      tbody.innerHTML = allMembers.map(s => {
+        const isOwner = s.role === 'Owner' || s.role === 'Co-Owner';
+        const isMgr = s.role === 'Manager';
+        const isCashAllowed = (typeof s.allowCash !== "undefined") ? s.allowCash : (!s.name.toUpperCase().includes("VIKRAM"));
+        const rolePill = isOwner ? (s.role === 'Owner' ? 'pill-red' : 'pill-yellow') : (isMgr ? 'pill-yellow' : 'pill-gray');
+
+        const cashBadge = isCashAllowed
+          ? `<span class="badge" style="background:#dcfce7;color:#166534;font-weight:700;font-size:0.73rem;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px;">✅ Cash + Online</span>`
+          : `<span class="badge" style="background:#fee2e2;color:#991b1b;font-weight:700;font-size:0.73rem;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px;">🚫 Online Only (No Cash)</span>`;
+
+        const isPrimaryOwner = (s.mobile === "7499477581" && s.role === "Owner") || (s.name && s.name.toUpperCase().includes("ROSHAN"));
+
+        return `
+          <tr>
+            <td class="font-bold">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:1.1rem;">👤</span>
+                <div>
+                  <div style="font-weight:700;color:#0f172a;">${escapeHtml(s.name)}</div>
+                  <div style="font-size:0.7rem;color:var(--muted);font-weight:normal;">ID: ${escapeHtml(s.id || '')}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="pill ${rolePill}">${escapeHtml(s.role)}</span></td>
+            <td><a href="tel:${escapeHtml(s.mobile)}" style="color:var(--primary);font-weight:600;text-decoration:none;">📞 ${escapeHtml(s.mobile)}</a></td>
+            <td>${escapeHtml(s.area || 'Field Route')}</td>
+            <td>${cashBadge}</td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button type="button" class="btn btn-sm btn-outline" onclick="openStaffUserModal('${s.id || s.mobile}')" style="padding:4px 8px;font-size:0.75rem;font-weight:600;" title="Edit Member">✏️ Edit</button>
+                ${!isPrimaryOwner ? `
+                  <button type="button" class="btn btn-sm btn-danger" onclick="deleteStaffUser('${s.id || s.mobile}')" style="padding:4px 8px;font-size:0.75rem;" title="Delete Member">🗑️</button>
+                ` : `<span style="font-size:0.7rem;color:var(--muted);font-weight:700;">👑 Master</span>`}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function openStaffUserModal(spId) {
+      const titleEl = document.getElementById("staffUserModalTitle");
+      const idInput = document.getElementById("staffUserId");
+      const nameInput = document.getElementById("staffUserNameInput");
+      const roleInput = document.getElementById("staffUserRoleInput");
+      const mobileInput = document.getElementById("staffUserMobileInput");
+      const areaInput = document.getElementById("staffUserAreaInput");
+      const pinInput = document.getElementById("staffUserPinInput");
+      const permAllowed = document.getElementById("staffCashPermAllowed");
+      const permRestricted = document.getElementById("staffCashPermRestricted");
+
+      if (spId) {
+        const allMembers = getAllStaffMembers();
+        const member = allMembers.find(m => m.id === spId || m.mobile === spId);
+        if (!member) {
+          alert("Team member details not found.");
+          return;
+        }
+        if (titleEl) titleEl.innerHTML = `<span>✏️</span> Edit Team Member: ${escapeHtml(member.name)}`;
+        if (idInput) idInput.value = member.id || "";
+        if (nameInput) nameInput.value = member.name || "";
+        if (roleInput) roleInput.value = member.role || "Salesperson";
+        if (mobileInput) mobileInput.value = member.mobile || "";
+        if (areaInput) areaInput.value = member.area || "";
+        if (pinInput) pinInput.value = member.pin || "";
+        
+        const isRestricted = (typeof member.allowCash !== "undefined") ? !member.allowCash : member.name.toUpperCase().includes("VIKRAM");
+        if (isRestricted) {
+          if (permRestricted) permRestricted.checked = true;
+        } else {
+          if (permAllowed) permAllowed.checked = true;
+        }
+      } else {
+        if (titleEl) titleEl.innerHTML = `<span>👤</span> Add New Team Member`;
+        if (idInput) idInput.value = "";
+        if (nameInput) nameInput.value = "";
+        if (roleInput) roleInput.value = "Salesperson";
+        if (mobileInput) mobileInput.value = "";
+        if (areaInput) areaInput.value = "";
+        if (pinInput) pinInput.value = "";
+        if (permAllowed) permAllowed.checked = true;
+      }
+      handleStaffRoleChange();
+      openModal("staffUserModal");
+    }
+
+    function handleStaffRoleChange() {
+      const roleEl = document.getElementById("staffUserRoleInput");
+      if (!roleEl) return;
+      const role = roleEl.value;
+      const permAllowed = document.getElementById("staffCashPermAllowed");
+      const permRestricted = document.getElementById("staffCashPermRestricted");
+      if (role === "Co-Owner") {
+        if (permAllowed) permAllowed.checked = true;
+        if (permRestricted) permRestricted.disabled = true;
+      } else {
+        if (permRestricted) permRestricted.disabled = false;
+      }
+    }
+
+    async function handleSaveStaffUser(e) {
+      if (e) e.preventDefault();
+      const idVal = document.getElementById("staffUserId").value.trim();
+      const nameVal = document.getElementById("staffUserNameInput").value.trim().toUpperCase();
+      const roleVal = document.getElementById("staffUserRoleInput").value;
+      const mobileVal = document.getElementById("staffUserMobileInput").value.trim();
+      const areaVal = document.getElementById("staffUserAreaInput").value.trim() || "Field Route";
+      const pinVal = document.getElementById("staffUserPinInput").value.trim();
+      const allowCashVal = (roleVal === "Co-Owner") ? true : (document.getElementById("staffCashPermAllowed").checked === true);
+
+      if (!nameVal || !mobileVal || !pinVal) {
+        alert("Please enter Name, Mobile Number, and PIN/Password.");
+        return;
+      }
+
+      if (!/^\d{10}$/.test(mobileVal)) {
+        alert("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+
+      // Check duplicate mobile for another user
+      const existing = (state.salespersons || []).find(s => s.mobile === mobileVal && s.id !== idVal);
+      if (existing) {
+        alert(`Mobile number ${mobileVal} is already assigned to ${existing.name} (${existing.role}). Please use a different mobile number.`);
+        return;
+      }
+
+      let shaHex = "";
+      if (window.crypto && crypto.subtle) {
+        try {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pinVal));
+          shaHex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        } catch (err) {}
+      }
+      const simpleHashVal = (typeof simpleHash === "function") ? simpleHash(pinVal) : 0;
+
+      const spId = idVal || ("SP_" + Date.now());
+      const memberObj = {
+        id: spId,
+        name: nameVal,
+        mobile: mobileVal,
+        role: roleVal,
+        area: areaVal,
+        allowCash: allowCashVal,
+        pin: pinVal,
+        sha: shaHex,
+        simple: simpleHashVal,
+        active: true,
+        updatedAt: new Date().toISOString()
+      };
+
+      await saveRecord("salespersons", memberObj);
+
+      closeModal("staffUserModal");
+      renderMasterSalespersons();
+      populateDropdowns();
+      if (typeof populateOrderSalespersonFilter === "function") populateOrderSalespersonFilter();
+
+      showToast(`Team Member ${nameVal} (${roleVal}) saved successfully! Cash Rights: ${allowCashVal ? "Allowed" : "Restricted"}.`);
+    }
+
+    async function deleteStaffUser(spId) {
+      if (!spId) return;
+      const allMembers = getAllStaffMembers();
+      const member = allMembers.find(m => m.id === spId || m.mobile === spId);
+      if (!member) return;
+
+      if ((member.mobile === "7499477581" && member.role === "Owner") || (member.name && member.name.toUpperCase().includes("ROSHAN"))) {
+        alert("⚠️ Primary Owner (Roshan Thakre) cannot be deleted.");
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to remove ${member.name} (${member.role}) from the system?`)) {
+        return;
+      }
+
+      // Remove from state.salespersons
+      state.salespersons = (state.salespersons || []).filter(s => s.id !== spId && s.mobile !== member.mobile);
+      persistLocal();
+
+      if (isFirebaseLive && db) {
+        try {
+          const prefix = activeCompany.toLowerCase() + "_";
+          await db.collection(prefix + "salespersons").doc(spId).delete().catch(e => console.warn(e));
+        } catch (e) {
+          console.warn("Firebase delete staff warning:", e);
+        }
+      }
+
+      renderMasterSalespersons();
+      populateDropdowns();
+      if (typeof populateOrderSalespersonFilter === "function") populateOrderSalespersonFilter();
+      showToast(`Team member ${member.name} has been removed.`);
     }
 
     // ==================== FORM HANDLERS ====================
@@ -21751,9 +22191,9 @@ Thank you!`;
       const spVal = document.getElementById("colSalesperson").value;
 
       // Vikram Cash Prohibition Check
-      const isVikram = (spVal || "").toUpperCase().includes("VIKARAM") || (spVal || "").toUpperCase().includes("VIKRAM") || (currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM")));
-      if (isVikram && colModeVal === "Cash") {
-        alert("Vikram Singh Thakur is prohibited from collecting Cash payments. Gopal or Prashik must accompany for cash collections.");
+      const isSpRestricted = isCashCollectionRestricted(spVal, currentStaff);
+      if (isSpRestricted && colModeVal === "Cash") {
+        alert("⚠️ Security Rule: " + (spVal || "Selected team member") + " is not authorized to accept Cash payments. Please collect payment via Official QR / Online UPI or Cheque.");
         return;
       }
 
