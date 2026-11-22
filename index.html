@@ -1580,7 +1580,7 @@
             ⚡ Shivom
           </button>
         </div>
-        <span class="badge-status">
+        <span class="badge-status" style="display:none;" aria-hidden="true">
           <span class="dot live" id="syncDot"></span>
           <span id="syncText">Live Sync</span>
         </span>
@@ -8119,6 +8119,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       renderCollectionTable();
       renderChequeRegister();
       updateSubTabBadges();
+      updateInstallButtonsVisibility();
     }
 
     function updateAdminUI() {
@@ -16587,10 +16588,11 @@ Thank you! Your payment has been received successfully.`;
       const topWrap = document.getElementById("pwaInstallBtnWrap");
       const gwBanner = document.getElementById("pwaInstallBannerGateway");
       const inApp = isRunningStandaloneOrApk();
-      // Keep visible on browsers (mobile/desktop) so user can always install or add to homescreen
-      const shouldShow = !inApp;
-      if (topWrap) topWrap.style.display = shouldShow ? "inline-flex" : "none";
-      if (gwBanner) gwBanner.style.display = shouldShow ? "block" : "none";
+      const isLoggedIn = !!isAdminLoggedIn || !!currentStaff;
+      // Show top header button ONLY on Gateway / Login screen when not logged in; hide once logged in
+      const shouldShowTop = !inApp && !isLoggedIn;
+      if (topWrap) topWrap.style.display = shouldShowTop ? "inline-flex" : "none";
+      if (gwBanner) gwBanner.style.display = inApp ? "none" : "block";
     }
 
     window.addEventListener("beforeinstallprompt", (e) => {
@@ -16631,7 +16633,12 @@ Thank you! Your payment has been received successfully.`;
     }
 
     async function forceAppRefresh() {
-      showToast("⏳ Checking updates & refreshing app cache...");
+      const btn = document.getElementById("forceRefreshBtn");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Refreshing...";
+      }
+      showToast("⏳ Clearing cache & updating to latest version...");
       try {
         if ("caches" in window) {
           const keys = await caches.keys();
@@ -16646,8 +16653,8 @@ Thank you! Your payment has been received successfully.`;
       } catch (e) {
         console.warn("Cache reset error:", e);
       }
-      const sep = window.location.href.includes("?") ? "&" : "?";
-      window.location.href = window.location.origin + window.location.pathname + sep + "_v=" + Date.now();
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.location.replace(cleanUrl + "?_v=" + Date.now());
     }
 
     // Register Service Worker for PWA installability & offline shell
