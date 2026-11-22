@@ -2473,10 +2473,13 @@
 
         <!-- Sales Team Market Collections & Handover Balance Table (Manager & Admin Only) -->
         <div class="card" id="salesTeamCashOverviewCard" style="margin-bottom:16px;">
-          <div class="card-header" style="background:#f8fafc;padding:12px 16px;">
+          <div class="card-header" style="background:#f8fafc;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
             <span class="card-title" style="color:var(--primary);font-size:1rem;display:flex;align-items:center;gap:6px;">
               👥 Sales Team Market Collections &amp; Handover Balance (Gopal, Vikram, Prashik)
             </span>
+            <button class="btn btn-sm btn-teal" onclick="openNewChequeFromStaffModal()" style="font-weight:700;padding:6px 14px;font-size:0.82rem;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+              📥 + Receive Cheque from Salesman
+            </button>
           </div>
           <div class="table-wrap">
             <table>
@@ -2574,6 +2577,37 @@
                 <tbody id="bankDepositTableBody"></tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- Table 3 (For Manager/Admin): Cheques in Office Box & Sales Team Cheque Register -->
+        <div class="card" id="staffChequesOfficeCard" style="display:none;margin-top:16px;">
+          <div class="card-header" style="background:#f8fafc;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.2rem;">🏢</span>
+              <span class="card-title" style="color:var(--primary);font-size:1rem;">Cheques in Office Box &amp; Sales Team Cheque Register</span>
+              <span class="pill pill-blue" id="staffChequesOfficeCountBadge">0 Cheques</span>
+            </div>
+            <button class="btn btn-sm btn-teal" onclick="openNewChequeFromStaffModal()" style="font-weight:700;padding:6px 14px;font-size:0.82rem;display:inline-flex;align-items:center;gap:4px;">
+              📥 + Receive Cheque from Salesman
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receipt / Date</th>
+                  <th>Salesperson (From)</th>
+                  <th>Party / Dealer</th>
+                  <th>Cheque No &amp; Bank</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th>Target Bank A/c</th>
+                  <th class="text-center">Status / Location</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="staffChequesOfficeTbody"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -3395,6 +3429,97 @@
         <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;font-weight:700;padding:10px;">
           ✓ Confirm Bank Deposit
         </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== RECEIVE CHEQUE FROM SALESMAN MODAL ==================== -->
+  <div class="modal-backdrop" id="receiveChequeFromStaffModal">
+    <div class="modal" style="max-width:540px;max-height:92vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.4rem;">📥</span>
+          <h3 style="margin:0;color:var(--primary);font-size:1.12rem;">Receive Cheque from Salesperson</h3>
+        </div>
+        <button type="button" class="btn btn-sm" style="background:#e2e8f0;" onclick="closeModal('receiveChequeFromStaffModal')">✕ Close</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">
+        Record physical cheque brought from market by Gopal or Vikram directly into office custody.
+      </p>
+
+      <form id="receiveChequeFromStaffForm" onsubmit="submitReceiveChequeFromStaff(event)">
+        <!-- 1. Salesperson Selection -->
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Brought By Salesperson <span style="color:#ef4444;">*</span></label>
+          <select id="rcStaffSelect" class="form-control font-bold" required>
+            <option value="GOPAL AMBAGADE">👤 Gopal Ambagade</option>
+            <option value="VIKARAM SING THAKUR">👤 Vikram Singh Thakur</option>
+          </select>
+        </div>
+
+        <!-- 2. Party / Dealer Selection -->
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Party / Dealer Name <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="rcPartySearch" class="form-control" placeholder="🔍 Type to filter parties..." oninput="filterRcParties()" style="margin-bottom:6px;font-size:0.82rem;" />
+          <select id="rcPartySelect" class="form-control font-bold" required size="5" style="font-size:0.85rem;height:auto;max-height:130px;">
+          </select>
+        </div>
+
+        <!-- 3. Cheque Details Grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="form-group">
+            <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Cheque Amount (₹) <span style="color:#ef4444;">*</span></label>
+            <input type="number" id="rcAmount" class="form-control font-bold" min="1" step="0.01" placeholder="e.g. 15000" style="color:#0f766e;font-size:1.05rem;" required />
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Cheque Date <span style="color:#ef4444;">*</span></label>
+            <input type="date" id="rcChequeDate" class="form-control" required />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="form-group">
+            <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Cheque No (6 Digits) <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="rcChequeNo" class="form-control font-bold" placeholder="e.g. 054129" required />
+          </div>
+          <div class="form-group">
+            <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Bank Name <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="rcChequeBank" class="form-control" placeholder="e.g. SBI / HDFC / BOI" required />
+          </div>
+        </div>
+
+        <!-- 4. Deposit Target Account -->
+        <div class="form-group" style="margin-bottom:12px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Deposit Target Bank Account <span style="color:#ef4444;">*</span></label>
+          <select id="rcDepositAccount" class="form-control font-bold" required></select>
+          <div id="rcDepositHint" style="font-size:0.74rem;color:var(--muted);margin-top:3px;"></div>
+        </div>
+
+        <!-- 5. Cheque Photo Attachment -->
+        <div class="form-group" style="margin-bottom:14px;background:#f8fafc;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">📸 Attach Cheque Photo (Optional)</label>
+          <input type="file" id="rcProofFile" accept="image/*" onchange="handleRcProofImageSelect(event)" style="display:none;" />
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('rcProofFile').click()" style="background:#f0fdf4;border:1.5px dashed #16a34a;color:#15803d;font-weight:700;width:100%;padding:8px;justify-content:center;gap:6px;">
+            <span id="rcProofBtnText">📷 Take Cheque Photo / Gallery</span>
+          </button>
+          <div id="rcProofPreview" style="display:none;margin-top:8px;text-align:center;">
+            <img id="rcProofImgTag" src="" alt="Cheque Preview" style="max-height:120px;border-radius:6px;border:1px solid #cbd5e1;" />
+            <br>
+            <button type="button" class="btn btn-sm btn-danger" style="margin-top:4px;padding:2px 8px;font-size:0.72rem;" onclick="clearRcProofImage()">✕ Remove Photo</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);">Remarks / Notes</label>
+          <input type="text" id="rcRemarks" class="form-control" placeholder="e.g. Received at office from Gopal" />
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-sm" style="flex:1;justify-content:center;background:#e2e8f0;" onclick="closeModal('receiveChequeFromStaffModal')">Cancel</button>
+          <button type="submit" class="btn btn-success" style="flex:2;justify-content:center;font-weight:700;padding:10px;">
+            📥 Confirm &amp; Receive Cheque at Office
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -9100,6 +9225,276 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       renderChequeRegister();
     }
 
+    async function receiveAllStaffCheques(staffName) {
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isAdmin = !!isAdminLoggedIn;
+      if (!isPrashik && !isAdmin) {
+        alert("Only Manager (Prashik Hajare) or Owner can receive physical cheques at office.");
+        return;
+      }
+      const sName = (staffName || "").trim().toUpperCase();
+      const pendingCheques = (state.collections || []).filter(c => {
+        if (c.mode !== "Cheque") return false;
+        const sp = (c.salespersonName || "").trim().toUpperCase();
+        const matches = sp.includes(sName) || sName.includes(sp) || (sName.includes("VIKRAM") && sp.includes("VIKARAM")) || (sName.includes("VIKARAM") && sp.includes("VIKRAM"));
+        const inHand = (c.chequeStatus || "Pending") === "Pending" && !c.chequeHandedToPrashik && c.chequeLocation !== "AT_OFFICE" && c.chequeLocation !== "DEPOSITED_BANK" && c.chequeLocation !== "CLEARED";
+        return matches && inHand;
+      });
+
+      if (pendingCheques.length === 0) {
+        showToast(`ℹ️ No pending cheques in hand found for ${staffName}.`);
+        return;
+      }
+
+      const totalAmt = pendingCheques.reduce((s, c) => s + Number(c.amount || 0), 0);
+      if (!confirm(`Confirm receiving ${pendingCheques.length} physical cheque(s) totaling ${fmtINR(totalAmt)} from ${staffName} into office box custody?`)) {
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const receivedBy = currentStaff ? currentStaff.name : (isAdminLoggedIn ? "OWNER" : "PRASHIK HAJARE");
+
+      for (const c of pendingCheques) {
+        c.chequeLocation = "AT_OFFICE";
+        c.chequeHandedToPrashik = true;
+        c.chequeHandedDate = today;
+        c.chequeReceivedBy = receivedBy;
+        c.bankRef = `Chq #${c.chequeNo || ''} (${c.chequeBank || 'Bank'}) - Received at Office by ${receivedBy}`;
+        await saveRecord("collections", c);
+      }
+
+      showToast(`✅ Successfully received ${pendingCheques.length} cheque(s) (${fmtINR(totalAmt)}) from ${staffName} at office!`);
+      renderStaffCashTab();
+      renderChequeRegister();
+    }
+
+    let rcProofBase64 = "";
+
+    function handleRcProofImageSelect(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          let w = img.width;
+          let h = img.height;
+          const maxDim = 1200;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          rcProofBase64 = canvas.toDataURL("image/jpeg", 0.7);
+
+          const prevWrap = document.getElementById("rcProofPreview");
+          const imgTag = document.getElementById("rcProofImgTag");
+          const btnText = document.getElementById("rcProofBtnText");
+          if (imgTag) imgTag.src = rcProofBase64;
+          if (prevWrap) prevWrap.style.display = "block";
+          if (btnText) btnText.innerHTML = "🔄 Change Cheque Photo";
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearRcProofImage() {
+      rcProofBase64 = "";
+      const fileInp = document.getElementById("rcProofFile");
+      if (fileInp) fileInp.value = "";
+      const prevWrap = document.getElementById("rcProofPreview");
+      const imgTag = document.getElementById("rcProofImgTag");
+      const btnText = document.getElementById("rcProofBtnText");
+      if (imgTag) imgTag.src = "";
+      if (prevWrap) prevWrap.style.display = "none";
+      if (btnText) btnText.innerHTML = "📷 Take Cheque Photo / Gallery";
+    }
+
+    function openNewChequeFromStaffModal(defaultStaff) {
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isAdmin = !!isAdminLoggedIn;
+      if (!isPrashik && !isAdmin) {
+        alert("Only Manager (Prashik Hajare) or Owner can receive cheques at office.");
+        return;
+      }
+
+      // 1. Staff selection
+      const staffSel = document.getElementById("rcStaffSelect");
+      if (staffSel) {
+        if (defaultStaff) {
+          const dUpper = defaultStaff.toUpperCase();
+          staffSel.value = (dUpper.includes("VIKRAM") || dUpper.includes("VIKARAM"))
+            ? "VIKARAM SING THAKUR"
+            : "GOPAL AMBAGADE";
+        } else {
+          staffSel.value = "GOPAL AMBAGADE";
+        }
+      }
+
+      // 2. Populate Party select
+      const searchInp = document.getElementById("rcPartySearch");
+      if (searchInp) searchInp.value = "";
+      filterRcParties();
+
+      // 3. Deposit accounts according to activeCompany
+      const depSel = document.getElementById("rcDepositAccount");
+      const depHint = document.getElementById("rcDepositHint");
+      if (depSel) {
+        const coBankAccs = COMPANY_BANK_ACCOUNTS.filter(a => a.company === activeCompany);
+        depSel.innerHTML = coBankAccs.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join("");
+        if (depHint) {
+          depHint.textContent = activeCompany === "MADHAV"
+            ? "MADHAV payments are routed to Indian Overseas Bank (IOB)."
+            : "SHIVOM payments are routed to authorized company collection accounts.";
+        }
+      }
+
+      // 4. Default fields
+      const dateInp = document.getElementById("rcChequeDate");
+      if (dateInp) dateInp.value = new Date().toISOString().split("T")[0];
+
+      const amtInp = document.getElementById("rcAmount");
+      if (amtInp) amtInp.value = "";
+
+      const chqNoInp = document.getElementById("rcChequeNo");
+      if (chqNoInp) chqNoInp.value = "";
+
+      const chqBankInp = document.getElementById("rcChequeBank");
+      if (chqBankInp) chqBankInp.value = "";
+
+      const remInp = document.getElementById("rcRemarks");
+      if (remInp) remInp.value = "";
+
+      clearRcProofImage();
+      openModal("receiveChequeFromStaffModal");
+    }
+
+    function filterRcParties() {
+      const searchInp = document.getElementById("rcPartySearch");
+      const query = (searchInp ? searchInp.value : "").trim().toLowerCase();
+      const partySel = document.getElementById("rcPartySelect");
+      if (!partySel) return;
+
+      const parties = getComputedParties().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      const filtered = query
+        ? parties.filter(p => (p.name && p.name.toLowerCase().includes(query)) || (p.area && p.area.toLowerCase().includes(query)))
+        : parties;
+
+      if (filtered.length === 0) {
+        partySel.innerHTML = '<option value="" disabled>No parties match search</option>';
+      } else {
+        partySel.innerHTML = filtered.map(p => {
+          const areaStr = p.area ? ` [${p.area}]` : '';
+          const dueStr = p.due > 0 ? ` (Due: ${fmtINR(p.due)})` : '';
+          return `<option value="${p.id}">${p.name}${areaStr}${dueStr}</option>`;
+        }).join("");
+        partySel.selectedIndex = 0;
+      }
+    }
+
+    async function submitReceiveChequeFromStaff(e) {
+      e.preventDefault();
+      const staffSel = document.getElementById("rcStaffSelect");
+      const staffName = staffSel ? staffSel.value : "GOPAL AMBAGADE";
+      const partySel = document.getElementById("rcPartySelect");
+      const partyId = partySel ? partySel.value : "";
+      const party = getComputedParties().find(p => p.id === partyId);
+
+      if (!party) {
+        alert("Please select a valid party / dealer.");
+        return;
+      }
+
+      const amt = Number(document.getElementById("rcAmount").value);
+      if (isNaN(amt) || amt <= 0) {
+        alert("Please enter a valid cheque amount.");
+        return;
+      }
+
+      const chqNo = document.getElementById("rcChequeNo").value.trim() || ("CHQ-" + Date.now().toString().slice(-6));
+      const chqBank = document.getElementById("rcChequeBank").value.trim() || "Bank";
+      const chqDate = document.getElementById("rcChequeDate").value || new Date().toISOString().split("T")[0];
+      const depositAcc = document.getElementById("rcDepositAccount").value || (activeCompany === "MADHAV" ? "IOB" : "ROSHAN");
+      const remarks = document.getElementById("rcRemarks").value.trim();
+
+      // Strict Company Separation Validation
+      if (activeCompany === "SHIVOM" && (depositAcc === "IOB" || depositAcc === "MADHAV_QR")) {
+        alert("⚠️ Security Rule: Madhav Enterprises accounts cannot be used for Shivom payments. Please select a Shivom account.");
+        return;
+      }
+      if (activeCompany === "MADHAV" && (depositAcc === "ROSHAN" || depositAcc === "PRASHIK" || depositAcc === "SAVITA")) {
+        alert("⚠️ Security Rule: Madhav payments must only be deposited to Madhav's Official QR or IOB Bank account.");
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const receivedBy = currentStaff ? currentStaff.name : (isAdminLoggedIn ? "OWNER" : "PRASHIK HAJARE");
+
+      let maxRcpNum = 99;
+      (state.collections || []).forEach(c => {
+        const m = String(c.receiptNo || "").match(/(\d+)$/);
+        if (m) {
+          const n = parseInt(m[1], 10);
+          if (!isNaN(n) && n > maxRcpNum) maxRcpNum = n;
+        }
+      });
+
+      const newCol = {
+        id: "COL_" + Date.now(),
+        receiptNo: "RCP-" + String(maxRcpNum + 1),
+        date: today,
+        partyId: party.id,
+        partyName: party.name,
+        salespersonName: staffName,
+        amount: amt,
+        mode: "Cheque",
+        depositAccount: depositAcc,
+        chequeNo: chqNo,
+        chequeBank: chqBank,
+        chequeDate: chqDate,
+        chequeStatus: "Pending",
+        chequeLocation: "AT_OFFICE",
+        chequeHandedToPrashik: true,
+        chequeHandedDate: today,
+        chequeReceivedBy: receivedBy,
+        bankRef: `Chq #${chqNo} (${chqBank}) - Received at Office by ${receivedBy}`,
+        proofImg: rcProofBase64 || null,
+        notes: remarks || `Physical cheque brought by ${staffName}`
+      };
+
+      await saveRecord("collections", newCol);
+
+      // Auto upload to Google Drive if photo exists
+      if (rcProofBase64 && typeof uploadDocToGoogleDrive === "function") {
+        const safePName = party.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const proofFileName = `${activeCompany}_Receipt_${newCol.receiptNo}_${safePName}_Proof_${Date.now()}.jpg`;
+        uploadDocToGoogleDrive(activeCompany, "Cheques_And_Proofs", proofFileName, rcProofBase64, "image/jpeg")
+          .then(async res => {
+            if (res && res.fileUrl) {
+              newCol.driveUrl = res.fileUrl;
+              await saveRecord("collections", newCol);
+              if (typeof renderStaffCashTab === "function") renderStaffCashTab();
+            }
+          }).catch(e => console.error("Drive upload error:", e));
+      }
+
+      closeModal("receiveChequeFromStaffModal");
+      showToast(`✅ Physical Cheque #${chqNo} (${fmtINR(amt)}) from ${staffName} received into office box!`);
+      if (typeof renderStaffCashTab === "function") renderStaffCashTab();
+      if (typeof renderChequeRegister === "function") renderChequeRegister();
+      if (typeof renderCollectionTable === "function") renderCollectionTable();
+    }
+
     async function depositChequeInBank(colId) {
       const isPrashik = currentStaff && currentStaff.role === "Manager";
       const isAdmin = !!isAdminLoggedIn;
@@ -13158,8 +13553,18 @@ Thank you!`;
             </td>
             <td class="text-center">
               ${cs.gopalChequesInHand.length > 0
-                ? `<span class="pill pill-yellow" style="font-weight:700;">⚠️ ${cs.gopalChequesInHand.length} (${fmtINR(gopalInHandSum)})</span>`
-                : `<span style="color:#16a34a;font-weight:600;">✓ 0</span>`}
+                ? `<div>
+                     <span class="pill pill-yellow" style="font-weight:700;">⚠️ ${cs.gopalChequesInHand.length} (${fmtINR(gopalInHandSum)})</span>
+                     <div style="margin-top:4px;">
+                       <button class="btn btn-sm btn-teal" onclick="receiveAllStaffCheques('GOPAL AMBAGADE')" style="font-size:0.73rem;padding:3px 8px;font-weight:700;white-space:nowrap;">
+                         📥 Receive Cheques (${cs.gopalChequesInHand.length})
+                       </button>
+                     </div>
+                   </div>`
+                : `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                     <span style="color:#16a34a;font-weight:600;">✓ 0</span>
+                     <button class="btn btn-sm btn-outline" onclick="openNewChequeFromStaffModal('GOPAL AMBAGADE')" style="font-size:0.7rem;padding:2px 6px;margin-top:2px;" title="Receive Cheque brought by Gopal">+ Cheque</button>
+                   </div>`}
             </td>
           </tr>
 
@@ -13190,8 +13595,18 @@ Thank you!`;
             </td>
             <td class="text-center">
               ${cs.vikramChequesInHand.length > 0
-                ? `<span class="pill pill-yellow" style="font-weight:700;">⚠️ ${cs.vikramChequesInHand.length} (${fmtINR(vikramInHandSum)})</span>`
-                : `<span style="color:#16a34a;font-weight:600;">✓ 0</span>`}
+                ? `<div>
+                     <span class="pill pill-yellow" style="font-weight:700;">⚠️ ${cs.vikramChequesInHand.length} (${fmtINR(vikramInHandSum)})</span>
+                     <div style="margin-top:4px;">
+                       <button class="btn btn-sm btn-teal" onclick="receiveAllStaffCheques('VIKARAM SING THAKUR')" style="font-size:0.73rem;padding:3px 8px;font-weight:700;white-space:nowrap;">
+                         📥 Receive Cheques (${cs.vikramChequesInHand.length})
+                       </button>
+                     </div>
+                   </div>`
+                : `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                     <span style="color:#16a34a;font-weight:600;">✓ 0</span>
+                     <button class="btn btn-sm btn-outline" onclick="openNewChequeFromStaffModal('VIKARAM SING THAKUR')" style="font-size:0.7rem;padding:2px 6px;margin-top:2px;" title="Receive Cheque brought by Vikram">+ Cheque</button>
+                   </div>`}
             </td>
           </tr>
 
@@ -13279,15 +13694,22 @@ Thank you!`;
           // B: Physical Cheques with Sales Team (Pending Handover to Office)
           const allSalesChequesInHand = [...cs.gopalChequesInHand, ...cs.vikramChequesInHand];
           if (allSalesChequesInHand.length > 0) {
+            const allSalesChequesSum = allSalesChequesInHand.reduce((s, c) => s + Number(c.amount || 0), 0);
             pCards.push(`
               <div class="card" style="background:#fffbeb;border:2px solid #f59e0b;padding:16px;margin-bottom:12px;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                  <span style="font-size:1.6rem;">🚶</span>
-                  <div>
-                    <h4 style="margin:0;color:#b45309;font-size:1.05rem;">Physical Cheques with Sales Team (${allSalesChequesInHand.length})</h4>
-                    <div style="font-size:0.8rem;color:#78350f;">
-                      Cheques collected in market by Gopal / Vikram. When they arrive at the office, physically verify and click 'Receive at Office'.
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.6rem;">🚶</span>
+                    <div>
+                      <h4 style="margin:0;color:#b45309;font-size:1.05rem;">Physical Cheques with Sales Team (${allSalesChequesInHand.length} Cheques — ${fmtINR(allSalesChequesSum)})</h4>
+                      <div style="font-size:0.8rem;color:#78350f;">
+                        Cheques collected in market by Gopal / Vikram. When they arrive at the office, physically verify and click 'Receive at Office'.
+                      </div>
                     </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${cs.gopalChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" onclick="receiveAllStaffCheques('GOPAL AMBAGADE')" style="font-weight:700;padding:6px 12px;">📥 Receive All from Gopal (${cs.gopalChequesInHand.length})</button>` : ''}
+                    ${cs.vikramChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" onclick="receiveAllStaffCheques('VIKARAM SING THAKUR')" style="font-weight:700;padding:6px 12px;">📥 Receive All from Vikram (${cs.vikramChequesInHand.length})</button>` : ''}
                   </div>
                 </div>
                 <div style="display:grid;gap:10px;">
@@ -13455,6 +13877,10 @@ Thank you!`;
       // 3. Role-Specific KPI Cards & Action Cards
       if (isPrashik) {
         if (roleBadge) roleBadge.textContent = "Manager View: PRASHIK HAJARE";
+        const totalSalesChequesInHand = cs.gopalChequesInHand.length + cs.vikramChequesInHand.length;
+        const totalSalesChequesSum = cs.gopalChequesInHand.reduce((s, c) => s + Number(c.amount || 0), 0) + cs.vikramChequesInHand.reduce((s, c) => s + Number(c.amount || 0), 0);
+        const officeChequeSum = cs.chequesInOffice.reduce((s, c) => s + Number(c.amount || 0), 0);
+
         grid.innerHTML = `
           <div class="kpi-card" style="border-top:4px solid #0f766e;">
             <div class="kpi-label">Cash in Office Box (To Deposit)</div>
@@ -13468,8 +13894,20 @@ Thank you!`;
           </div>
           <div class="kpi-card" style="border-top:4px solid #2563eb;">
             <div class="kpi-label">Cheques in Office Box</div>
-            <div class="kpi-val" style="color:#2563eb;">${cs.chequesInOffice.length}</div>
+            <div class="kpi-val" style="color:#2563eb;">${cs.chequesInOffice.length} <small style="font-size:0.75rem;color:var(--muted);font-weight:normal;">(${fmtINR(officeChequeSum)})</small></div>
             <div class="kpi-sub">Ready for Bank Deposit</div>
+            <button class="btn btn-sm btn-teal" style="margin-top:6px;width:100%;font-size:0.73rem;font-weight:700;padding:4px;" onclick="openNewChequeFromStaffModal()">+ Receive New Cheque</button>
+          </div>
+          <div class="kpi-card" style="border-top:4px solid #0284c7;">
+            <div class="kpi-label">Cheques with Sales Team</div>
+            <div class="kpi-val" style="color:#0284c7;">${totalSalesChequesInHand} <small style="font-size:0.75rem;color:var(--muted);font-weight:normal;">(${fmtINR(totalSalesChequesSum)})</small></div>
+            <div class="kpi-sub">Gopal &amp; Vikram In Hand</div>
+            ${totalSalesChequesInHand > 0
+              ? `<div style="display:flex;gap:4px;margin-top:6px;">
+                   ${cs.gopalChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" style="flex:1;font-size:0.72rem;padding:4px;" onclick="receiveAllStaffCheques('GOPAL AMBAGADE')">📥 Recv Gopal (${cs.gopalChequesInHand.length})</button>` : ''}
+                   ${cs.vikramChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" style="flex:1;font-size:0.72rem;padding:4px;" onclick="receiveAllStaffCheques('VIKARAM SING THAKUR')">📥 Recv Vikram (${cs.vikramChequesInHand.length})</button>` : ''}
+                 </div>`
+              : `<button class="btn btn-sm btn-outline" style="margin-top:6px;width:100%;font-size:0.73rem;font-weight:700;padding:4px;" onclick="openNewChequeFromStaffModal()">+ Receive Cheque</button>`}
           </div>
           <div class="kpi-card" style="border-top:4px solid #ea580c;">
             <div class="kpi-label">Cash with Gopal (In Pocket)</div>
@@ -13611,6 +14049,12 @@ Thank you!`;
             <div class="kpi-label">Cheques with Sales Team</div>
             <div class="kpi-val" style="color:#d97706;">${cs.gopalChequesInHand.length + cs.vikramChequesInHand.length}</div>
             <div class="kpi-sub">Gopal &amp; Vikram In Hand</div>
+            ${(cs.gopalChequesInHand.length + cs.vikramChequesInHand.length) > 0
+              ? `<div style="display:flex;gap:4px;margin-top:6px;">
+                   ${cs.gopalChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" style="flex:1;font-size:0.72rem;padding:4px;" onclick="receiveAllStaffCheques('GOPAL AMBAGADE')">📥 Recv Gopal (${cs.gopalChequesInHand.length})</button>` : ''}
+                   ${cs.vikramChequesInHand.length > 0 ? `<button class="btn btn-sm btn-teal" style="flex:1;font-size:0.72rem;padding:4px;" onclick="receiveAllStaffCheques('VIKARAM SING THAKUR')">📥 Recv Vikram (${cs.vikramChequesInHand.length})</button>` : ''}
+                 </div>`
+              : `<button class="btn btn-sm btn-outline" style="margin-top:6px;width:100%;font-size:0.73rem;font-weight:700;padding:4px;" onclick="openNewChequeFromStaffModal()">+ Receive Cheque</button>`}
           </div>
           <div class="kpi-card teal">
             <div class="kpi-label">Total Deposited in Banks</div>
@@ -13790,6 +14234,99 @@ Thank you!`;
       // 6. Render 4 Bank Accounts Summary Grid (Manager & Admin Only)
       if (canViewAllCash) {
         renderBankAccountsSummary();
+      }
+
+      // 7. Render Office Cheques & Sales Team Cheque Register Table (Manager & Admin Only)
+      const officeChequesCard = document.getElementById("staffChequesOfficeCard");
+      const officeChequesTbody = document.getElementById("staffChequesOfficeTbody");
+      const officeChequesBadge = document.getElementById("staffChequesOfficeCountBadge");
+      if (officeChequesCard) officeChequesCard.style.display = canViewAllCash ? "block" : "none";
+
+      if (officeChequesTbody && canViewAllCash) {
+        const allCheques = (state.collections || []).filter(c => c.mode === "Cheque");
+        if (officeChequesBadge) {
+          const inOfficeCount = allCheques.filter(c => c.chequeLocation === "AT_OFFICE" || (c.chequeHandedToPrashik && c.chequeLocation !== "DEPOSITED_BANK" && c.chequeLocation !== "CLEARED")).length;
+          officeChequesBadge.textContent = `${inOfficeCount} In Office / ${allCheques.length} Total`;
+        }
+
+        if (allCheques.length === 0) {
+          officeChequesTbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="text-center" style="color:var(--muted);padding:18px;">
+                No cheques recorded yet. Click <strong>'+ Receive Cheque from Salesman'</strong> to record and receive a cheque into the office box.
+              </td>
+            </tr>
+          `;
+        } else {
+          // Sort descending by date
+          const sortedCheques = [...allCheques].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+          officeChequesTbody.innerHTML = sortedCheques.map(c => {
+            const loc = c.chequeLocation || (c.chequeHandedToPrashik ? "AT_OFFICE" : "WITH_SALESPERSON");
+            let locBadge = '';
+            let actionBtns = '';
+
+            if (loc === "WITH_SALESPERSON") {
+              locBadge = `<span class="pill pill-yellow" style="font-weight:700;">🚶 With ${c.salespersonName || 'Salesperson'}</span>`;
+              actionBtns = `
+                <button type="button" class="btn btn-sm btn-teal" onclick="acceptChequeAtOffice('${c.id}')" style="padding:4px 10px;font-size:0.75rem;font-weight:700;white-space:nowrap;">
+                  📥 Receive at Office
+                </button>
+              `;
+            } else if (loc === "AT_OFFICE") {
+              locBadge = '<span class="pill pill-blue" style="font-weight:700;">🏢 In Office Box</span>';
+              actionBtns = `
+                <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-teal" onclick="depositChequeInBank('${c.id}')" style="padding:4px 8px;font-size:0.75rem;font-weight:700;white-space:nowrap;" title="Mark Deposited in Bank">
+                    🏦 Deposit
+                  </button>
+                  <button type="button" class="btn btn-sm btn-success" onclick="markChequeStatus('${c.id}', 'Cleared')" style="padding:4px 8px;font-size:0.75rem;font-weight:700;white-space:nowrap;" title="Mark Cleared">
+                    ✓ Cleared
+                  </button>
+                </div>
+              `;
+            } else if (loc === "DEPOSITED_BANK") {
+              locBadge = '<span class="pill pill-purple" style="font-weight:700;">🏦 Deposited in Bank</span>';
+              actionBtns = `
+                <button type="button" class="btn btn-sm btn-success" onclick="markChequeStatus('${c.id}', 'Cleared')" style="padding:4px 10px;font-size:0.75rem;font-weight:700;white-space:nowrap;">
+                  ✓ Mark Cleared
+                </button>
+              `;
+            } else if (c.chequeStatus === "Cleared" || loc === "CLEARED") {
+              locBadge = '<span class="pill pill-green" style="font-weight:700;">🟢 Cleared</span>';
+              actionBtns = '<span style="font-size:0.75rem;color:#15803d;font-weight:700;">✓ Cleared</span>';
+            } else if (c.chequeStatus === "Bounced") {
+              locBadge = '<span class="pill pill-red" style="font-weight:700;">🔴 Bounced</span>';
+              actionBtns = '<span style="font-size:0.75rem;color:#b91c1c;font-weight:700;">Bounced</span>';
+            }
+
+            const proofBtn = (c.proofImg || c.driveUrl)
+              ? `<button type="button" class="btn btn-sm" onclick="openProofImageModal('${c.id}')" title="View Cheque Photo" style="padding:2px 6px;font-size:0.75rem;margin-left:4px;background:#f1f5f9;">📷</button>`
+              : '';
+
+            return `
+              <tr>
+                <td>
+                  <strong>${c.receiptNo || '-'}</strong>
+                  <div style="font-size:0.75rem;color:var(--muted);">${fmtDate(c.date)}</div>
+                </td>
+                <td>
+                  <strong style="color:var(--primary);">${c.salespersonName || '-'}</strong>
+                </td>
+                <td class="font-bold">${c.partyName || '-'}</td>
+                <td>
+                  <strong>#${c.chequeNo || '-'}</strong>
+                  <div style="font-size:0.75rem;color:var(--muted);">${c.chequeBank || 'Bank'} ${proofBtn}</div>
+                </td>
+                <td class="text-right font-bold" style="color:#0f766e;font-size:0.95rem;">${fmtINR(c.amount)}</td>
+                <td>
+                  <span class="pill pill-outline" style="font-size:0.75rem;font-weight:600;">${getAccShortName(c.depositAccount)}</span>
+                </td>
+                <td class="text-center">${locBadge}</td>
+                <td class="text-center">${actionBtns}</td>
+              </tr>
+            `;
+          }).join("");
+        }
       }
     }
     async function handleCustomStaffHandover() {
