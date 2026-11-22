@@ -3429,9 +3429,9 @@
   <div class="modal-backdrop" id="invoiceModal">
     <div class="modal modal-lg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
-        <h3 style="margin:0;font-size:1.1rem;">Official GST Tax Invoice Preview</h3>
+        <h3 style="margin:0;font-size:1.1rem;" id="invoiceModalTitle">Official GST Tax Invoice Preview</h3>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="shareCurrentInvoiceWhatsApp()">💬 Share on WhatsApp</button>
+          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="handleInvoiceModalWhatsAppShare()">💬 Share on WhatsApp</button>
           <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('invoiceModal')">← Back</button>
         </div>
       </div>
@@ -7936,9 +7936,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (tabId === "dashboard") {
         if (typeof renderDashboard === "function") renderDashboard();
       } else if (tabId === "open-stock") {
-        if (typeof renderOpenStockTable === "function") renderOpenStockTable();
+        if (typeof renderOpenStock === "function") renderOpenStock();
       } else if (tabId === "open-dues") {
-        if (typeof renderOpenDuesTable === "function") renderOpenDuesTable();
+        if (typeof renderOpenDealers === "function") renderOpenDealers();
       } else if (tabId === "admin-orders") {
         if (typeof renderOrdersTable === "function") renderOrdersTable();
         if (typeof updateSubTabBadges === "function") updateSubTabBadges();
@@ -10183,6 +10183,7 @@ Thank you!`;
     function openOrderMemoModal(orderId) {
       const ord = state.orders.find(o => o.id === orderId || o.orderNo === String(orderId) || o.memoNo === orderId);
       if (!ord) return;
+      lastActiveMemoOrderId = ord.id;
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName);
       const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
@@ -10986,7 +10987,7 @@ Thank you!`;
 
         if (isCompleted) {
           primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" style="font-weight:700;padding:5px 9px;" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send Bill to Party">💬 Send Bill</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendInvoiceWhatsAppDirect('${o.id}')" style="padding:5px 9px;" title="Send Bill to Party">💬 Send Bill</button>`;
         } else if (isPartial) {
           primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;" title="Dispatch remaining items">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
           primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send WhatsApp">💬 WhatsApp</button>`;
@@ -13514,8 +13515,10 @@ Thank you! Your payment has been received successfully.`;
     }
 
     function findPartyByName(nameInput) {
+      if (!nameInput) return null;
       const clean = nameInput.trim().toLowerCase();
-      return state.parties.find(p => p.name.toLowerCase() === clean);
+      if (!clean) return null;
+      return (state.parties || []).find(p => p.name && p.name.trim().toLowerCase() === clean);
     }
 
     function handleInwardProdSelected() {
@@ -14554,6 +14557,9 @@ Thank you! Your payment has been received successfully.`;
         </div>
       `;
       currentPreviewInvoiceOrderId = orderId;
+      currentPreviewDocType = "INVOICE";
+      const titleEl = document.getElementById("invoiceModalTitle");
+      if (titleEl) titleEl.textContent = "🧾 Official GST Tax Invoice Preview";
       const waBtn = document.getElementById("invoiceWaShareBtn");
       if (waBtn) waBtn.style.display = "inline-flex";
       openModal("invoiceModal");
@@ -17044,9 +17050,16 @@ Thank you! Your payment has been received successfully.`;
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) return;
       lastActiveMemoOrderId = orderId;
+      currentPreviewInvoiceOrderId = orderId;
+      currentPreviewDocType = "MEMO";
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const party = getComputedParties().find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+
+      const titleEl = document.getElementById("invoiceModalTitle");
+      if (titleEl) titleEl.textContent = "📝 Order Booking Memo Preview";
+      const waBtn = document.getElementById("invoiceWaShareBtn");
+      if (waBtn) waBtn.style.display = "inline-flex";
 
       document.getElementById("invoicePrintArea").innerHTML = buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, false);
       openModal("invoiceModal");
@@ -17205,6 +17218,49 @@ Thank you! Your payment has been received successfully.`;
         showToast("⚠️ PDF generation issue. Opening print preview...");
         window.print();
       }
+    }
+
+    let currentPreviewDocType = "INVOICE";
+
+    function sendInvoiceWhatsAppDirect(orderId) {
+      currentPreviewInvoiceOrderId = orderId;
+      currentPreviewDocType = "INVOICE";
+      shareCurrentInvoiceWhatsApp();
+    }
+
+    function handleInvoiceModalWhatsAppShare() {
+      if (currentPreviewDocType === "MEMO") {
+        const targetId = lastActiveMemoOrderId || currentPreviewInvoiceOrderId || (lastActiveOrd && lastActiveOrd.id);
+        if (targetId) shareOrderTextOnWhatsApp(targetId);
+      } else if (currentPreviewDocType === "CHALLAN") {
+        const targetId = lastActiveMemoOrderId || currentPreviewInvoiceOrderId || (lastActiveOrd && lastActiveOrd.id);
+        if (targetId) shareDeliveryChallanWhatsApp(targetId);
+      } else {
+        shareCurrentInvoiceWhatsApp();
+      }
+    }
+
+    function shareDeliveryChallanWhatsApp(orderId) {
+      const targetId = orderId || lastActiveMemoOrderId;
+      if (!targetId) return;
+      const ord = (state.orders || []).find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
+      if (!ord) return;
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
+      const cleanPhone = (party.mobile || "").replace(/\D/g, "");
+      const dcNo = ord.dcNo || `DC-${ord.orderNo}`;
+      const memoDisplay = ord.memoNo ? ord.memoNo : `#${ord.orderNo}`;
+      let itemsList = "";
+      if (Array.isArray(ord.items) && ord.items.length > 0) {
+        itemsList = ord.items.map((it, idx) => `• ${it.productName} — ${it.qty} Units`).join("\n");
+      } else {
+        itemsList = `• ${ord.productName || "General Goods"} — ${ord.orderQty} Units`;
+      }
+      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery\nThank you!`;
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
     }
 
     function shareOrderTextOnWhatsApp(orderId) {
@@ -17781,6 +17837,13 @@ Thank you! Your payment has been received successfully.`;
           </div>
         </div>
       `;
+      currentPreviewDocType = "CHALLAN";
+      lastActiveMemoOrderId = orderId;
+      currentPreviewInvoiceOrderId = orderId;
+      const titleEl = document.getElementById("invoiceModalTitle");
+      if (titleEl) titleEl.textContent = "🚚 Delivery Challan (DC) Preview";
+      const waBtn = document.getElementById("invoiceWaShareBtn");
+      if (waBtn) waBtn.style.display = "inline-flex";
       openModal("invoiceModal");
     }
 
@@ -17845,8 +17908,17 @@ Thank you! Your payment has been received successfully.`;
     let activeProofColId = null;
 
     function openProofImageModal(colId) {
-      const col = state.collections.find(c => c.id === colId);
-      if (!col || !col.proofImg) return;
+      const col = (state.collections || []).find(c => c.id === colId);
+      if (!col) return;
+      const driveLink = col.driveUrl || col.proofDriveUrl || col.receiptDriveUrl;
+      if (!col.proofImg && driveLink) {
+        window.open(driveLink, "_blank");
+        return;
+      }
+      if (!col.proofImg) {
+        showToast("⚠️ No proof photo or Drive link found for this receipt.");
+        return;
+      }
       activeProofColId = colId;
       document.getElementById("proofModalTitle").textContent = `Proof: Receipt #${col.receiptNo} — ${col.partyName}`;
       document.getElementById("proofModalImg").src = col.proofImg;
