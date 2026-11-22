@@ -1726,6 +1726,40 @@
 
       <!-- ==================== ADMIN TAB 1: DASHBOARD ==================== -->
       <section id="tab-dashboard" class="tab-panel">
+        <!-- Smart Dashboard Date Filter Toolbar -->
+        <div class="card" style="border-left:4px solid #0284c7;margin-bottom:14px;background:#f8fafc;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          <div class="card-header" style="background:transparent;padding:10px 14px;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:0.84rem;color:#0369a1;display:inline-flex;align-items:center;gap:6px;">
+                <span style="font-size:1.05rem;">📅</span> Date Filter / Period:
+              </span>
+              <select id="dashDateFilter" class="form-control" style="width:auto;min-width:190px;font-weight:600;font-size:0.82rem;padding:6px 12px;border:1.5px solid #0284c7;border-radius:6px;background:#ffffff;color:#0f172a;cursor:pointer;" onchange="handleDashDateFilterChange()">
+                <option value="THIS_MONTH" selected>🗓️ This Month (Current Month)</option>
+                <option value="TODAY">⚡ Today (Live Daily)</option>
+                <option value="YESTERDAY">⏮️ Yesterday</option>
+                <option value="THIS_WEEK">📆 This Week (Mon - Sun)</option>
+                <option value="LAST_MONTH">⏪ Last Month</option>
+                <option value="THIS_FY">🏛️ This Financial Year (FY 2026-27)</option>
+                <option value="ALL">🌐 All Time (Complete History)</option>
+                <option value="CUSTOM">🎯 Custom Date Range...</option>
+              </select>
+
+              <div id="dashCustomDateWrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;background:#ffffff;border:1px solid #cbd5e1;padding:3px 8px;border-radius:6px;">
+                <label style="font-size:0.75rem;font-weight:700;color:#334155;margin:0;">From:</label>
+                <input type="date" id="dashFromDate" class="form-control" style="width:130px;padding:3px 6px;font-size:0.78rem;" onchange="renderDashboard()" />
+                <label style="font-size:0.75rem;font-weight:700;color:#334155;margin:0;">To:</label>
+                <input type="date" id="dashToDate" class="form-control" style="width:130px;padding:3px 6px;font-size:0.78rem;" onchange="renderDashboard()" />
+                <button type="button" class="btn btn-primary btn-sm" style="font-size:0.72rem;padding:3px 8px;font-weight:700;" onclick="renderDashboard()">Apply</button>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span id="dashActiveDateBadge" class="pill pill-blue" style="font-size:0.74rem;padding:4px 10px;font-weight:700;">Loading Period...</span>
+              <button type="button" class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:3px 8px;border-color:#cbd5e1;background:#fff;color:#475569;font-weight:600;" onclick="resetDashDateFilter()" title="Reset to Current Month">↺ This Month</button>
+            </div>
+          </div>
+        </div>
+
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-label">Total Order Booking</div>
@@ -1740,12 +1774,12 @@
           <div class="kpi-card green">
             <div class="kpi-label">Cash Collection</div>
             <div class="kpi-val" id="kpiCash">₹0</div>
-            <div class="kpi-sub">Counter Cash Received</div>
+            <div class="kpi-sub" id="kpiCashSub">Counter Cash Received</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Bank / UPI Collection</div>
             <div class="kpi-val" id="kpiBank">₹0</div>
-            <div class="kpi-sub">Bank Deposits / UPI</div>
+            <div class="kpi-sub" id="kpiBankSub">Bank Deposits / UPI</div>
           </div>
           <div class="kpi-card red">
             <div class="kpi-label">Net Party Receivable</div>
@@ -1810,9 +1844,10 @@
                 <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Click 🎯 Target to set/update monthly booking target</div>
               </div>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <input type="month" id="dashPerfMonth" class="form-control" style="width:145px;padding:4px 8px;font-size:0.78rem;" onchange="renderDashboard()" />
+                <span style="font-size:0.75rem;color:var(--muted);font-weight:600;">Override Month:</span>
+                <input type="month" id="dashPerfMonth" class="form-control" style="width:140px;padding:4px 8px;font-size:0.78rem;" onchange="renderDashboard()" />
                 <label style="font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
-                  <input type="checkbox" id="dashPerfAllTime" checked onchange="renderDashboard()" /> All Time
+                  <input type="checkbox" id="dashPerfAllTime" onchange="renderDashboard()" /> All Time
                 </label>
               </div>
             </div>
@@ -1856,8 +1891,11 @@
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Recent Invoices &amp; Order Dispatches</span>
+          <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+            <div>
+              <span class="card-title">Recent Invoices &amp; Order Dispatches</span>
+              <span id="dashRecentOrdersSub" style="font-size:0.75rem;color:var(--muted);font-weight:600;margin-left:6px;"></span>
+            </div>
             <button class="btn btn-primary btn-sm" onclick="switchTab('admin-orders', document.querySelector('[data-tab=admin-orders]'))">+ New Order / Bill</button>
           </div>
           <div class="table-wrap">
@@ -17273,72 +17311,258 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     }
 
     // ==================== ADMIN PORTAL FUNCTIONS ====================
+    const DASH_FILTER_KEY = "erp_dash_filter_pref";
+    const DASH_FROM_KEY = "erp_dash_filter_from";
+    const DASH_TO_KEY = "erp_dash_filter_to";
+
+    function getDashLocalDateStr(d = new Date()) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getDashDateRange(filterType) {
+      const today = new Date();
+      const todayStr = getDashLocalDateStr(today);
+
+      if (filterType === "TODAY") {
+        return { from: todayStr, to: todayStr, label: `Today (${fmtDate(todayStr)})` };
+      }
+
+      if (filterType === "YESTERDAY") {
+        const y = new Date(today);
+        y.setDate(y.getDate() - 1);
+        const yStr = getDashLocalDateStr(y);
+        return { from: yStr, to: yStr, label: `Yesterday (${fmtDate(yStr)})` };
+      }
+
+      if (filterType === "THIS_WEEK") {
+        const day = today.getDay(); // 0 is Sun, 1 is Mon
+        const diffToMon = today.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(today.getFullYear(), today.getMonth(), diffToMon);
+        const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+        const monStr = getDashLocalDateStr(mon);
+        const sunStr = getDashLocalDateStr(sun);
+        return { from: monStr, to: sunStr, label: `This Week (${fmtDate(monStr)} - ${fmtDate(sunStr)})` };
+      }
+
+      if (filterType === "THIS_MONTH") {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const fromStr = getDashLocalDateStr(firstDay);
+        const toStr = getDashLocalDateStr(lastDay);
+        const mName = today.toLocaleString("en-IN", { month: "short", year: "numeric" });
+        return { from: fromStr, to: toStr, label: `This Month (${mName}: ${fmtDate(fromStr)} - ${fmtDate(toStr)})` };
+      }
+
+      if (filterType === "LAST_MONTH") {
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        const fromStr = getDashLocalDateStr(firstDay);
+        const toStr = getDashLocalDateStr(lastDay);
+        const mName = firstDay.toLocaleString("en-IN", { month: "short", year: "numeric" });
+        return { from: fromStr, to: toStr, label: `Last Month (${mName}: ${fmtDate(fromStr)} - ${fmtDate(toStr)})` };
+      }
+
+      if (filterType === "THIS_FY") {
+        const curYear = today.getFullYear();
+        const curMonth = today.getMonth(); // 0=Jan, 3=Apr
+        const startYear = curMonth >= 3 ? curYear : curYear - 1;
+        const firstDay = new Date(startYear, 3, 1);
+        const lastDay = new Date(startYear + 1, 2, 31);
+        const fromStr = getDashLocalDateStr(firstDay);
+        const toStr = getDashLocalDateStr(lastDay);
+        return { from: fromStr, to: toStr, label: `FY ${startYear}-${String(startYear + 1).slice(-2)} (${fmtDate(fromStr)} - ${fmtDate(toStr)})` };
+      }
+
+      if (filterType === "CUSTOM") {
+        const fromEl = document.getElementById("dashFromDate");
+        const toEl = document.getElementById("dashToDate");
+        const fromStr = fromEl && fromEl.value ? fromEl.value : todayStr;
+        const toStr = toEl && toEl.value ? toEl.value : todayStr;
+        return { from: fromStr, to: toStr, label: `Custom (${fmtDate(fromStr)} - ${fmtDate(toStr)})` };
+      }
+
+      // ALL
+      return { from: null, to: null, label: "All Time (Complete History)" };
+    }
+
+    function handleDashDateFilterChange() {
+      const filterEl = document.getElementById("dashDateFilter");
+      const filterType = filterEl ? filterEl.value : "THIS_MONTH";
+      localStorage.setItem(DASH_FILTER_KEY, filterType);
+
+      const customWrap = document.getElementById("dashCustomDateWrap");
+      if (filterType === "CUSTOM") {
+        if (customWrap) customWrap.style.display = "inline-flex";
+        const todayStr = getDashLocalDateStr(new Date());
+        const fromEl = document.getElementById("dashFromDate");
+        const toEl = document.getElementById("dashToDate");
+        const savedFrom = localStorage.getItem(DASH_FROM_KEY);
+        const savedTo = localStorage.getItem(DASH_TO_KEY);
+        if (fromEl && !fromEl.value) fromEl.value = savedFrom || todayStr;
+        if (toEl && !toEl.value) toEl.value = savedTo || todayStr;
+      } else {
+        if (customWrap) customWrap.style.display = "none";
+      }
+      renderDashboard();
+    }
+
+    function resetDashDateFilter() {
+      const filterEl = document.getElementById("dashDateFilter");
+      if (filterEl) filterEl.value = "THIS_MONTH";
+      localStorage.setItem(DASH_FILTER_KEY, "THIS_MONTH");
+      const customWrap = document.getElementById("dashCustomDateWrap");
+      if (customWrap) customWrap.style.display = "none";
+      renderDashboard();
+    }
+
     function renderDashboard() {
-      const totalOrders = state.orders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
-      const totalDispatched = state.orders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
-      const cashCol = state.collections.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount), 0);
-      const bankCol = state.collections.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount), 0);
+      // 1. Resolve Active Date Filter & restore preferences
+      const filterEl = document.getElementById("dashDateFilter");
+      if (filterEl) {
+        const savedFilter = localStorage.getItem(DASH_FILTER_KEY);
+        if (savedFilter && !filterEl.dataset.initialized) {
+          filterEl.value = savedFilter;
+          filterEl.dataset.initialized = "true";
+        }
+      }
+      const filterType = filterEl ? filterEl.value : "THIS_MONTH";
+      const customWrap = document.getElementById("dashCustomDateWrap");
+      if (customWrap) {
+        customWrap.style.display = filterType === "CUSTOM" ? "inline-flex" : "none";
+      }
+
+      const fromEl = document.getElementById("dashFromDate");
+      const toEl = document.getElementById("dashToDate");
+      if (fromEl && fromEl.value) localStorage.setItem(DASH_FROM_KEY, fromEl.value);
+      if (toEl && toEl.value) localStorage.setItem(DASH_TO_KEY, toEl.value);
+
+      const dateRange = getDashDateRange(filterType);
+
+      // Update Active Badge
+      const badgeEl = document.getElementById("dashActiveDateBadge");
+      if (badgeEl) {
+        badgeEl.textContent = `📅 ${dateRange.label}`;
+      }
+
+      // Range Matcher
+      const isDateInRange = (dateVal) => {
+        if (!dateRange.from && !dateRange.to) return true;
+        const d = String(dateVal || "").trim().slice(0, 10);
+        if (!d) return false;
+        if (dateRange.from && d < dateRange.from) return false;
+        if (dateRange.to && d > dateRange.to) return false;
+        return true;
+      };
+
+      // 2. Filter Orders and Collections according to active Date Range
+      const filtOrders = state.orders.filter(o => isDateInRange(o.date));
+      const filtCols = state.collections.filter(c => isDateInRange(c.date));
+
+      const totalOrders = filtOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+      const totalDispatched = filtOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+      const cashCol = filtCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+      const bankCol = filtCols.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount || 0), 0);
+
       const parties = getComputedParties();
       const totalReceivable = parties.reduce((s, p) => s + Math.max(0, p.netBalance), 0);
 
-      document.getElementById("kpiOrders").textContent = fmtINR(totalOrders);
-      document.getElementById("kpiOrdersCount").textContent = `${state.orders.length} Orders / Bills Recorded`;
-      document.getElementById("kpiDispatched").textContent = fmtINR(totalDispatched);
-      document.getElementById("kpiPendingDispatch").textContent = `Pending Dispatch: ${fmtINR(Math.max(0, totalOrders - totalDispatched))}`;
-      document.getElementById("kpiCash").textContent = fmtINR(cashCol);
-      document.getElementById("kpiBank").textContent = fmtINR(bankCol);
-      document.getElementById("kpiReceivable").textContent = fmtINR(totalReceivable);
-      document.getElementById("kpiReceivableSub").textContent = `Across ${parties.length} Registered Parties`;
-
-      // Team Performance Scorecard (with Monthly Target %)
-      const perfMonthEl = document.getElementById("dashPerfMonth");
-      if (perfMonthEl && !perfMonthEl.value) {
-        const now = new Date();
-        perfMonthEl.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      // 3. Update Top KPI Cards
+      const kpiOrdersEl = document.getElementById("kpiOrders");
+      if (kpiOrdersEl) kpiOrdersEl.textContent = fmtINR(totalOrders);
+      const kpiOrdersCountEl = document.getElementById("kpiOrdersCount");
+      if (kpiOrdersCountEl) {
+        kpiOrdersCountEl.textContent = `${filtOrders.length} Orders / Bills (${filterType === "ALL" ? "All Time" : "In Period"})`;
       }
-      const perfAllTime = document.getElementById("dashPerfAllTime") ? document.getElementById("dashPerfAllTime").checked : true;
+
+      const kpiDispatchedEl = document.getElementById("kpiDispatched");
+      if (kpiDispatchedEl) kpiDispatchedEl.textContent = fmtINR(totalDispatched);
+      const kpiPendingDispatchEl = document.getElementById("kpiPendingDispatch");
+      if (kpiPendingDispatchEl) {
+        kpiPendingDispatchEl.textContent = `Pending Dispatch: ${fmtINR(Math.max(0, totalOrders - totalDispatched))}`;
+      }
+
+      const kpiCashEl = document.getElementById("kpiCash");
+      if (kpiCashEl) kpiCashEl.textContent = fmtINR(cashCol);
+      const kpiCashSubEl = document.getElementById("kpiCashSub");
+      if (kpiCashSubEl) {
+        kpiCashSubEl.textContent = dateRange.from ? `Counter Cash in Period` : `Counter Cash Received`;
+      }
+
+      const kpiBankEl = document.getElementById("kpiBank");
+      if (kpiBankEl) kpiBankEl.textContent = fmtINR(bankCol);
+      const kpiBankSubEl = document.getElementById("kpiBankSub");
+      if (kpiBankSubEl) {
+        kpiBankSubEl.textContent = dateRange.from ? `Bank / UPI in Period` : `Bank Deposits / UPI`;
+      }
+
+      const kpiReceivableEl = document.getElementById("kpiReceivable");
+      if (kpiReceivableEl) kpiReceivableEl.textContent = fmtINR(totalReceivable);
+      const kpiReceivableSubEl = document.getElementById("kpiReceivableSub");
+      if (kpiReceivableSubEl) {
+        const periodTotalRecovery = cashCol + bankCol;
+        kpiReceivableSubEl.textContent = dateRange.from
+          ? `Across ${parties.length} Parties | Recovery: ${fmtINR(periodTotalRecovery)}`
+          : `Across ${parties.length} Registered Parties`;
+      }
+
+      // 4. Team Performance Scorecard (with Monthly Target %)
+      const perfMonthEl = document.getElementById("dashPerfMonth");
+      const perfAllTime = document.getElementById("dashPerfAllTime") ? document.getElementById("dashPerfAllTime").checked : false;
       const perfMonth = perfMonthEl ? perfMonthEl.value : "";
 
-      const filtOrders = state.orders.filter(o => perfAllTime || !perfMonth || String(o.date || "").startsWith(perfMonth));
-      const filtCols = state.collections.filter(c => perfAllTime || !perfMonth || String(c.date || "").startsWith(perfMonth));
+      let spOrdersSource = filtOrders;
+      let spColsSource = filtCols;
+      if (perfAllTime) {
+        spOrdersSource = state.orders;
+        spColsSource = state.collections;
+      } else if (perfMonth) {
+        // If user manually chose an override month for the scorecard
+        spOrdersSource = state.orders.filter(o => String(o.date || "").startsWith(perfMonth));
+        spColsSource = state.collections.filter(c => String(c.date || "").startsWith(perfMonth));
+      }
 
       const spBody = document.getElementById("dashSalespersonBody");
-      spBody.innerHTML = state.salespersons.map(sp => {
-        const spOrders = filtOrders.filter(o => (o.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
-        const ord = spOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
-        const disp = spOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
-        const spCols = filtCols.filter(c => (c.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
-        const cCash = spCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
-        const cBank = spCols.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount || 0), 0);
-        const totalCol = cCash + cBank;
-        const target = Number(sp.monthlyTarget || 0);
-        const pct = target > 0 ? Math.min(999, Math.round((ord / target) * 100)) : 0;
-        const barColor = pct >= 100 ? "#16a34a" : (pct >= 60 ? "#d97706" : "#2563eb");
+      if (spBody) {
+        spBody.innerHTML = state.salespersons.map(sp => {
+          const spOrders = spOrdersSource.filter(o => (o.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
+          const ord = spOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+          const disp = spOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+          const spCols = spColsSource.filter(c => (c.salespersonName || "").toLowerCase() === (sp.name || "").toLowerCase());
+          const cCash = spCols.filter(c => c.mode === "Cash").reduce((s, c) => s + Number(c.amount || 0), 0);
+          const cBank = spCols.filter(c => c.mode === "Bank" || (c.mode === "Cheque" && c.chequeStatus === "Cleared")).reduce((s, c) => s + Number(c.amount || 0), 0);
+          const totalCol = cCash + cBank;
+          const target = Number(sp.monthlyTarget || 0);
+          const pct = target > 0 ? Math.min(999, Math.round((ord / target) * 100)) : 0;
+          const barColor = pct >= 100 ? "#16a34a" : (pct >= 60 ? "#d97706" : "#2563eb");
 
-        return `
-          <tr>
-            <td>
-              <strong>${sp.name}</strong>
-              <span class="pill pill-gray" style="margin-left:4px;font-size:0.68rem;">${sp.role}</span>
-              <div style="font-size:0.7rem;color:var(--muted);">${spOrders.length} Orders | Cash: ${fmtINR(cCash)} | Bank: ${fmtINR(cBank)}</div>
-            </td>
-            <td class="text-right font-bold">${fmtINR(ord)}</td>
-            <td class="text-right">${fmtINR(disp)}</td>
-            <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(totalCol)}</td>
-            <td class="text-center" style="min-width:115px;">
-              ${target > 0
-                ? `<div style="font-size:0.72rem;font-weight:700;color:${barColor};">${pct}% of ${fmtINR(target)}</div>
-                   <div style="height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:3px 0;">
-                     <div style="height:100%;width:${Math.min(100, pct)}%;background:${barColor};"></div>
-                   </div>`
-                : `<div style="font-size:0.7rem;color:var(--muted);">No Target</div>`}
-              <button type="button" class="btn btn-outline btn-sm" style="font-size:0.68rem;padding:2px 6px;color:var(--primary);border-color:var(--border);" onclick="editSalespersonTarget('${sp.id}')">🎯 Target</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+          return `
+            <tr>
+              <td>
+                <strong>${sp.name}</strong>
+                <span class="pill pill-gray" style="margin-left:4px;font-size:0.68rem;">${sp.role}</span>
+                <div style="font-size:0.7rem;color:var(--muted);">${spOrders.length} Orders | Cash: ${fmtINR(cCash)} | Bank: ${fmtINR(cBank)}</div>
+              </td>
+              <td class="text-right font-bold">${fmtINR(ord)}</td>
+              <td class="text-right">${fmtINR(disp)}</td>
+              <td class="text-right font-bold" style="color:#0f766e;">${fmtINR(totalCol)}</td>
+              <td class="text-center" style="min-width:115px;">
+                ${target > 0
+                  ? `<div style="font-size:0.72rem;font-weight:700;color:${barColor};">${pct}% of ${fmtINR(target)}</div>
+                     <div style="height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:3px 0;">
+                       <div style="height:100%;width:${Math.min(100, pct)}%;background:${barColor};"></div>
+                     </div>`
+                  : `<div style="font-size:0.7rem;color:var(--muted);">No Target</div>`}
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:0.68rem;padding:2px 6px;color:var(--primary);border-color:var(--border);" onclick="editSalespersonTarget('${sp.id}')">🎯 Target</button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
 
-      // True 30 / 60 / 90+ Days Receivables Ageing Summary + Credit Limit Alert
+      // 5. True 30 / 60 / 90+ Days Receivables Ageing Summary + Credit Limit Alert
       const dueParties = parties.filter(p => p.netBalance > 0);
       const agingTiers = [
         { label: "🔴 90+ Days Overdue (Critical)", badge: "pill-red", list: dueParties.filter(p => p.agingBucket === "90+") },
@@ -17347,34 +17571,50 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         { label: "🟢 0–30 Days Active (Safe)", badge: "pill-green", list: dueParties.filter(p => p.agingBucket === "0-30") },
         { label: "⚠️ Credit Limit Exceeded", badge: "pill-red", list: dueParties.filter(p => p.isOverCreditLimit) }
       ];
-      document.getElementById("dashAgeingBody").innerHTML = agingTiers.map(t => {
-        const sum = t.list.reduce((s, p) => s + p.netBalance, 0);
-        return `
-          <tr>
-            <td><span class="pill ${t.badge}">${t.label}</span></td>
-            <td class="text-center font-bold">${t.list.length}</td>
-            <td class="text-right font-bold">${fmtINR(sum)}</td>
-          </tr>
-        `;
-      }).join("");
+      const ageingBodyEl = document.getElementById("dashAgeingBody");
+      if (ageingBodyEl) {
+        ageingBodyEl.innerHTML = agingTiers.map(t => {
+          const sum = t.list.reduce((s, p) => s + p.netBalance, 0);
+          return `
+            <tr>
+              <td><span class="pill ${t.badge}">${t.label}</span></td>
+              <td class="text-center font-bold">${t.list.length}</td>
+              <td class="text-right font-bold">${fmtINR(sum)}</td>
+            </tr>
+          `;
+        }).join("");
+      }
 
-      // Recent Orders
-      document.getElementById("dashRecentOrdersBody").innerHTML = state.orders.slice(0, 10).map(o => {
-        const st = o.dispatchedQty === 0 ? ["Pending", "pill-red"] : (o.dispatchedQty < o.orderQty ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
-        return `
-          <tr>
-            <td class="font-bold">#${o.orderNo}</td>
-            <td>${fmtDate(o.date)}</td>
-            <td>${o.partyName}</td>
-            <td>${o.salespersonName}</td>
-            <td>${o.productName}</td>
-            <td class="text-center">${o.orderQty} / ${o.dispatchedQty}</td>
-            <td class="text-right font-bold">${fmtINR(getOrderTotalAmount(o))}</td>
-            <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
-            <td class="text-center"><button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')">Tax Bill PDF</button></td>
-          </tr>
-        `;
-      }).join("");
+      // 6. Recent Invoices / Orders (Filtered by selected Date Range)
+      const recentOrdersBodyEl = document.getElementById("dashRecentOrdersBody");
+      if (recentOrdersBodyEl) {
+        const subCountEl = document.getElementById("dashRecentOrdersSub");
+        if (subCountEl) {
+          subCountEl.textContent = `(${filtOrders.length} orders in period)`;
+        }
+
+        const displayOrders = filtOrders.slice(0, 15);
+        if (displayOrders.length === 0) {
+          recentOrdersBodyEl.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:22px;color:var(--muted);font-weight:600;">No orders / bills recorded in selected period (${dateRange.label}).</td></tr>`;
+        } else {
+          recentOrdersBodyEl.innerHTML = displayOrders.map(o => {
+            const st = o.dispatchedQty === 0 ? ["Pending", "pill-red"] : (o.dispatchedQty < o.orderQty ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
+            return `
+              <tr>
+                <td class="font-bold">#${o.orderNo}</td>
+                <td>${fmtDate(o.date)}</td>
+                <td>${o.partyName}</td>
+                <td>${o.salespersonName}</td>
+                <td>${o.productName}</td>
+                <td class="text-center">${o.orderQty} / ${o.dispatchedQty}</td>
+                <td class="text-right font-bold">${fmtINR(getOrderTotalAmount(o))}</td>
+                <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
+                <td class="text-center"><button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')">Tax Bill PDF</button></td>
+              </tr>
+            `;
+          }).join("");
+        }
+      }
     }
 
     async function editSalespersonTarget(spId) {
