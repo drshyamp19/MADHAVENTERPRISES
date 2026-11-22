@@ -6883,17 +6883,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         "amount": 2250,
         "mode": "Cash",
         "bankRef": "Cash"
-      },
-      {
-        "id": "COL_RCP_157",
-        "receiptNo": "RCP-157",
-        "date": "2026-11-16",
-        "partyId": "P020",
-        "partyName": "SHREE KRUSHNA ELECTRICAL",
-        "salespersonName": "PRASHIK HAJARE",
-        "amount": 1700,
-        "mode": "Cash",
-        "bankRef": "Collected via Vikram / Handed to Prashik"
       }
     ],
     "salespersons": [
@@ -7486,6 +7475,59 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       ];
     }
 
+    function isTrialVikramCashCol(c) {
+      if (!c) return false;
+      if (c.id === "COL_RCP_157" || c.receiptNo === "RCP-157") return true;
+      const sp = (c.salespersonName || "").toUpperCase();
+      const pName = (c.partyName || "").toUpperCase();
+      const isVikram = sp.includes("VIKARAM") || sp.includes("VIKRAM") || (c.bankRef || "").includes("Vikram");
+      const isShreeKrushna = pName.includes("SHREE KRUSHNA");
+      if (c.mode === "Cash" && (Number(c.amount) === 1700 || isShreeKrushna || isVikram)) {
+        return true;
+      }
+      return false;
+    }
+
+    function purgeTrialCashRecords() {
+      let changed = false;
+      if (Array.isArray(state.collections)) {
+        const prevLen = state.collections.length;
+        state.collections = state.collections.filter(c => !isTrialVikramCashCol(c));
+        if (state.collections.length !== prevLen) changed = true;
+      }
+      if (Array.isArray(state.cashHandovers)) {
+        const prevLen = state.cashHandovers.length;
+        state.cashHandovers = state.cashHandovers.filter(h => {
+          const from = (h.fromStaffName || "").toUpperCase();
+          return !(from.includes("VIKARAM") || from.includes("VIKRAM"));
+        });
+        if (state.cashHandovers.length !== prevLen) changed = true;
+      }
+      if (changed) persistLocal();
+
+      // Cloud purge from Firebase Firestore across both companies
+      if (typeof isFirebaseLive !== "undefined" && isFirebaseLive && typeof db !== "undefined" && db) {
+        ["madhav_", "shivom_"].forEach(pfx => {
+          db.collection(pfx + "collections").doc("COL_RCP_157").delete().catch(() => {});
+          db.collection(pfx + "collections").where("receiptNo", "==", "RCP-157").get().then(snap => {
+            snap.forEach(doc => doc.ref.delete().catch(() => {}));
+          }).catch(() => {});
+          db.collection(pfx + "collections").where("amount", "==", 1700).get().then(snap => {
+            snap.forEach(doc => {
+              const d = doc.data() || {};
+              if (d.mode === "Cash") doc.ref.delete().catch(() => {});
+            });
+          }).catch(() => {});
+          db.collection(pfx + "cashHandovers").where("fromStaffName", "==", "VIKARAM SING THAKUR").get().then(snap => {
+            snap.forEach(doc => doc.ref.delete().catch(() => {}));
+          }).catch(() => {});
+          db.collection(pfx + "cashHandovers").where("amount", "==", 1700).get().then(snap => {
+            snap.forEach(doc => doc.ref.delete().catch(() => {}));
+          }).catch(() => {});
+        });
+      }
+    }
+
     function loadCompanyState() {
       const key = getStorageKey();
       const saved = localStorage.getItem(key);
@@ -7571,28 +7613,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         persistLocal();
       }
 
-      // Auto-clean trial cash handovers for Vikram Singh Thakur (Cash prohibited)
-      if (Array.isArray(state.cashHandovers)) {
-        const vikramTrialHandovers = state.cashHandovers.filter(h => {
-          const from = (h.fromStaffName || "").toUpperCase();
-          return from.includes("VIKARAM") || from.includes("VIKRAM");
-        });
-        if (vikramTrialHandovers.length > 0) {
-          state.cashHandovers = state.cashHandovers.filter(h => {
-            const from = (h.fromStaffName || "").toUpperCase();
-            return !(from.includes("VIKARAM") || from.includes("VIKRAM"));
-          });
-          persistLocal();
-          if (typeof isFirebaseLive !== "undefined" && isFirebaseLive && typeof db !== "undefined" && db) {
-            const prefix = activeCompany.toLowerCase() + "_";
-            vikramTrialHandovers.forEach(th => {
-              if (th.id) {
-                db.collection(prefix + "cashHandovers").doc(th.id).delete().catch(e => console.warn(e));
-              }
-            });
-          }
-        }
-      }
+      // Auto-clean trial cash collection and handover records for Vikram Singh Thakur (RCP-157 / ₹1,700)
+      purgeTrialCashRecords();
 
       // Auto-migrate old category codes to clean English categories
       if (state.products && state.products.length > 0) {
@@ -8225,7 +8247,18 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
               } else {
                 state.cashHandovers = remoteItems;
               }
-            } else if (col === "orders" || col === "collections" || col === "parties" || col === "products" || col === "salespersons" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
+            } else if (col === "collections") {
+              // Authoritative cloud sync: filter out any trial Vikram Cash collection (₹1700 RCP-157)
+              const trialCols = remoteItems.filter(isTrialVikramCashCol);
+              if (trialCols.length > 0) {
+                trialCols.forEach(tc => {
+                  if (tc.id) db.collection(prefix + "collections").doc(tc.id).delete().catch(e => console.warn(e));
+                });
+                state.collections = remoteItems.filter(c => !isTrialVikramCashCol(c));
+              } else {
+                state.collections = remoteItems;
+              }
+            } else if (col === "orders" || col === "parties" || col === "products" || col === "salespersons" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
               // Authoritative cloud sync: remoteItems from Firestore is authoritative source of truth
               state[col] = remoteItems;
               if (col === "orders") {
@@ -8260,6 +8293,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       document.getElementById("syncDot").classList.add("live");
       document.getElementById("syncText").textContent = "Live Sync";
       attachCompanyFirebaseListeners();
+      purgeTrialCashRecords();
     }
 
     async function saveRecord(col, item) {
@@ -8503,7 +8537,12 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const badge = document.getElementById("badgePendingChequesCount");
       if (!card || !tbody) return;
 
-      const cheques = (state.collections || []).filter(c => c.mode === "Cheque");
+      let cheques = (state.collections || []).filter(c => c.mode === "Cheque");
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      if (isSalesperson) {
+        const myName = (currentStaff.name || "").toUpperCase();
+        cheques = cheques.filter(c => (c.salespersonName || "").toUpperCase().includes(myName.includes("GOPAL") ? "GOPAL" : "VIK"));
+      }
       if (cheques.length === 0) {
         card.style.display = "none";
         return;
