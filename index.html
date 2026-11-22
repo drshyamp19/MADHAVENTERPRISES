@@ -7569,6 +7569,29 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         persistLocal();
       }
 
+      // Auto-clean trial cash handovers for Vikram Singh Thakur (Cash prohibited)
+      if (Array.isArray(state.cashHandovers)) {
+        const vikramTrialHandovers = state.cashHandovers.filter(h => {
+          const from = (h.fromStaffName || "").toUpperCase();
+          return from.includes("VIKARAM") || from.includes("VIKRAM");
+        });
+        if (vikramTrialHandovers.length > 0) {
+          state.cashHandovers = state.cashHandovers.filter(h => {
+            const from = (h.fromStaffName || "").toUpperCase();
+            return !(from.includes("VIKARAM") || from.includes("VIKRAM"));
+          });
+          persistLocal();
+          if (typeof isFirebaseLive !== "undefined" && isFirebaseLive && typeof db !== "undefined" && db) {
+            const prefix = activeCompany.toLowerCase() + "_";
+            vikramTrialHandovers.forEach(th => {
+              if (th.id) {
+                db.collection(prefix + "cashHandovers").doc(th.id).delete().catch(e => console.warn(e));
+              }
+            });
+          }
+        }
+      }
+
       // Auto-migrate old category codes to clean English categories
       if (state.products && state.products.length > 0) {
         let changed = false;
@@ -8182,7 +8205,24 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           if (activeCompany !== boundCompany || isResetInProgress) return;
           if (!snap.empty) {
             const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (col === "orders" || col === "collections" || col === "parties" || col === "products" || col === "salespersons" || col === "cashHandovers" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
+            if (col === "cashHandovers") {
+              // Authoritative cloud sync: filter out any trial handovers for Vikram
+              const vikramHandovers = remoteItems.filter(h => {
+                const f = (h.fromStaffName || "").toUpperCase();
+                return f.includes("VIKARAM") || f.includes("VIKRAM");
+              });
+              if (vikramHandovers.length > 0) {
+                vikramHandovers.forEach(vh => {
+                  if (vh.id) db.collection(prefix + "cashHandovers").doc(vh.id).delete().catch(e => console.warn(e));
+                });
+                state.cashHandovers = remoteItems.filter(h => {
+                  const f = (h.fromStaffName || "").toUpperCase();
+                  return !(f.includes("VIKARAM") || f.includes("VIKRAM"));
+                });
+              } else {
+                state.cashHandovers = remoteItems;
+              }
+            } else if (col === "orders" || col === "collections" || col === "parties" || col === "products" || col === "salespersons" || col === "bankDeposits" || col === "purchaseBills" || col === "salesReturns" || col === "expenses") {
               // Authoritative cloud sync: remoteItems from Firestore is authoritative source of truth
               state[col] = remoteItems;
               if (col === "orders") {
@@ -12733,8 +12773,14 @@ Thank you!`;
               }
             } else if (isAccepted) {
               actionHtml = `<span style="font-size:0.75rem;color:#15803d;font-weight:600;">✓ Cleared ${h.acceptedBy ? '(' + h.acceptedBy + ')' : ''}</span>`;
+              if (isPrashik || isAdmin) {
+                actionHtml += ` <button type="button" class="btn btn-sm btn-danger" onclick="deleteCashHandover('${h.id}')" title="Delete Handover" style="padding:2px 6px;font-size:0.72rem;margin-left:6px;">🗑️</button>`;
+              }
             } else {
               actionHtml = `<span style="font-size:0.72rem;color:#dc2626;" title="${h.rejectReason || ''}">${h.rejectReason || 'Rejected'}</span>`;
+              if (isPrashik || isAdmin) {
+                actionHtml += ` <button type="button" class="btn btn-sm btn-danger" onclick="deleteCashHandover('${h.id}')" title="Delete Handover" style="padding:2px 6px;font-size:0.72rem;margin-left:6px;">🗑️</button>`;
+              }
             }
 
             return `
@@ -12932,6 +12978,28 @@ Thank you!`;
 
       await saveRecord("cashHandovers", h);
       showToast(`Handover request rejected (${h.fromStaffName} - ${fmtINR(h.amount)}).`);
+      renderStaffCashTab();
+    }
+
+    async function deleteCashHandover(id) {
+      const isPrashik = currentStaff && currentStaff.role === "Manager";
+      const isAdmin = !!isAdminLoggedIn;
+      if (!isPrashik && !isAdmin) {
+        alert("Only Manager (Prashik Hajare) or Owner can delete cash handover records.");
+        return;
+      }
+      const h = (state.cashHandovers || []).find(x => x.id === id);
+      if (!h) return;
+      if (!confirm(`Are you sure you want to delete this cash handover record of ${fmtINR(h.amount)} from ${h.fromStaffName}?`)) {
+        return;
+      }
+      state.cashHandovers = state.cashHandovers.filter(x => x.id !== id);
+      persistLocal();
+      if (typeof isFirebaseLive !== "undefined" && isFirebaseLive && typeof db !== "undefined" && db) {
+        const prefix = activeCompany.toLowerCase() + "_";
+        db.collection(prefix + "cashHandovers").doc(id).delete().catch(e => console.warn(e));
+      }
+      showToast(`🗑️ Cash handover record (${fmtINR(h.amount)}) deleted successfully.`);
       renderStaffCashTab();
     }
 
