@@ -3332,21 +3332,26 @@
     <div class="modal" style="max-width:480px;text-align:center;position:relative;max-height:88vh;overflow-y:auto;padding:18px 14px;">
       <button type="button" onclick="closeModal('orderSuccessModal')" style="position:absolute;top:10px;right:10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;" title="Close">✕</button>
       <div style="font-size:2.2rem;margin-bottom:4px;">📝</div>
-      <h3 style="color:#0f766e;margin-bottom:2px;font-size:1.15rem;">Order Booking Memo Generated!</h3>
+      <h3 style="color:#0f766e;margin-bottom:2px;font-size:1.18rem;">Order Saved Successfully!</h3>
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Memo No: <strong id="succOrdNo" style="color:var(--primary);">#OB-1050</strong></p>
       <div id="succOrdDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
-      <div id="succOrdDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:4px;">
-        ☁️ Syncing PDF to Google Drive...
+      <div id="succOrdDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:6px;">
+        ☁️ Syncing PDF to Google Drive in background...
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
-        <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;" onclick="shareOrderFromSuccessModal()">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+        <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareOrderFromSuccessModal()">
           💬 Share on WhatsApp
         </button>
-        <button type="button" class="btn btn-outline" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openOrderBookingMemoFromSuccess()">
-          📄 View Booking Memo
-        </button>
-        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#334155;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
-          ← Back / Done
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="bookNewOrderFromSuccess()">
+            ➕ Book New Order
+          </button>
+          <button type="button" class="btn" style="justify-content:center;background:#6d28d9;color:#fff;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;" onclick="openPartyLedgerFromSuccess()">
+            📒 Go to Ledger
+          </button>
+        </div>
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#64748b;font-weight:600;padding:8px;font-size:0.82rem;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
+          ✕ Done / Close
         </button>
       </div>
     </div>
@@ -3371,21 +3376,26 @@
     <div class="modal" style="max-width:480px;text-align:center;position:relative;max-height:88vh;overflow-y:auto;padding:18px 14px;">
       <button type="button" onclick="closeModal('colSuccessModal')" style="position:absolute;top:10px;right:10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;" title="Close">✕</button>
       <div style="font-size:2.2rem;margin-bottom:4px;">💵</div>
-      <h3 style="color:#15803d;margin-bottom:2px;font-size:1.15rem;">Payment Receipt Saved!</h3>
+      <h3 style="color:#15803d;margin-bottom:2px;font-size:1.18rem;">Payment Receipt Saved!</h3>
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Receipt No: <strong id="succColNo" style="color:var(--primary);">#REC-1050</strong></p>
       <div id="succColDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
-      <div id="succColDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:4px;">
-        ☁️ Syncing Receipt to Google Drive...
+      <div id="succColDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:6px;">
+        ☁️ Syncing Receipt to Google Drive in background...
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
-        <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;" onclick="shareCollectionFromSuccessModal()">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+        <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareCollectionFromSuccessModal()">
           💬 Share on WhatsApp
         </button>
-        <button type="button" class="btn btn-outline" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openPaymentReceiptFromSuccess()">
-          📄 View Official Receipt
-        </button>
-        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#334155;font-weight:700;padding:11px;font-size:0.9rem;border:1px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="closeModal('colSuccessModal')">
-          ← Back / Done
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="receiveNewPaymentFromSuccess()">
+            ➕ New Payment
+          </button>
+          <button type="button" class="btn" style="justify-content:center;background:#6d28d9;color:#fff;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;" onclick="openPartyLedgerFromColSuccess()">
+            📒 Go to Ledger
+          </button>
+        </div>
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#64748b;font-weight:600;padding:8px;font-size:0.82rem;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="closeModal('colSuccessModal')">
+          ✕ Done / Close
         </button>
       </div>
     </div>
@@ -11023,30 +11033,14 @@ Thank you!`;
 
     let lastActiveOrd = null;
 
-    async function shareOrderFromSuccessModal() {
+    function shareOrderFromSuccessModal() {
       const ord = lastActiveOrd;
       if (!ord) return;
-      const btn = document.getElementById("succOrdWhatsAppBtn");
-      const badge = document.getElementById("succOrdDriveBadge");
-      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName };
+      const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase())) || { name: ord.partyName };
 
-      if (!ord.driveUrl) {
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = "⏳ Syncing PDF to Google Drive...";
-        }
-        if (badge) {
-          badge.innerHTML = "⏳ Generating PDF & uploading to Google Drive...";
-        }
-        await autoBackupOrderMemoToDrive(ord, false);
-      }
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = "💬 Share on WhatsApp";
-      }
-      if (badge && ord.driveUrl) {
-        badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+      // Trigger background upload silently if not already done, without blocking WhatsApp
+      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
+        autoBackupOrderMemoToDrive(ord, false);
       }
 
       const cleanPhone = (party && party.mobile) ? party.mobile.replace(/\D/g, "") : "";
@@ -11055,6 +11049,39 @@ Thank you!`;
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, "_blank");
+    }
+
+    function bookNewOrderFromSuccess() {
+      closeModal("orderSuccessModal");
+      if (typeof switchTab === "function") {
+        switchTab("orders");
+      }
+      const partyInp = document.getElementById("ordPartyInput");
+      if (partyInp) {
+        partyInp.value = "";
+        partyInp.focus();
+      }
+      const pInp = document.getElementById("ordProductInput");
+      if (pInp) pInp.value = "";
+      const qInp = document.getElementById("ordQty");
+      if (qInp) qInp.value = "1";
+      const rInp = document.getElementById("ordRate");
+      if (rInp) rInp.value = "";
+      const alertBox = document.getElementById("ordPartyDueAlert");
+      if (alertBox) alertBox.innerHTML = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openPartyLedgerFromSuccess() {
+      const ord = lastActiveOrd;
+      closeModal("orderSuccessModal");
+      if (!ord) return;
+      const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
+      if (party && typeof openDealerLedgerModal === "function") {
+        openDealerLedgerModal(party.id);
+      } else {
+        showToast("Party ledger details not found.");
+      }
     }
 
     function showOrderSuccessModal(ord, party) {
@@ -11081,6 +11108,9 @@ Thank you!`;
         ? ord.items.reduce((s, it) => s + Number(it.qty || 0), 0)
         : ord.orderQty;
 
+      const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
+      const remBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
+
       document.getElementById("succOrdDetails").innerHTML = `
         <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
           <div><strong>Dealer:</strong> ${ord.partyName} (${party ? party.area : "Nagpur"})</div>
@@ -11093,12 +11123,24 @@ Thank you!`;
           <div><strong>Total: ${totalQty} Units</strong></div>
           <div style="color:#0f766e;font-weight:800;font-size:1.05rem;">${fmtINR(ord.totalAmt)}</div>
         </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:0.86rem;">
+          <div><strong>Current Balance Due:</strong></div>
+          <div style="color:${remBal > 0 ? '#dc2626' : '#15803d'};font-weight:800;">${fmtINR(remBal)}</div>
+        </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic;">
           (Note: This is an order booking memo only. Tax invoice will be issued upon dispatch.)
         </div>
       `;
 
-      const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
+      const badge = document.getElementById("succOrdDriveBadge");
+      if (badge) {
+        if (ord.driveUrl) {
+          badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+        } else {
+          badge.innerHTML = '☁️ <span style="color:#0284c7;">Syncing PDF to Google Drive in background...</span>';
+        }
+      }
+
       const waBtn = document.getElementById("succOrdWhatsAppBtn");
       if (waBtn) {
         waBtn.onclick = () => shareOrderFromSuccessModal();
@@ -14490,30 +14532,14 @@ Thank you!`;
 
     let lastActiveColId = null;
 
-    async function shareCollectionFromSuccessModal() {
+    function shareCollectionFromSuccessModal() {
       const col = state.collections.find(c => c.id === lastActiveColId || c.receiptNo === lastActiveColId);
       if (!col) return;
-      const btn = document.getElementById("succColWhatsAppBtn");
-      const badge = document.getElementById("succColDriveBadge");
       const computedParty = getComputedParties().find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
 
-      if (!col.receiptDriveUrl && !col.driveUrl) {
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = "⏳ Syncing Receipt PDF to Google Drive...";
-        }
-        if (badge) {
-          badge.innerHTML = "⏳ Generating PDF & uploading to Google Drive...";
-        }
-        await autoBackupPaymentReceiptToDrive(col);
-      }
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = "💬 Share on WhatsApp";
-      }
-      if (badge && (col.receiptDriveUrl || col.driveUrl)) {
-        badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+      // Trigger background upload silently without blocking WhatsApp
+      if (!col.receiptDriveUrl && !col.driveUrl && typeof autoBackupPaymentReceiptToDrive === "function") {
+        autoBackupPaymentReceiptToDrive(col);
       }
 
       const targetDrive = col.receiptDriveUrl || col.driveUrl || col.proofDriveUrl;
@@ -14530,6 +14556,33 @@ Thank you!`;
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, "_blank");
+    }
+
+    function receiveNewPaymentFromSuccess() {
+      closeModal("colSuccessModal");
+      if (typeof switchTab === "function") {
+        switchTab("collections");
+      }
+      const partyInp = document.getElementById("colPartyInput");
+      if (partyInp) {
+        partyInp.value = "";
+        partyInp.focus();
+      }
+      const amtInp = document.getElementById("colAmount");
+      if (amtInp) amtInp.value = "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openPartyLedgerFromColSuccess() {
+      const col = state.collections.find(c => c.id === lastActiveColId || c.receiptNo === lastActiveColId);
+      closeModal("colSuccessModal");
+      if (!col) return;
+      const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === col.partyId || (p.name && col.partyName && p.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
+      if (party && typeof openDealerLedgerModal === "function") {
+        openDealerLedgerModal(party.id);
+      } else {
+        showToast("Party ledger details not found.");
+      }
     }
 
     function openPaymentReceiptFromSuccess() {
@@ -14552,6 +14605,15 @@ Thank you!`;
         <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
         <div id="succColDriveLink" style="display:none;margin-top:6px;padding:6px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;"></div>
       `;
+
+      const badge = document.getElementById("succColDriveBadge");
+      if (badge) {
+        if (newCol.receiptDriveUrl || newCol.driveUrl) {
+          badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+        } else {
+          badge.innerHTML = '☁️ <span style="color:#0284c7;">Syncing Receipt to Google Drive in background...</span>';
+        }
+      }
 
       const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
       const waBtn = document.getElementById("succColWhatsAppBtn");
@@ -16034,14 +16096,14 @@ Thank you!`;
       return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUri)}`;
     }
 
-    async function shareCurrentInvoiceWhatsApp() {
+    function shareCurrentInvoiceWhatsApp() {
       if (!currentPreviewInvoiceOrderId) return;
       const ord = state.orders.find(o => o.id === currentPreviewInvoiceOrderId);
       if (!ord) return;
 
+      // Trigger background upload silently without blocking WhatsApp
       if (!ord.invoiceDriveUrl && !ord.driveUrl && typeof autoBackupTaxInvoiceToDrive === "function") {
-        showToast("⏳ Syncing Tax Invoice PDF to Google Drive...");
-        await autoBackupTaxInvoiceToDrive(ord);
+        autoBackupTaxInvoiceToDrive(ord);
       }
 
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
@@ -18756,15 +18818,15 @@ Thank you!`;
       }
     }
 
-    async function shareDeliveryChallanWhatsApp(orderId) {
+    function shareDeliveryChallanWhatsApp(orderId) {
       const targetId = orderId || lastActiveMemoOrderId;
       if (!targetId) return;
       const ord = (state.orders || []).find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
 
+      // Trigger background upload silently without blocking WhatsApp
       if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
-        showToast("⏳ Syncing PDF to Google Drive...");
-        await autoBackupOrderMemoToDrive(ord, false);
+        autoBackupOrderMemoToDrive(ord, false);
       }
 
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
@@ -18789,15 +18851,15 @@ Thank you!`;
       window.open(waUrl, "_blank");
     }
 
-    async function shareOrderTextOnWhatsApp(orderId) {
+    function shareOrderTextOnWhatsApp(orderId) {
       const targetId = orderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
       if (!targetId) return;
       const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
 
+      // Trigger background upload silently without blocking WhatsApp
       if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
-        showToast("⏳ Syncing PDF to Google Drive...");
-        await autoBackupOrderMemoToDrive(ord, false);
+        autoBackupOrderMemoToDrive(ord, false);
       }
 
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
