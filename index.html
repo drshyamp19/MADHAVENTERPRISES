@@ -3677,34 +3677,194 @@ function toBase64Utf8(str) {
       }
     }
 
+    async function generateDocPdfBase64(elementOrHtml, filename) {
+      if (!window.html2pdf || !elementOrHtml) return null;
+      let tempWrap = null;
+      let targetEl = null;
+
+      if (typeof elementOrHtml === "string") {
+        tempWrap = document.createElement("div");
+        tempWrap.style.position = "fixed";
+        tempWrap.style.left = "-9999px";
+        tempWrap.style.top = "0";
+        tempWrap.style.width = "794px";
+        tempWrap.style.background = "#ffffff";
+        tempWrap.style.color = "#0f172a";
+        tempWrap.style.padding = "16px";
+        tempWrap.className = "invoice-paper";
+        tempWrap.innerHTML = elementOrHtml;
+        document.body.appendChild(tempWrap);
+        targetEl = tempWrap;
+      } else {
+        targetEl = elementOrHtml;
+      }
+
+      try {
+        const opt = {
+          margin: [6, 6, 6, 6],
+          filename: filename || "Document.pdf",
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        const pdfDataUri = await html2pdf().set(opt).from(targetEl).outputPdf('datauristring');
+        if (pdfDataUri && pdfDataUri.indexOf(',') > -1) {
+          return pdfDataUri.split(',')[1];
+        }
+        return pdfDataUri;
+      } catch (err) {
+        console.warn("generateDocPdfBase64 error:", err);
+        return null;
+      } finally {
+        if (tempWrap && tempWrap.parentNode) {
+          tempWrap.parentNode.removeChild(tempWrap);
+        }
+      }
+    }
+
+    function buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, isCorrection = false) {
+      party = party || (state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "-" });
+      co = co || (COMPANIES[activeCompany] || COMPANIES.MADHAV);
+      memoDisplayNo = memoDisplayNo || (ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`);
+      const logoSrc = getCompanyLogo(activeCompany);
+      const logoHtml = co.hasLogo
+        ? `<img src="${logoSrc}" alt="Logo" style="height:52px;object-fit:contain;border-radius:6px;" />`
+        : '<div style="font-size:1.8rem;">📝</div>';
+
+      let itemsRowsHtml = "";
+      let totalQty = 0;
+      let totalValue = 0;
+
+      if (ord.items && ord.items.length > 0) {
+        itemsRowsHtml = ord.items.map((it, idx) => {
+          const q = Number(it.qty || 0);
+          const isFoc = (it.isFoc || Number(it.rate) === 0);
+          const r = isFoc ? 0 : Number(it.rate || 0);
+          const val = isFoc ? 0 : Number(it.totalAmt || (q * r));
+          totalQty += q;
+          totalValue += val;
+          return `
+            <tr>
+              <td class="text-center" style="padding:6px;border:1px solid #cbd5e1;">${idx + 1}</td>
+              <td style="padding:6px;border:1px solid #cbd5e1;">
+                <strong>${it.productName}</strong>
+                ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC (Free)</span>' : ""}
+              </td>
+              <td class="text-center" style="padding:6px;border:1px solid #cbd5e1;">${q} Units</td>
+              <td class="text-right" style="padding:6px;border:1px solid #cbd5e1;">${isFoc ? "₹0.00" : fmtINR(r)}</td>
+              <td class="text-right" style="padding:6px;border:1px solid #cbd5e1;">${isFoc ? "₹0.00" : fmtINR(val)}</td>
+            </tr>
+          `;
+        }).join("");
+      } else {
+        totalQty = Number(ord.orderQty || 1);
+        const isFoc = (Number(ord.rate) === 0);
+        totalValue = isFoc ? 0 : Number(ord.totalAmt || (totalQty * Number(ord.rate || 0)));
+        itemsRowsHtml = `
+          <tr>
+            <td class="text-center" style="padding:6px;border:1px solid #cbd5e1;">1</td>
+            <td style="padding:6px;border:1px solid #cbd5e1;">
+              <strong>${ord.productName}</strong>
+              ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC</span>' : ""}
+            </td>
+            <td class="text-center" style="padding:6px;border:1px solid #cbd5e1;">${totalQty} Units</td>
+            <td class="text-right" style="padding:6px;border:1px solid #cbd5e1;">${isFoc ? "₹0.00" : fmtINR(ord.rate)}</td>
+            <td class="text-right" style="padding:6px;border:1px solid #cbd5e1;">${isFoc ? "₹0.00" : fmtINR(totalValue)}</td>
+          </tr>
+        `;
+      }
+
+      return `
+        <div class="inv-top">
+          ${logoHtml}
+          <div class="inv-company">
+            <h2>${co.name}</h2>
+            <div>${co.sub}</div>
+            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
+            <div>Phone: 7499477581 | Nagpur</div>
+          </div>
+        </div>
+        <div class="inv-title-bar" style="background:${activeCompany === 'SHIVOM' ? '#0f766e' : '#0284c7'};color:#fff;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:1px;margin:10px 0;">
+          ORDER BOOKING MEMO ${isCorrection ? '(REVISED / UPDATED)' : ''}
+        </div>
+        <div style="font-size:10.5px;text-align:center;color:#475569;margin-bottom:8px;font-style:italic;">
+          (Order booking memo for dealer confirmation — Official Tax Invoice will be issued upon dispatch)
+        </div>
+        <div class="inv-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;font-size:11.5px;">
+          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
+            <strong>Dealer / Party Details:</strong><br/>
+            <span style="font-size:13px;font-weight:700;">${party.name}</span><br/>
+            Area / Town: ${party.area || "Nagpur"}<br/>
+            Contact No: ${party.mobile || "-"}<br/>
+            GSTIN: <strong>${party.gstin || "Unregistered (B2C)"}</strong>
+          </div>
+          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
+            <strong>Memo Information:</strong><br/>
+            Memo No: <strong>#${memoDisplayNo}</strong><br/>
+            Date: <strong>${fmtDate(ord.date)}</strong><br/>
+            Booked By: <strong>${ord.salespersonName || "-"}</strong><br/>
+            Status: <span class="pill pill-yellow">${isCorrection ? 'Order Updated' : 'Order Booked (Pending Dispatch)'}</span>
+          </div>
+        </div>
+        <div class="inv-table-wrap">
+        <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
+              <th class="text-center" style="padding:6px;width:35px;border:1px solid #cbd5e1;">#</th>
+              <th style="padding:6px;border:1px solid #cbd5e1;">Product Description</th>
+              <th class="text-center" style="padding:6px;width:90px;border:1px solid #cbd5e1;">Qty Booked</th>
+              <th class="text-right" style="padding:6px;width:110px;border:1px solid #cbd5e1;">Agreed Rate (₹)</th>
+              <th class="text-right" style="padding:6px;width:120px;border:1px solid #cbd5e1;">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml}
+            <tr style="background:#ecfdf5;font-weight:800;border-top:2px solid #cbd5e1;font-size:12px;">
+              <td colspan="2" class="text-right" style="padding:8px;border:1px solid #cbd5e1;">TOTAL ESTIMATED ORDER VALUE:</td>
+              <td class="text-center" style="padding:8px;border:1px solid #cbd5e1;">${totalQty} Units</td>
+              <td style="border:1px solid #cbd5e1;"></td>
+              <td class="text-right" style="padding:8px;color:#0f766e;font-size:13px;border:1px solid #cbd5e1;">${fmtINR(totalValue)}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10px;">
+          <strong>Notes:</strong><br/>
+          1. Rates are agreed as per booking memo. Goods will be dispatched as per warehouse stock availability.<br/>
+          2. Final GST Tax Invoice and Delivery Challan will accompany goods at the time of delivery.<br/>
+          <div style="display:flex;justify-content:space-between;margin-top:20px;">
+            <div>Dealer / Buyer Stamp &amp; Signature<br/><strong>Acknowledged</strong></div>
+            <div style="text-align:right;">Booked by <strong>${ord.salespersonName || co.name}</strong><br/><strong>Sales Representative</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
     async function backupOrderMemoToDrive(orderId, btnEl) {
       const ord = state.orders.find(o => o.id === orderId || o.orderNo === String(orderId) || o.memoNo === orderId);
       if (!ord) return;
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName };
       const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
       const memoNo = ord.memoNo || `OB-${ord.orderNo}`;
+      const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+      const pdfFileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}.pdf`;
 
       if (btnEl) {
         btnEl.disabled = true;
-        btnEl.innerHTML = "⏳ Uploading...";
+        btnEl.innerHTML = "⏳ Generating PDF & Uploading...";
       }
 
-      const memoHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order Memo #${memoNo} - ${co.name}</title>
-      <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;margin-top:14px;}th,td{border:1px solid #cbd5e1;padding:8px 10px;}th{background:#f1f5f9;}</style>
-      </head><body>
-      <h2>${co.name}</h2><p>${co.sub}</p><hr/>
-      <h3>ORDER BOOKING MEMO #${memoNo}</h3>
-      <p><strong>Date:</strong> ${fmtDate(ord.date)} | <strong>Dealer:</strong> ${ord.partyName} (${party.area || 'Nagpur'}) | <strong>Salesperson:</strong> ${ord.salespersonName}</p>
-      <table><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
-      ${(ord.items || []).map((it, idx) => `<tr><td>${idx+1}</td><td>${it.productName}</td><td>${it.qty}</td><td>₹${it.rate}</td><td>₹${it.totalAmt}</td></tr>`).join("")}
-      </tbody></table>
-      <h3 style="text-align:right;margin-top:14px;">Total Amount: ₹${Number(ord.totalAmt || 0).toLocaleString('en-IN')}</h3>
-      <p style="font-size:12px;color:#64748b;">Saved to Google Drive on ${new Date().toLocaleString()}</p>
-</body></html>`;
+      const memoHtml = buildOrderMemoContentHtml(ord, party, co, memoNo, false);
+      let pdfB64 = await generateDocPdfBase64(memoHtml, pdfFileName);
+      let res = null;
 
-const base64Data = toBase64Utf8(memoHtml);
-      const fileName = `${activeCompany}_OrderMemo_${memoNo}_${ord.partyName.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
-      const res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", fileName, base64Data, "text/html");
+      if (pdfB64) {
+        res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", pdfFileName, pdfB64, "application/pdf");
+      } else {
+        const htmlFileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}.html`;
+        const base64Data = toBase64Utf8(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order Memo #${memoNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;margin-top:14px;}th,td{border:1px solid #cbd5e1;padding:8px 10px;}th{background:#f1f5f9;}</style></head><body>${memoHtml}</body></html>`);
+        res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", htmlFileName, base64Data, "text/html");
+      }
 
       if (res && res.fileUrl) {
         ord.driveUrl = res.fileUrl;
@@ -3713,9 +3873,9 @@ const base64Data = toBase64Utf8(memoHtml);
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.className = "btn btn-sm btn-teal";
-          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View</a>)`;
+          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View PDF</a>)`;
         }
-        alert(`✓ Order Memo #${memoNo} has been safely saved to Google Drive!`);
+        alert(`✓ Order Memo #${memoNo} has been safely saved to Google Drive as PDF!`);
       } else {
         if (btnEl) {
           btnEl.disabled = false;
@@ -3731,21 +3891,29 @@ const base64Data = toBase64Utf8(memoHtml);
       const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
       const gst = computeOrderGstBreakdown(ord);
       const invNo = gst.invoiceNo || ord.invoiceNo || ("INV-" + ord.orderNo);
+      const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+      const pdfFileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.pdf`;
 
       if (btnEl) {
         btnEl.disabled = true;
-        btnEl.innerHTML = "⏳ Uploading...";
+        btnEl.innerHTML = "⏳ Generating PDF & Uploading...";
       }
 
-const invEl = document.getElementById("invoicePrintArea") || document.getElementById("invoiceModal");
+      openInvoice(orderId);
+      const invEl = document.getElementById("invoicePrintArea");
       const invHtml = invEl ? invEl.innerHTML : `Tax Invoice #${invNo}`;
-      const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${invNo} - ${co.name}</title>
-      <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #cbd5e1;padding:6px;font-size:12px;}th{background:#f1f5f9;}</style>
-      </head><body>${invHtml}</body></html>`;
 
-const base64Data = toBase64Utf8(fullDoc);
-      const fileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${ord.partyName.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
-      const res = await uploadDocToGoogleDrive(activeCompany, "Invoices", fileName, base64Data, "text/html");
+      let pdfB64 = await generateDocPdfBase64(invHtml, pdfFileName);
+      let res = null;
+
+      if (pdfB64) {
+        res = await uploadDocToGoogleDrive(activeCompany, "Invoices", pdfFileName, pdfB64, "application/pdf");
+      } else {
+        const htmlFileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.html`;
+        const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${invNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #cbd5e1;padding:6px;font-size:12px;}th{background:#f1f5f9;}</style></head><body>${invHtml}</body></html>`;
+        const base64Data = toBase64Utf8(fullDoc);
+        res = await uploadDocToGoogleDrive(activeCompany, "Invoices", htmlFileName, base64Data, "text/html");
+      }
 
       if (res && res.fileUrl) {
         ord.invoiceDriveUrl = res.fileUrl;
@@ -3754,9 +3922,9 @@ const base64Data = toBase64Utf8(fullDoc);
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.className = "btn btn-sm btn-teal";
-          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View</a>)`;
+          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View PDF</a>)`;
         }
-        alert(`✓ Tax Invoice #${invNo} has been safely saved to Google Drive!`);
+        alert(`✓ Tax Invoice #${invNo} has been safely saved to Google Drive as PDF!`);
       } else {
         if (btnEl) {
           btnEl.disabled = false;
@@ -3766,7 +3934,6 @@ const base64Data = toBase64Utf8(fullDoc);
       }
     }
 
-    
     // ==================== AUTO DRIVE BACKUP HELPERS ====================
     async function autoBackupOrderMemoToDrive(ord, isCorrection = false) {
       if (!ord || !GOOGLE_DRIVE_UPLOADER_URL) return;
@@ -3776,23 +3943,20 @@ const base64Data = toBase64Utf8(fullDoc);
         const memoNo = ord.memoNo || `OB-${ord.orderNo}`;
         const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
         const suffix = isCorrection ? "_REVISED" : "";
-        const fileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}${suffix}.html`;
+        const pdfFileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}${suffix}.pdf`;
 
-        const memoHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order Memo #${memoNo} - ${co.name}</title>
-        <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;margin-top:14px;}th,td{border:1px solid #cbd5e1;padding:8px 10px;}th{background:#f1f5f9;}</style>
-        </head><body>
-        <h2>${co.name}</h2><p>${co.sub}</p><hr/>
-        <h3>ORDER BOOKING MEMO #${memoNo} ${isCorrection ? '<span style="color:#b45309;">(REVISED / UPDATED)</span>' : ''}</h3>
-        <p><strong>Date:</strong> ${fmtDate(ord.date)} | <strong>Dealer:</strong> ${ord.partyName} (${party.area || 'Nagpur'}) | <strong>Salesperson:</strong> ${ord.salespersonName}</p>
-        <table><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
-        ${(ord.items || []).map((it, idx) => `<tr><td>${idx+1}</td><td>${it.productName}</td><td>${it.qty}</td><td>₹${it.rate}</td><td>₹${it.totalAmt}</td></tr>`).join("")}
-        </tbody></table>
-        <h3 style="text-align:right;margin-top:14px;">Total Amount: ₹${Number(ord.totalAmt || 0).toLocaleString('en-IN')}</h3>
-        <p style="font-size:12px;color:#64748b;">${isCorrection ? 'Corrected & Replaced' : 'Auto-Saved'} in Google Drive on ${new Date().toLocaleString()}</p>
-        </body></html>`;
+        const memoHtml = buildOrderMemoContentHtml(ord, party, co, memoNo, isCorrection);
+        let pdfB64 = await generateDocPdfBase64(memoHtml, pdfFileName);
+        let res = null;
 
-const base64Data = toBase64Utf8(memoHtml);
-        const res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", fileName, base64Data, "text/html");
+        if (pdfB64) {
+          res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", pdfFileName, pdfB64, "application/pdf");
+        } else {
+          const htmlFileName = `${activeCompany}_OrderMemo_${memoNo}_${safeParty}${suffix}.html`;
+          const base64Data = toBase64Utf8(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order Memo #${memoNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;margin-top:14px;}th,td{border:1px solid #cbd5e1;padding:8px 10px;}th{background:#f1f5f9;}</style></head><body>${memoHtml}</body></html>`);
+          res = await uploadDocToGoogleDrive(activeCompany, "Order_Memos", htmlFileName, base64Data, "text/html");
+        }
+
         if (res && res.fileUrl) {
           ord.driveUrl = res.fileUrl;
           persistLocal();
@@ -3809,7 +3973,7 @@ const base64Data = toBase64Utf8(memoHtml);
               ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
               : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
           }
-          console.log(`Auto-backed up Order Memo #${memoNo} to Drive:`, res.fileUrl);
+          console.log(`Auto-backed up Order Memo PDF #${memoNo} to Drive:`, res.fileUrl);
         }
       } catch (err) {
         console.error("Auto backup order memo error:", err);
@@ -3823,16 +3987,23 @@ const base64Data = toBase64Utf8(memoHtml);
         const gst = computeOrderGstBreakdown(ord);
         const invNo = gst.invoiceNo || ord.invoiceNo || ("INV-" + ord.orderNo);
         const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
-        const fileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.html`;
+        const pdfFileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.pdf`;
 
-const invEl = document.getElementById("invoicePrintArea") || document.getElementById("invoiceModal");
-        const invHtml = invEl ? invEl.innerHTML : `Tax Invoice #${invNo}`;
-        const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${invNo} - ${co.name}</title>
-        <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #cbd5e1;padding:6px;font-size:12px;}th{background:#f1f5f9;}</style>
-        </head><body>${invHtml}</body></html>`;
+        const invEl = document.getElementById("invoicePrintArea");
+        const invHtml = (invEl && invEl.innerHTML.trim().length > 50) ? invEl.innerHTML : `<h2>${co.name}</h2><h3>Tax Invoice #${invNo}</h3>`;
 
-const base64Data = toBase64Utf8(fullDoc);
-        const res = await uploadDocToGoogleDrive(activeCompany, "Invoices", fileName, base64Data, "text/html");
+        let pdfB64 = await generateDocPdfBase64(invHtml, pdfFileName);
+        let res = null;
+
+        if (pdfB64) {
+          res = await uploadDocToGoogleDrive(activeCompany, "Invoices", pdfFileName, pdfB64, "application/pdf");
+        } else {
+          const htmlFileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.html`;
+          const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${invNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #cbd5e1;padding:6px;font-size:12px;}th{background:#f1f5f9;}</style></head><body>${invHtml}</body></html>`;
+          const base64Data = toBase64Utf8(fullDoc);
+          res = await uploadDocToGoogleDrive(activeCompany, "Invoices", htmlFileName, base64Data, "text/html");
+        }
+
         if (res && res.fileUrl) {
           ord.invoiceDriveUrl = res.fileUrl;
           persistLocal();
@@ -3841,7 +4012,7 @@ const base64Data = toBase64Utf8(fullDoc);
             db.collection(prefix + "orders").doc(ord.id).update({ invoiceDriveUrl: res.fileUrl }).catch(e => console.warn(e));
           }
           renderOrdersTable();
-          console.log(`Auto-backed up Tax Invoice #${invNo} to Drive:`, res.fileUrl);
+          console.log(`Auto-backed up Tax Invoice PDF #${invNo} to Drive:`, res.fileUrl);
         }
       } catch (err) {
         console.error("Auto backup invoice error:", err);
@@ -3852,21 +4023,29 @@ const base64Data = toBase64Utf8(fullDoc);
       const col = state.collections.find(c => c.id === colId || c.receiptNo === colId);
       if (!col) return;
       const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
+      const safeParty = (col.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
+      const pdfFileName = `${activeCompany}_Receipt_${col.receiptNo}_${safeParty}.pdf`;
 
       if (btnEl) {
         btnEl.disabled = true;
-        btnEl.innerHTML = "⏳ Uploading...";
+        btnEl.innerHTML = "⏳ Generating PDF & Uploading...";
       }
 
+      openPaymentReceipt(col.id || col.receiptNo);
       const rPrint = document.getElementById("receiptPrintArea");
       const receiptHtml = rPrint ? rPrint.innerHTML : `Payment Receipt #${col.receiptNo}`;
-      const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt #${col.receiptNo} - ${co.name}</title>
-      <style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}</style>
-      </head><body>${receiptHtml}</body></html>`;
 
-const base64Data = toBase64Utf8(fullDoc);
-      const fileName = `${activeCompany}_Receipt_${col.receiptNo}_${col.partyName.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
-      const res = await uploadDocToGoogleDrive(activeCompany, "Payment_Receipts", fileName, base64Data, "text/html");
+      let pdfB64 = await generateDocPdfBase64(receiptHtml, pdfFileName);
+      let res = null;
+
+      if (pdfB64) {
+        res = await uploadDocToGoogleDrive(activeCompany, "Payment_Receipts", pdfFileName, pdfB64, "application/pdf");
+      } else {
+        const htmlFileName = `${activeCompany}_Receipt_${col.receiptNo}_${safeParty}.html`;
+        const fullDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Receipt #${col.receiptNo} - ${co.name}</title><style>body{font-family:sans-serif;padding:24px;color:#1e293b;}table{width:100%;border-collapse:collapse;}</style></head><body>${receiptHtml}</body></html>`;
+        const base64Data = toBase64Utf8(fullDoc);
+        res = await uploadDocToGoogleDrive(activeCompany, "Payment_Receipts", htmlFileName, base64Data, "text/html");
+      }
 
       if (res && res.fileUrl) {
         col.receiptDriveUrl = res.fileUrl;
@@ -3875,9 +4054,9 @@ const base64Data = toBase64Utf8(fullDoc);
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.className = "btn btn-sm btn-teal";
-          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View</a>)`;
+          btnEl.innerHTML = `✓ Saved in Drive (<a href="${res.fileUrl}" target="_blank" style="color:#fff;text-decoration:underline;">View PDF</a>)`;
         }
-        alert(`✓ Payment Receipt #${col.receiptNo} has been safely saved to Google Drive!`);
+        alert(`✓ Payment Receipt #${col.receiptNo} has been safely saved to Google Drive as PDF!`);
       } else {
         if (btnEl) {
           btnEl.disabled = false;
@@ -7439,7 +7618,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
       const logoWrap = document.getElementById("headerLogoWrap");
       if (co.hasLogo) {
-        logoWrap.innerHTML = '<img id="headerLogo" src="' + SHOP_LOGO + '" alt="Logo" style="height:42px;width:auto;display:block;" />';
+        logoWrap.innerHTML = '<img id="headerLogo" src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:42px;width:auto;display:block;border-radius:6px;object-fit:contain;" />';
       } else {
         logoWrap.innerHTML = '<span style="font-size:1.8rem;padding:0 6px;">⚡</span>';
       }
@@ -12093,7 +12272,7 @@ Thank you!`;
       const co = COMPANIES[activeCompany] || { name: "MADHAV ENTERPRISES", sub: "Wholesale Home & Kitchen Appliances" };
 
       const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" style="height:60px;" />'
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:60px;object-fit:contain;border-radius:6px;" />'
         : '<div style="font-size:2.4rem;">⚡</div>';
 
       document.getElementById("receiptPrintArea").innerHTML = `
@@ -14114,7 +14293,7 @@ Thank you! Your payment has been received successfully.`;
       const { party, supply, lines, hsnSummary } = gst;
 
       const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" />'
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:55px;object-fit:contain;border-radius:6px;" />'
         : '<div style="font-size:2.4rem;">⚡</div>';
 
       const ewayBanner = gst.ewayRequired
@@ -15022,7 +15201,7 @@ Thank you! Your payment has been received successfully.`;
       const party = state.parties.find(p => p.id === r.partyId) || { name: r.partyName, area: "Nagpur", mobile: "", gstin: "" };
       const supply = getPartySupplyInfo(party);
       const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" />'
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:55px;object-fit:contain;border-radius:6px;" />'
         : '<div style="font-size:2.4rem;">⚡</div>';
 
       document.getElementById("invoicePrintArea").innerHTML = `
@@ -16812,117 +16991,7 @@ Thank you! Your payment has been received successfully.`;
       const party = getComputedParties().find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
 
-      const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" style="height:50px;object-fit:contain;" />'
-        : '<div style="font-size:1.8rem;">📝</div>';
-
-      let itemsRowsHtml = "";
-      let totalQty = 0;
-      let totalValue = 0;
-
-      if (ord.items && ord.items.length > 0) {
-        itemsRowsHtml = ord.items.map((it, idx) => {
-          const q = Number(it.qty || 0);
-          const isFoc = (it.isFoc || Number(it.rate) === 0);
-          const r = isFoc ? 0 : Number(it.rate || 0);
-          const val = isFoc ? 0 : Number(it.totalAmt || (q * r));
-          totalQty += q;
-          totalValue += val;
-          return `
-            <tr>
-              <td class="text-center" style="padding:6px;">${idx + 1}</td>
-              <td style="padding:6px;">
-                <strong>${it.productName}</strong>
-                ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC (Free)</span>' : ""}
-              </td>
-              <td class="text-center" style="padding:6px;">${q} Units</td>
-              <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(r)}</td>
-              <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(val)}</td>
-            </tr>
-          `;
-        }).join("");
-      } else {
-        totalQty = Number(ord.orderQty || 1);
-        const isFoc = (Number(ord.rate) === 0);
-        totalValue = isFoc ? 0 : Number(ord.totalAmt || (totalQty * Number(ord.rate || 0)));
-        itemsRowsHtml = `
-          <tr>
-            <td class="text-center" style="padding:6px;">1</td>
-            <td style="padding:6px;">
-              <strong>${ord.productName}</strong>
-              ${isFoc ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:700;">🎁 FOC</span>' : ""}
-            </td>
-            <td class="text-center" style="padding:6px;">${totalQty} Units</td>
-            <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(ord.rate)}</td>
-            <td class="text-right" style="padding:6px;">${isFoc ? "₹0.00" : fmtINR(totalValue)}</td>
-          </tr>
-        `;
-      }
-
-      document.getElementById("invoicePrintArea").innerHTML = `
-        <div class="inv-top">
-          ${logoHtml}
-          <div class="inv-company">
-            <h2>${co.name}</h2>
-            <div>${co.sub}</div>
-            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
-            <div>Phone: 7499477581 | Nagpur</div>
-          </div>
-        </div>
-        <div class="inv-title-bar" style="background:#0284c7;color:#fff;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:1px;margin:10px 0;">
-          ORDER BOOKING MEMO
-        </div>
-        <div style="font-size:10.5px;text-align:center;color:#475569;margin-bottom:8px;font-style:italic;">
-          (Order booking memo for dealer confirmation — Official Tax Invoice will be issued upon dispatch)
-        </div>
-        <div class="inv-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;font-size:11.5px;">
-          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
-            <strong>Dealer / Party Details:</strong><br/>
-            <span style="font-size:13px;font-weight:700;">${party.name}</span><br/>
-            Area / Town: ${party.area || "Nagpur"}<br/>
-            Contact No: ${party.mobile || "-"}<br/>
-            GSTIN: <strong>${party.gstin || "Unregistered (B2C)"}</strong>
-          </div>
-          <div class="inv-meta-box" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;background:#f8fafc;">
-            <strong>Memo Information:</strong><br/>
-            Memo No: <strong>#${memoDisplayNo}</strong><br/>
-            Date: <strong>${fmtDate(ord.date)}</strong><br/>
-            Booked By: <strong>${ord.salespersonName || "-"}</strong><br/>
-            Status: <span class="pill pill-yellow">Order Booked (Pending Dispatch)</span>
-          </div>
-        </div>
-        <div class="inv-table-wrap">
-        <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
-          <thead>
-            <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
-              <th class="text-center" style="padding:6px;width:35px;">#</th>
-              <th style="padding:6px;">Product Description</th>
-              <th class="text-center" style="padding:6px;width:90px;">Qty Booked</th>
-              <th class="text-right" style="padding:6px;width:110px;">Agreed Rate (₹)</th>
-              <th class="text-right" style="padding:6px;width:120px;">Total (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsRowsHtml}
-            <tr style="background:#ecfdf5;font-weight:800;border-top:2px solid #cbd5e1;font-size:12px;">
-              <td colspan="2" class="text-right" style="padding:8px;">TOTAL ESTIMATED ORDER VALUE:</td>
-              <td class="text-center" style="padding:8px;">${totalQty} Units</td>
-              <td></td>
-              <td class="text-right" style="padding:8px;color:#0f766e;font-size:13px;">${fmtINR(totalValue)}</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-        <div style="margin-top:14px;padding:8px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:10px;">
-          <strong>Notes:</strong><br/>
-          1. Rates are agreed as per booking memo. Goods will be dispatched as per warehouse stock availability.<br/>
-          2. Final GST Tax Invoice and Delivery Challan will accompany goods at the time of delivery.<br/>
-          <div style="display:flex;justify-content:space-between;margin-top:20px;">
-            <div>Dealer / Buyer Stamp &amp; Signature<br/><strong>Acknowledged</strong></div>
-            <div style="text-align:right;">Booked by <strong>${ord.salespersonName || co.name}</strong><br/><strong>Sales Representative</strong></div>
-          </div>
-        </div>
-      `;
+      document.getElementById("invoicePrintArea").innerHTML = buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, false);
       openModal("invoiceModal");
     }
 
@@ -17453,7 +17522,7 @@ Thank you! Your payment has been received successfully.`;
       }).join("");
 
       const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" style="height:50px;object-fit:contain;" />'
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:50px;object-fit:contain;border-radius:6px;" />'
         : '<div style="font-size:1.8rem;">🏢</div>';
 
       document.getElementById("statementPrintArea").innerHTML = `
@@ -17550,7 +17619,7 @@ Thank you! Your payment has been received successfully.`;
       const party = getComputedParties().find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
 
       const logoHtml = co.hasLogo
-        ? '<img src="' + SHOP_LOGO + '" alt="Logo" style="height:50px;object-fit:contain;" />'
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:50px;object-fit:contain;border-radius:6px;" />'
         : '<div style="font-size:1.8rem;">📦</div>';
 
       let itemsRowsHtml = "";
