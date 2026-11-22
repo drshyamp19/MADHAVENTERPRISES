@@ -2,8 +2,9 @@
 
 Stock, Order, GST Billing & Recovery ERP for:
 1. **MADHAV ENTERPRISES**: Greenchef Appliances & Cookware (Nagpur)
-   - **Active Parties:** 63 Verified Dealers
-   - **Total Net Receivable:** ₹3,24,350/-
+   - **Active Parties:** 560 Verified Parties (96 with Active Dues)
+   - **Total Net Receivable:** ₹10,66,177/-
+   - **Total Net Payable:** ₹26,01,456/- (Greenshef Appliances Ltd Pune & Suppliers)
    - **Active Inventory:** 29 Greenchef Cookware & Appliance Items
    - **Address:** Plot No 408, Besan Bag, Near Lal School, Indora, Nagpur - 440014
    - **GSTIN:** 27BQIPP3836Q1ZZ | **Phone:** 7499477581
