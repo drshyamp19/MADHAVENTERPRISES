@@ -481,6 +481,7 @@
     }
     .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,58,95,0.1); }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 18px; }
     @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 
     /* Filter Chips Bar */
@@ -2430,8 +2431,8 @@
         <!-- Dynamic Cash Summary Cards -->
         <div class="kpi-grid" id="staffCashCardsGrid" style="margin-bottom:16px;"></div>
 
-        <!-- Sales Team Market Collections & Handover Balance Table -->
-        <div class="card" style="margin-bottom:16px;">
+        <!-- Sales Team Market Collections & Handover Balance Table (Manager & Admin Only) -->
+        <div class="card" id="salesTeamCashOverviewCard" style="margin-bottom:16px;">
           <div class="card-header" style="background:#f8fafc;padding:12px 16px;">
             <span class="card-title" style="color:var(--primary);font-size:1rem;display:flex;align-items:center;gap:6px;">
               👥 Sales Team Market Collections &amp; Handover Balance (Gopal, Vikram, Prashik)
@@ -2462,8 +2463,8 @@
         <!-- Action Card (Handover for Salesmen / Bank Deposit for Prashik / Overview for Owner) -->
         <div class="card" id="staffCashActionCard" style="margin-bottom:16px;padding:18px;"></div>
 
-        <!-- 4 Official Bank/Deposit Accounts Ledger Summary -->
-        <div class="card" style="margin-bottom:16px;">
+        <!-- 4 Official Bank/Deposit Accounts Ledger Summary (Manager & Admin Only) -->
+        <div class="card" id="bankAccountsSummaryCard" style="margin-bottom:16px;">
           <div class="card-header" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 16px;">
             <span class="card-title" style="font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:6px;">
               🏦 Account-wise Direct UPI &amp; Cash Deposits (4 Accounts)
@@ -2475,9 +2476,9 @@
         </div>
 
         <!-- History Tables: Handovers & Bank Deposits -->
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">📜 Salesmen Handover to Prashik History</span></div>
+        <div class="grid-2" id="staffCashHistoryGrid">
+          <div class="card" id="salesmenHandoverHistoryCard">
+            <div class="card-header"><span class="card-title" id="salesmenHandoverHistoryTitle">📜 Salesmen Handover to Prashik History</span></div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -2495,7 +2496,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card" id="bankDepositHistoryCard">
             <div class="card-header"><span class="card-title">🏦 Bank / Account Deposit History</span></div>
             <div class="table-wrap">
               <table>
@@ -12133,6 +12134,20 @@ Thank you!`;
       const isPrashik = currentStaff && currentStaff.role === "Manager";
       const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       const isAdmin = !!isAdminLoggedIn;
+      const canViewAllCash = isPrashik || isAdmin;
+
+      // Role-based visibility: Hide full team summary table & bank sections for Salespersons (Gopal & Vikram)
+      const spCard = document.getElementById("salesTeamCashOverviewCard");
+      if (spCard) spCard.style.display = canViewAllCash ? "block" : "none";
+
+      const bankCard = document.getElementById("bankAccountsSummaryCard");
+      if (bankCard) bankCard.style.display = canViewAllCash ? "block" : "none";
+
+      const bankDepCard = document.getElementById("bankDepositHistoryCard");
+      if (bankDepCard) bankDepCard.style.display = canViewAllCash ? "block" : "none";
+
+      const historyGrid = document.getElementById("staffCashHistoryGrid");
+      if (historyGrid) historyGrid.className = canViewAllCash ? "grid-2" : "grid-1";
 
       // 1. Populate Sales Team Market Collections & Handover Balance Table
       if (spOverviewTbody) {
@@ -12678,11 +12693,22 @@ Thank you!`;
 
       // 4. Render Handover Table Body
       const hoTbody = document.getElementById("cashHandoverTableBody");
+      const hoTitle = document.getElementById("salesmenHandoverHistoryTitle");
+      if (hoTitle) {
+        hoTitle.textContent = isSalesperson
+          ? `📜 My Cash Handover to Prashik History (${currentStaff.name})`
+          : "📜 Salesmen Handover to Prashik History";
+      }
+
       if (hoTbody) {
-        if (!state.cashHandovers || state.cashHandovers.length === 0) {
-          hoTbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--muted);padding:14px;">No cash handovers recorded yet.</td></tr>';
+        const handoversToShow = isSalesperson
+          ? (state.cashHandovers || []).filter(h => (h.fromStaffName || "").trim().toUpperCase() === currentStaff.name.trim().toUpperCase())
+          : (state.cashHandovers || []);
+
+        if (handoversToShow.length === 0) {
+          hoTbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color:var(--muted);padding:14px;">No cash handovers recorded yet${isSalesperson ? ' for ' + currentStaff.name : ''}.</td></tr>`;
         } else {
-          hoTbody.innerHTML = state.cashHandovers.map(h => {
+          hoTbody.innerHTML = handoversToShow.map(h => {
             const isPending = h.status === "Pending";
             const isAccepted = h.status === "Accepted" || h.status === "Received";
             const statusBadge = isPending
@@ -12723,9 +12749,9 @@ Thank you!`;
         }
       }
 
-      // 5. Render Bank Deposit Table Body
+      // 5. Render Bank Deposit Table Body (Manager & Admin Only)
       const depTbody = document.getElementById("bankDepositTableBody");
-      if (depTbody) {
+      if (depTbody && canViewAllCash) {
         if (!state.bankDeposits || state.bankDeposits.length === 0) {
           depTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--muted);padding:14px;">No bank deposits recorded yet.</td></tr>';
         } else {
@@ -12744,8 +12770,10 @@ Thank you!`;
         }
       }
 
-      // 6. Render 4 Bank Accounts Summary Grid
-      renderBankAccountsSummary();
+      // 6. Render 4 Bank Accounts Summary Grid (Manager & Admin Only)
+      if (canViewAllCash) {
+        renderBankAccountsSummary();
+      }
     }
     async function handleCustomStaffHandover() {
       if (!currentStaff) { alert("Please login first."); return; }
