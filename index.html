@@ -3305,9 +3305,9 @@
         ☁️ Syncing PDF to Google Drive...
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
-        <a id="succOrdWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;">
+        <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;" onclick="shareOrderFromSuccessModal()">
           💬 Share on WhatsApp
-        </a>
+        </button>
         <button type="button" class="btn btn-outline" id="succOrdPrintMemoBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openOrderBookingMemoFromSuccess()">
           📄 View Booking Memo
         </button>
@@ -3344,9 +3344,9 @@
         ☁️ Syncing Receipt to Google Drive...
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
-        <a id="succColWhatsAppBtn" href="#" target="_blank" class="btn btn-whatsapp" style="justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;">
+        <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:0.96rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;" onclick="shareCollectionFromSuccessModal()">
           💬 Share on WhatsApp
-        </a>
+        </button>
         <button type="button" class="btn btn-outline" id="succColPrintBtn" style="justify-content:center;font-weight:700;padding:9px;font-size:0.85rem;border-radius:8px;color:#0284c7;border:1px solid #bae6fd;background:#f0f9ff;" onclick="openPaymentReceiptFromSuccess()">
           📄 View Official Receipt
         </button>
@@ -3762,7 +3762,7 @@
     function getDirectDrivePdfUrl(driveUrl) {
       if (!driveUrl) return "";
       const match = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      const fileId = match ? match[1] : null;
+      const fileId = match ? match[1] : (driveUrl.indexOf("http") === -1 && driveUrl.length > 15 ? driveUrl : null);
       if (fileId) {
         return `https://drive.google.com/file/d/${fileId}/view`;
       }
@@ -3773,6 +3773,21 @@
       if (!driveUrl) return "";
       // Return direct Google Drive PDF URL so it opens directly in Google Drive without login requirements!
       return getDirectDrivePdfUrl(driveUrl);
+    }
+
+    function getCompanyLogo(companyKey) {
+      const co = (companyKey || (typeof activeCompany !== "undefined" ? activeCompany : "MADHAV")).toUpperCase();
+      if (co === "SHIVOM") {
+        return "shivom-logo.jpg";
+      }
+      return typeof SHOP_LOGO !== "undefined" ? SHOP_LOGO : "shivom-logo.jpg";
+    }
+
+    function persistAndSync() {
+      persistLocal();
+      if (typeof isFirebaseLive !== "undefined" && isFirebaseLive && typeof db !== "undefined" && db && typeof syncWithFirebase === "function") {
+        syncWithFirebase();
+      }
     }
 
 function toBase64Utf8(str) {
@@ -3821,9 +3836,12 @@ function toBase64Utf8(str) {
 
       if (typeof elementOrHtml === "string") {
         tempWrap = document.createElement("div");
-        tempWrap.style.position = "fixed";
-        tempWrap.style.left = "-9999px";
-        tempWrap.style.top = "0";
+        tempWrap.style.position = "absolute";
+        tempWrap.style.left = "0px";
+        tempWrap.style.top = "0px";
+        tempWrap.style.zIndex = "-99999";
+        tempWrap.style.opacity = "0.01";
+        tempWrap.style.pointerEvents = "none";
         tempWrap.style.width = "794px";
         tempWrap.style.background = "#ffffff";
         tempWrap.style.color = "#0f172a";
@@ -3840,8 +3858,8 @@ function toBase64Utf8(str) {
         const opt = {
           margin: [6, 6, 6, 6],
           filename: filename || "Document.pdf",
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 1.5, useCORS: true, logging: false },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         const pdfDataUri = await html2pdf().set(opt).from(targetEl).outputPdf('datauristring');
@@ -4073,7 +4091,8 @@ function toBase64Utf8(str) {
 
     // ==================== AUTO DRIVE BACKUP HELPERS ====================
     async function autoBackupOrderMemoToDrive(ord, isCorrection = false) {
-      if (!ord || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      if (!ord || !GOOGLE_DRIVE_UPLOADER_URL) return null;
+      if (ord.driveUrl && !isCorrection) return ord.driveUrl;
       try {
         const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName };
         const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
@@ -4102,30 +4121,26 @@ function toBase64Utf8(str) {
             db.collection(prefix + "orders").doc(ord.id).update({ driveUrl: res.fileUrl }).catch(e => console.warn(e));
           }
           renderOrdersTable();
-          const waBtn = document.getElementById("succOrdWhatsAppBtn");
-          if (waBtn && lastActiveOrd && lastActiveOrd.id === ord.id) {
-            const updatedMsg = getOrderMemoWhatsAppText(ord, party);
-            const cleanPhone = (party.mobile || "").replace(/\D/g, "");
-            waBtn.href = cleanPhone.length >= 10
-              ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
-              : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
-          }
           const badgeEl = document.getElementById("succOrdDriveBadge");
           if (badgeEl) badgeEl.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
           console.log(`Auto-backed up Order Memo PDF #${memoNo} to Drive:`, res.fileUrl);
+          return res.fileUrl;
         }
       } catch (err) {
         console.error("Auto backup order memo error:", err);
       }
+      return null;
     }
 
     async function autoBackupPaymentReceiptToDrive(col) {
-      if (!col || col.receiptDriveUrl || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      if (!col || !GOOGLE_DRIVE_UPLOADER_URL) return null;
+      if (col.receiptDriveUrl) return col.receiptDriveUrl;
       try {
         const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
         const safeParty = (col.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
         const pdfFileName = `${activeCompany}_Receipt_${col.receiptNo}_${safeParty}.pdf`;
 
+        if (typeof openPaymentReceipt === "function") openPaymentReceipt(col.id);
         const rEl = document.getElementById("receiptPrintArea");
         const receiptHtml = (rEl && rEl.innerHTML.trim().length > 50) ? rEl.innerHTML : `<h2>${co.name}</h2><h3>Payment Receipt #${col.receiptNo}</h3>`;
 
@@ -4150,28 +4165,20 @@ function toBase64Utf8(str) {
             db.collection(prefix + "collections").doc(col.id).update({ receiptDriveUrl: res.fileUrl, driveUrl: col.driveUrl || res.fileUrl }).catch(e => console.warn(e));
           }
           renderCollectionTable();
-          const waBtn = document.getElementById("succColWhatsAppBtn");
-          if (waBtn && lastActiveColId === col.id) {
-            const updatedDrive = getDirectDrivePdfUrl(res.fileUrl);
-            const computedParty = getComputedParties().find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
-            const remBal = computedParty ? computedParty.netBalance : 0;
-            const updatedMsg = `*${COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : 'MADHAV ENTERPRISES'}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 *Open Google Drive Official Receipt:*\n👉 ${updatedDrive}\n-----------------------------\nThank you! Your payment has been received successfully.`;
-            const cleanPhone = (computedParty && computedParty.mobile ? computedParty.mobile.replace(/\D/g, "") : "");
-            waBtn.href = cleanPhone.length >= 10
-              ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
-              : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
-          }
           const badgeEl = document.getElementById("succColDriveBadge");
           if (badgeEl) badgeEl.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
           console.log(`Auto-backed up Payment Receipt PDF #${col.receiptNo} to Drive:`, res.fileUrl);
+          return res.fileUrl;
         }
       } catch (err) {
         console.error("Auto backup payment receipt error:", err);
       }
+      return null;
     }
 
     async function autoBackupTaxInvoiceToDrive(ord) {
-      if (!ord || ord.invoiceDriveUrl || !GOOGLE_DRIVE_UPLOADER_URL) return;
+      if (!ord || !GOOGLE_DRIVE_UPLOADER_URL) return null;
+      if (ord.invoiceDriveUrl) return ord.invoiceDriveUrl;
       try {
         const co = COMPANIES[activeCompany] || COMPANIES["MADHAV"];
         const gst = computeOrderGstBreakdown(ord);
@@ -4179,6 +4186,7 @@ function toBase64Utf8(str) {
         const safeParty = (ord.partyName || "").replace(/[^a-zA-Z0-9]/g, '_');
         const pdfFileName = `${activeCompany}_TaxInvoice_${invNo.replace(/[^a-zA-Z0-9]/g, '_')}_${safeParty}.pdf`;
 
+        if (typeof openTaxInvoice === "function") openTaxInvoice(ord.id);
         const invEl = document.getElementById("invoicePrintArea");
         const invHtml = (invEl && invEl.innerHTML.trim().length > 50) ? invEl.innerHTML : `<h2>${co.name}</h2><h3>Tax Invoice #${invNo}</h3>`;
 
@@ -4203,10 +4211,12 @@ function toBase64Utf8(str) {
           }
           renderOrdersTable();
           console.log(`Auto-backed up Tax Invoice PDF #${invNo} to Drive:`, res.fileUrl);
+          return res.fileUrl;
         }
       } catch (err) {
         console.error("Auto backup invoice error:", err);
       }
+      return null;
     }
 
     async function backupPaymentReceiptToDrive(colId, btnEl) {
@@ -9360,7 +9370,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const payDetailReminder = (activeCompany === "MADHAV")
           ? "UPI/Bank (IOB A/c: 308202000000378, IFSC: IOBA0003082 | UPI: 7499477581@ybl)"
           : "Cash or PhonePe / UPI (7499477581@ybl - Roshan Thakre / Prashik Hajare)";
-        const statementWebLink = typeof getPartyStatementPublicUrl === "function" ? getPartyStatementPublicUrl(p.id, activeCompany) : "";
+        const statementDriveLink = p.statementDriveUrl ? getDirectDrivePdfUrl(p.statementDriveUrl) : "";
         const reminderLines = [
           `*PAYMENT REMINDER — ${COMPANIES[activeCompany].name}*`,
           `Namaskar *${p.name}*,`,
@@ -9369,7 +9379,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           `*Pending Balance Due: ${fmtINR(p.netBalance)}*`,
           p.pendingDays > 0 ? `*Aging:* ${p.pendingDays} Days Overdue` : ``,
           `--------------------------------`,
-          statementWebLink ? `📄 *View Complete Statement & Invoices:*\n👉 ${statementWebLink}` : ``,
+          statementDriveLink ? `📄 *View Complete Statement (Google Drive PDF):*\n👉 ${statementDriveLink}` : ``,
           `\n*Pay Easily via UPI / Bank:*`,
           payDetailReminder,
           `\nPlease arrange payment at your earliest convenience.\nThank you!`
@@ -9523,11 +9533,17 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       openModal("dealerLedgerModal");
     }
 
-    function shareDealerLedgerWhatsApp(partyId) {
+    async function shareDealerLedgerWhatsApp(partyId) {
       const p = getComputedParties().find(x => x.id === partyId);
       if (!p) return;
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const upiId = getCompanyUpiId();
+
+      if (!p.statementDriveUrl && typeof autoUploadPartyStatementToDrive === "function") {
+        showToast("⏳ Syncing Statement PDF to Google Drive...");
+        await autoUploadPartyStatementToDrive(p.id);
+      }
+
       const recentBills = (p.partyOrders || []).slice(0, 6).map(o =>
         `• ${formatOfficialGstInvoiceNo(o, activeCompany)} (${fmtDate(o.date)}): ${fmtINR(getOrderTotalAmount(o))}`
       ).join("\n");
@@ -9546,8 +9562,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       }
       if (driveUrl) {
         docLinkSection = `\n--------------------------------\n📄 *Google Drive PDF Record:*\n👉 ${driveUrl}`;
-      } else if (typeof getPartyStatementPublicUrl === "function") {
-        docLinkSection = `\n--------------------------------\n📄 *Open Statement & Full Ledger:*\n👉 ${getPartyStatementPublicUrl(p.id, activeCompany)}`;
       }
 
       const lines = [
@@ -9740,10 +9754,18 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (area) area.value = msg;
     }
 
-    function sendReminderWhatsApp() {
+    async function sendReminderWhatsApp() {
       if (!currentReminderPartyId) return;
       const p = getComputedParties().find(x => x.id === currentReminderPartyId);
       if (!p) return;
+
+      const incDrive = document.getElementById("remindIncludeDriveChk") ? document.getElementById("remindIncludeDriveChk").checked : true;
+      if (incDrive && !p.statementDriveUrl && typeof autoUploadPartyStatementToDrive === "function") {
+        showToast("⏳ Syncing Statement PDF to Google Drive...");
+        await autoUploadPartyStatementToDrive(p.id);
+        updateReminderPreviewText();
+      }
+
       const cleanPhone = (p.mobile || "").replace(/\D/g, "");
       const area = document.getElementById("remindMsgPreview");
       const msg = area ? area.value : "";
@@ -10549,9 +10571,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
       const memoDriveLink = ord.driveUrl ? getDirectDrivePdfUrl(ord.driveUrl) : "";
-      const memoWebLink = memoDriveLink || (typeof getPublicDocUrl === "function" ? getPublicDocUrl("memo", ord.id, activeCompany) : "");
-      const docLinkSection = memoWebLink
-        ? `\n-----------------------------\n📄 *Open Google Drive PDF Memo:*\n👉 ${memoWebLink}`
+      const docLinkSection = memoDriveLink
+        ? `\n-----------------------------\n📄 *Open Google Drive PDF Memo:*\n👉 ${memoDriveLink}`
         : "";
 
       return `*${coName}*
@@ -10574,6 +10595,41 @@ Thank you!`;
     }
 
     let lastActiveOrd = null;
+
+    async function shareOrderFromSuccessModal() {
+      const ord = lastActiveOrd;
+      if (!ord) return;
+      const btn = document.getElementById("succOrdWhatsAppBtn");
+      const badge = document.getElementById("succOrdDriveBadge");
+      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName };
+
+      if (!ord.driveUrl) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = "⏳ Syncing PDF to Google Drive...";
+        }
+        if (badge) {
+          badge.innerHTML = "⏳ Generating PDF & uploading to Google Drive...";
+        }
+        await autoBackupOrderMemoToDrive(ord, false);
+      }
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "💬 Share on WhatsApp";
+      }
+      if (badge && ord.driveUrl) {
+        badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+      }
+
+      const cleanPhone = (party && party.mobile) ? party.mobile.replace(/\D/g, "") : "";
+      const msg = getOrderMemoWhatsAppText(ord, party);
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+    }
+
     function showOrderSuccessModal(ord, party) {
       lastActiveOrd = ord;
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
@@ -10616,12 +10672,10 @@ Thank you!`;
       `;
 
       const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
-      const msg = getOrderMemoWhatsAppText(ord, party);
-
       const waBtn = document.getElementById("succOrdWhatsAppBtn");
-      waBtn.href = cleanPhone.length >= 10
-        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      if (waBtn) {
+        waBtn.onclick = () => shareOrderFromSuccessModal();
+      }
 
       openModal("orderSuccessModal");
       setTimeout(() => pregenerateOrderPdf(ord.id), 80);
@@ -13867,6 +13921,48 @@ Thank you!`;
 
     let lastActiveColId = null;
 
+    async function shareCollectionFromSuccessModal() {
+      const col = state.collections.find(c => c.id === lastActiveColId || c.receiptNo === lastActiveColId);
+      if (!col) return;
+      const btn = document.getElementById("succColWhatsAppBtn");
+      const badge = document.getElementById("succColDriveBadge");
+      const computedParty = getComputedParties().find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
+
+      if (!col.receiptDriveUrl && !col.driveUrl) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = "⏳ Syncing Receipt PDF to Google Drive...";
+        }
+        if (badge) {
+          badge.innerHTML = "⏳ Generating PDF & uploading to Google Drive...";
+        }
+        await autoBackupPaymentReceiptToDrive(col);
+      }
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "💬 Share on WhatsApp";
+      }
+      if (badge && (col.receiptDriveUrl || col.driveUrl)) {
+        badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
+      }
+
+      const targetDrive = col.receiptDriveUrl || col.driveUrl || col.proofDriveUrl;
+      const drivePdfLink = targetDrive ? getDirectDrivePdfUrl(targetDrive) : "";
+      const docLinkSection = drivePdfLink
+        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt:*\n👉 ${drivePdfLink}`
+        : "";
+      const remBal = computedParty ? computedParty.netBalance : 0;
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const cleanPhone = (computedParty && computedParty.mobile ? computedParty.mobile.replace(/\D/g, "") : "");
+      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+
+      const waUrl = cleanPhone.length >= 10
+        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+    }
+
     function openPaymentReceiptFromSuccess() {
       if (lastActiveColId) {
         closeModal("colSuccessModal");
@@ -13889,29 +13985,10 @@ Thank you!`;
       `;
 
       const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
-      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
-      const targetColDrive = newCol.driveUrl || newCol.receiptDriveUrl || newCol.proofDriveUrl;
-      const directDriveLink = targetColDrive ? getDirectDrivePdfUrl(targetColDrive) : "";
-      const docLinkSection = directDriveLink
-        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt:*\n👉 ${directDriveLink}`
-        : "";
-      const msg = `*${coName}*
-🧾 *Payment Receipt*
------------------------------
-*Receipt No:* #${newCol.receiptNo}
-*Date:* ${fmtDate(newCol.date)}
-*Received From:* ${newCol.partyName}
-*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})
-*Received By:* ${newCol.salespersonName}
------------------------------
-*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}
------------------------------
-Thank you! Your payment has been received successfully.`;
-
       const waBtn = document.getElementById("succColWhatsAppBtn");
-      waBtn.href = cleanPhone.length >= 10
-        ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      if (waBtn) {
+        waBtn.onclick = () => shareCollectionFromSuccessModal();
+      }
 
       openModal("colSuccessModal");
       setTimeout(() => pregenerateColPdf(newCol.id), 80);
@@ -15388,16 +15465,28 @@ Thank you! Your payment has been received successfully.`;
       return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUri)}`;
     }
 
-    function shareCurrentInvoiceWhatsApp() {
+    async function shareCurrentInvoiceWhatsApp() {
       if (!currentPreviewInvoiceOrderId) return;
       const ord = state.orders.find(o => o.id === currentPreviewInvoiceOrderId);
       if (!ord) return;
+
+      if (!ord.invoiceDriveUrl && !ord.driveUrl && typeof autoBackupTaxInvoiceToDrive === "function") {
+        showToast("⏳ Syncing Tax Invoice PDF to Google Drive...");
+        await autoBackupTaxInvoiceToDrive(ord);
+      }
+
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const gst = computeOrderGstBreakdown(ord);
       const upiId = getCompanyUpiId();
       const itemLines = gst.lines.map(ln =>
         `• ${ln.productName} (${ln.qty} pcs) — ${ln.isFoc ? "FOC Free" : fmtINR(ln.lineTotal)}`
       ).join("\n");
+
+      const targetDrive = ord.invoiceDriveUrl || ord.driveUrl;
+      const drivePdfLink = targetDrive ? getDirectDrivePdfUrl(targetDrive) : "";
+      const docLinkSection = drivePdfLink
+        ? `\n📄 *Open Google Drive Official Invoice (PDF):*\n👉 ${drivePdfLink}`
+        : "";
 
       const msg = [
         `*GST TAX INVOICE — ${co.name}*`,
@@ -15414,7 +15503,7 @@ Thank you! Your payment has been received successfully.`;
           ? `IGST: ${fmtINR(gst.totalIgst)}`
           : `CGST: ${fmtINR(gst.totalCgst)} | SGST: ${fmtINR(gst.totalSgst)}`,
         `*GRAND TOTAL: ${fmtINR(gst.roundedGrandTotal)}*`,
-        `\n📄 *Open Google Drive Official Invoice:*\n👉 ${(ord.invoiceDriveUrl || ord.driveUrl) ? getDirectDrivePdfUrl(ord.invoiceDriveUrl || ord.driveUrl) : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("invoice", ord.id, activeCompany) : "")}`,
+        docLinkSection,
         gst.ewayRequired ? `⚠️ E-Way Bill Applicable (≥ ₹50,000)` : "",
         `\n*Pay Easily via UPI / Bank:*`,
         (activeCompany === "MADHAV")
@@ -18042,11 +18131,17 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
-    function shareDeliveryChallanWhatsApp(orderId) {
+    async function shareDeliveryChallanWhatsApp(orderId) {
       const targetId = orderId || lastActiveMemoOrderId;
       if (!targetId) return;
       const ord = (state.orders || []).find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
+
+      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
+        showToast("⏳ Syncing PDF to Google Drive...");
+        await autoBackupOrderMemoToDrive(ord, false);
+      }
+
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
@@ -18058,19 +18153,28 @@ Thank you! Your payment has been received successfully.`;
       } else {
         itemsList = `• ${ord.productName || "General Goods"} — ${ord.orderQty} Units`;
       }
-      const challanDrive = ord.driveUrl ? getDirectDrivePdfUrl(ord.driveUrl) : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("challan", ord.id, activeCompany) : "");
-      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery\n📄 *Open Google Drive Record:*\n👉 ${challanDrive}\nThank you!`;
+      const challanDrive = ord.driveUrl ? getDirectDrivePdfUrl(ord.driveUrl) : "";
+      const docLinkSection = challanDrive
+        ? `\n📄 *Open Google Drive Record (PDF):*\n👉 ${challanDrive}`
+        : "";
+      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery${docLinkSection}\nThank you!`;
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
       window.open(waUrl, "_blank");
     }
 
-    function shareOrderTextOnWhatsApp(orderId) {
+    async function shareOrderTextOnWhatsApp(orderId) {
       const targetId = orderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
       if (!targetId) return;
       const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
+
+      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
+        showToast("⏳ Syncing PDF to Google Drive...");
+        await autoBackupOrderMemoToDrive(ord, false);
+      }
+
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
       const msg = getOrderMemoWhatsAppText(ord, party);
@@ -18210,20 +18314,26 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
-    function shareCurrentReceiptWhatsApp(colId) {
+    async function shareCurrentReceiptWhatsApp(colId) {
       const targetId = colId || lastActiveColId;
       if (!targetId) return;
       const col = state.collections.find(c => c.id === targetId || c.receiptNo === targetId);
       if (!col) return;
+
+      if (!col.receiptDriveUrl && !col.driveUrl && typeof autoBackupPaymentReceiptToDrive === "function") {
+        showToast("⏳ Syncing Receipt PDF to Google Drive...");
+        await autoBackupPaymentReceiptToDrive(col);
+      }
+
       const party = state.parties.find(p => p.id === col.partyId || p.name === col.partyName) || { name: col.partyName, area: "Nagpur", mobile: "" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
       const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
       const remBal = computed ? computed.netBalance : 0;
       const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
       const targetDriveUrl = col.driveUrl || col.receiptDriveUrl || col.proofDriveUrl;
-      const receiptWebLink = targetDriveUrl ? getDirectDrivePdfUrl(targetDriveUrl) : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("receipt", col.id, activeCompany) : "");
-      const docLinkSection = receiptWebLink
-        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt:*\n👉 ${receiptWebLink}`
+      const receiptPdfLink = targetDriveUrl ? getDirectDrivePdfUrl(targetDriveUrl) : "";
+      const docLinkSection = receiptPdfLink
+        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt (PDF):*\n👉 ${receiptPdfLink}`
         : "";
       const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
       const waUrl = cleanPhone.length >= 10
