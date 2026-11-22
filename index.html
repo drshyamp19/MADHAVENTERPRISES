@@ -1434,6 +1434,13 @@
       }
     }
 
+    /* Compact Orders Register view for Salespersons */
+    .salesperson-orders-view .order-admin-col,
+    .salesperson-orders-view .order-disp-col,
+    .salesperson-orders-view .order-sp-col {
+      display: none !important;
+    }
+
 </style>
 </head>
 <body>
@@ -2088,20 +2095,15 @@
         <div id="orderRegisterWrap" style="display:none;">
         <!-- Order Booking Memos Register -->
         <div class="card">
-          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:12px;">
-            <!-- Top Header & Primary Action Buttons -->
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-              <span class="card-title" style="display:flex;align-items:center;gap:6px;">
-                📋 Order Booking Memos Register
-              </span>
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-sm" onclick="openWarehousePickingSlipModal()" style="background:#0284c7;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;box-shadow:0 1px 3px rgba(2,132,199,0.25);" title="Generate Warehouse Picking &amp; Packing Slip for pending orders">
-                  <span>📦</span> Warehouse Slip
-                </button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="exportOrdersToExcel()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;background:#f8fafc;color:#334155;" title="Export current orders list to CSV / Excel file">
-                  <span>📊</span> Export Excel
-                </button>
-              </div>
+          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px;padding-top:10px;">
+            <!-- Admin / Manager Top Action Buttons -->
+            <div id="orderRegAdminBar" style="display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;">
+              <button type="button" class="btn btn-sm" onclick="openWarehousePickingSlipModal()" style="background:#0284c7;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;box-shadow:0 1px 3px rgba(2,132,199,0.25);" title="Generate Warehouse Picking &amp; Packing Slip for pending orders">
+                <span>📦</span> Warehouse Slip
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="exportOrdersToExcel()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;background:#f8fafc;color:#334155;" title="Export current orders list to CSV / Excel file">
+                <span>📊</span> Export Excel
+              </button>
             </div>
 
             <!-- Enhanced Filters Bar: Search, Date Range, Salesperson -->
@@ -2210,7 +2212,7 @@
             <table id="ordersMainTable">
               <thead>
                 <tr>
-                  <th style="width:36px;text-align:center;">
+                  <th class="order-admin-col" style="width:36px;text-align:center;">
                     <input type="checkbox" id="orderSelectAllChk" onchange="toggleSelectAllOrders(this)" title="Select All Visible Orders" />
                   </th>
                   <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('memoNo')">
@@ -2222,15 +2224,15 @@
                   <th style="cursor:pointer;user-select:none;" onclick="toggleOrderSort('partyName')">
                     Party Name &amp; Balance <span id="sortIcon_partyName">⇅</span>
                   </th>
-                  <th>Booked By</th>
+                  <th class="order-sp-col">Booked By</th>
                   <th>Items Details</th>
                   <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('ordQty')">
-                    Ord Qty <span id="sortIcon_ordQty">⇅</span>
+                    <span id="colHeaderOrdQty">Ord Qty</span> <span id="sortIcon_ordQty">⇅</span>
                   </th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('dispQty')">
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('dispQty')">
                     Disp Qty <span id="sortIcon_dispQty">⇅</span>
                   </th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('pendingQty')">
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('pendingQty')">
                     Pending <span id="sortIcon_pendingQty">⇅</span>
                   </th>
                   <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('totalAmt')">
@@ -8092,6 +8094,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       renderOrdersTable();
       renderCollectionTable();
       renderChequeRegister();
+      updateSubTabBadges();
     }
 
     function updateAdminUI() {
@@ -10261,8 +10264,9 @@ Thank you!`;
       if (dFrom) dFrom.value = "";
       const dTo = document.getElementById("orderDateTo");
       if (dTo) dTo.value = "";
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       const spEl = document.getElementById("orderSalespersonFilter");
-      if (spEl) spEl.value = "all";
+      if (spEl && !isSalesperson) spEl.value = "all";
       orderDatePreset = "all";
       renderOrdersTable();
     }
@@ -10333,6 +10337,12 @@ Thank you!`;
       const info = document.getElementById("orderBatchSelectedInfo");
       const btnCombine = document.getElementById("btnBatchCombineDispatch");
       if (!bar || !info) return;
+
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      if (isSalesperson) {
+        bar.style.display = "none";
+        return;
+      }
 
       const count = selectedOrderIds.size;
       if (count === 0) {
@@ -10437,8 +10447,19 @@ Thank you!`;
       // 3. Filter by Date range
       list = list.filter(o => isOrderInSelectedDateRange(o.date));
 
-      // 4. Filter by Salesperson
-      if (selectedSp !== "all") {
+      // 4. Filter by Salesperson (Role-Based for Salesperson, dropdown for Admin/Manager)
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      if (isSalesperson && currentStaff && currentStaff.name) {
+        const myName = currentStaff.name.toUpperCase();
+        const isGopal = myName.includes("GOPAL");
+        const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
+        list = list.filter(o => {
+          const sp = (o.salespersonName || "").toUpperCase();
+          if (isGopal) return sp.includes("GOPAL");
+          if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
+          return sp === myName;
+        });
+      } else if (selectedSp !== "all") {
         list = list.filter(o => (o.salespersonName || "").trim().toLowerCase() === selectedSp.trim().toLowerCase());
       }
 
@@ -10480,23 +10501,69 @@ Thank you!`;
     }
 
     function renderOrdersTable() {
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       const allOrders = state.orders || [];
       const computedParties = (typeof computePartiesForState === "function") ? computePartiesForState(state) : (state.parties || []);
 
-      // Populate Salesperson filter options if select element exists
-      if (document.getElementById("orderSalespersonFilter") && document.getElementById("orderSalespersonFilter").options.length <= 1) {
-        populateOrderSalespersonFilter();
+      // Toggle Admin Actions Bar & Salesperson Filter for Salespersons
+      const adminBar = document.getElementById("orderRegAdminBar");
+      if (adminBar) adminBar.style.display = isSalesperson ? "none" : "flex";
+
+      const spFilterEl = document.getElementById("orderSalespersonFilter");
+      if (spFilterEl) {
+        spFilterEl.style.display = isSalesperson ? "none" : "inline-block";
+        if (!isSalesperson && spFilterEl.options.length <= 1) {
+          populateOrderSalespersonFilter();
+        }
       }
 
-      // Compute KPI totals across all orders
+      // Toggle KPI Strip: Hide bulky company-wide stats for Salespersons
+      const kpiStrip = document.getElementById("ordersKpiStrip");
+      if (kpiStrip) kpiStrip.style.display = isSalesperson ? "none" : "grid";
+
+      // Toggle Compact View Classes & Headers on Main Orders Table
+      const tableEl = document.getElementById("ordersMainTable");
+      if (tableEl) {
+        if (isSalesperson) {
+          tableEl.classList.add("salesperson-orders-view");
+        } else {
+          tableEl.classList.remove("salesperson-orders-view");
+        }
+      }
+      const colOrdQtyHeader = document.getElementById("colHeaderOrdQty");
+      if (colOrdQtyHeader) {
+        colOrdQtyHeader.textContent = isSalesperson ? "Total Qty" : "Ord Qty";
+      }
+
+      // Hide batch selection toolbar for salespersons
+      if (isSalesperson) {
+        const batchToolbar = document.getElementById("orderBatchActionToolbar");
+        if (batchToolbar) batchToolbar.style.display = "none";
+      }
+
+      // Determine visible orders for stats & tab counts (personal for Salesperson, company-wide for Admin/Manager)
+      let visibleOrdersForStats = allOrders;
+      if (isSalesperson && currentStaff && currentStaff.name) {
+        const myName = currentStaff.name.toUpperCase();
+        const isGopal = myName.includes("GOPAL");
+        const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
+        visibleOrdersForStats = allOrders.filter(o => {
+          const sp = (o.salespersonName || "").toUpperCase();
+          if (isGopal) return sp.includes("GOPAL");
+          if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
+          return sp === myName;
+        });
+      }
+
+      // Compute KPI totals across visible orders
       let pendingVal = 0;
       let dispatchedVal = 0;
       let totalBookedVal = 0;
       let totalPendingCount = 0;
       let totalCompletedCount = 0;
 
-      allOrders.forEach(o => {
+      visibleOrdersForStats.forEach(o => {
         const ordQ = Number(o.orderQty || 0);
         const dispQ = Number(o.dispatchedQty || 0);
         const lineTotal = Number(o.totalAmt || (ordQ * Number(o.rate || 0)) || 0);
@@ -10527,13 +10594,13 @@ Thank you!`;
       if (kpiDispValEl) kpiDispValEl.textContent = fmtINR(dispatchedVal);
       if (kpiDispCntEl) kpiDispCntEl.textContent = totalCompletedCount;
       if (kpiTotValEl) kpiTotValEl.textContent = fmtINR(totalBookedVal);
-      if (kpiTotCntEl) kpiTotCntEl.textContent = allOrders.length;
+      if (kpiTotCntEl) kpiTotCntEl.textContent = visibleOrdersForStats.length;
 
-      // Update Tab Counter Badges across all orders
+      // Update Tab Counter Badges
       const cAllEl = document.getElementById("countAllOrders");
       const cPenEl = document.getElementById("countPendingOrders");
       const cCompEl = document.getElementById("countCompletedOrders");
-      if (cAllEl) cAllEl.textContent = allOrders.length;
+      if (cAllEl) cAllEl.textContent = visibleOrdersForStats.length;
       if (cPenEl) cPenEl.textContent = totalPendingCount;
       if (cCompEl) cCompEl.textContent = totalCompletedCount;
 
@@ -10545,7 +10612,7 @@ Thank you!`;
       if (!tbody) return;
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${isSalesperson ? '8' : '12'}" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
         updateSelectedOrdersBar();
         return;
       }
@@ -10638,7 +10705,7 @@ Thank you!`;
 
         return `
           <tr>
-            <td style="text-align:center;vertical-align:middle;">
+            <td class="order-admin-col" style="text-align:center;vertical-align:middle;">
               <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" />
             </td>
             <td class="font-bold" style="white-space:nowrap;">
@@ -10655,11 +10722,11 @@ Thank you!`;
               <div class="font-bold" style="color:#0f172a;">${escapeHtml(o.partyName)}</div>
               ${partyDueHtml}
             </td>
-            <td style="font-size:0.78rem;font-weight:600;color:#475569;">${escapeHtml(o.salespersonName || "-")}</td>
+            <td class="order-sp-col" style="font-size:0.78rem;font-weight:600;color:#475569;">${escapeHtml(o.salespersonName || "-")}</td>
             <td>${itemsHtml}</td>
             <td class="text-right font-bold">${o.orderQty}</td>
-            <td class="text-right" style="color:#15803d;font-weight:600;">${o.dispatchedQty || 0}</td>
-            <td class="text-right font-bold" style="color:#ea580c;">${pending}</td>
+            <td class="text-right order-disp-col" style="color:#15803d;font-weight:600;">${o.dispatchedQty || 0}</td>
+            <td class="text-right font-bold order-disp-col" style="color:#ea580c;">${pending}</td>
             <td class="text-right font-bold" style="color:#0f172a;">${fmtINR(lineTotal)}</td>
             <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
             <td class="text-center" style="white-space:nowrap;vertical-align:middle;">
@@ -16603,7 +16670,20 @@ Thank you! Your payment has been received successfully.`;
     function updateSubTabBadges() {
       const ordBadge = document.getElementById("subtabOrderCountBadge");
       if (ordBadge && state.orders) {
-        const pendingCount = state.orders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0).length;
+        const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+        let ordersList = state.orders;
+        if (isSalesperson && currentStaff && currentStaff.name) {
+          const myName = currentStaff.name.toUpperCase();
+          const isGopal = myName.includes("GOPAL");
+          const isVikram = myName.includes("VIKARAM") || myName.includes("VIKRAM");
+          ordersList = state.orders.filter(o => {
+            const sp = (o.salespersonName || "").toUpperCase();
+            if (isGopal) return sp.includes("GOPAL");
+            if (isVikram) return sp.includes("VIKARAM") || sp.includes("VIKRAM");
+            return sp === myName;
+          });
+        }
+        const pendingCount = ordersList.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0).length;
         ordBadge.textContent = `${pendingCount} Pending`;
       }
       const colBadge = document.getElementById("subtabColCountBadge");
