@@ -11012,6 +11012,14 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         ? `\n-----------------------------\n📄 *Open Google Drive PDF Memo:*\n👉 ${memoDriveLink}`
         : "";
 
+      // Compute Previous Balance (Before Order) and Total Due (After Order)
+      const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
+      const netBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
+      const currentDispatched = (typeof getOrderDispatchedAmount === "function") ? getOrderDispatchedAmount(ord) : 0;
+      const beforeBal = netBal - currentDispatched;
+      const orderAmt = Number(ord.totalAmt || 0);
+      const afterBal = beforeBal + orderAmt;
+
       return `*${coName}*
 📝 *ORDER BOOKING MEMO*
 -----------------------------
@@ -11024,7 +11032,13 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 ${itemsList}
 -----------------------------
 *Total Items:* ${totalQty} Units
-*Total Estimated Value:* ${fmtINR(ord.totalAmt)}
+*This Order Value:* ${fmtINR(orderAmt)}
+-----------------------------
+💰 *ACCOUNT BALANCE SUMMARY:*
+• *Previous Balance (Before Order):* ${fmtINR(beforeBal)}
+• *This Order Amount:* +${fmtINR(orderAmt)}
+• *Total Balance Due (After Order):* ${fmtINR(afterBal)}
+-----------------------------
 *Status:* Order Booked (Pending Dispatch)${docLinkSection}
 -----------------------------
 Note: This is an order booking memo only. Official tax invoice will be issued upon dispatch.
@@ -11109,7 +11123,11 @@ Thank you!`;
         : ord.orderQty;
 
       const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
-      const remBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
+      const netBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
+      const currentDispatched = (typeof getOrderDispatchedAmount === "function") ? getOrderDispatchedAmount(ord) : 0;
+      const beforeBal = netBal - currentDispatched;
+      const orderAmt = Number(ord.totalAmt || 0);
+      const afterBal = beforeBal + orderAmt;
 
       document.getElementById("succOrdDetails").innerHTML = `
         <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
@@ -11121,11 +11139,21 @@ Thank you!`;
         ${itemsHtml}
         <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:2px solid var(--primary);font-size:0.95rem;">
           <div><strong>Total: ${totalQty} Units</strong></div>
-          <div style="color:#0f766e;font-weight:800;font-size:1.05rem;">${fmtINR(ord.totalAmt)}</div>
+          <div style="color:#0f766e;font-weight:800;font-size:1.05rem;">${fmtINR(orderAmt)}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:0.86rem;">
-          <div><strong>Current Balance Due:</strong></div>
-          <div style="color:${remBal > 0 ? '#dc2626' : '#15803d'};font-weight:800;">${fmtINR(remBal)}</div>
+        <div style="margin-top:8px;padding:8px 10px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;font-size:0.82rem;">
+          <div style="display:flex;justify-content:space-between;color:#475569;">
+            <span>Previous Balance (Before Order):</span>
+            <strong>${fmtINR(beforeBal)}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:#0f766e;margin-top:3px;">
+            <span>This Order Amount:</span>
+            <strong>+${fmtINR(orderAmt)}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;color:${afterBal > 0 ? '#dc2626' : '#15803d'};font-weight:800;font-size:0.88rem;margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;">
+            <span>Total Balance Due (After Order):</span>
+            <span>${fmtINR(afterBal)}</span>
+          </div>
         </div>
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic;">
           (Note: This is an order booking memo only. Tax invoice will be issued upon dispatch.)
