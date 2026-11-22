@@ -11704,7 +11704,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     "salespersons": [
       {
         "id": "SP00",
-        "name": "Roshan Thakre",
+        "name": "SHYAM PIMPLKAR",
         "role": "Owner",
         "mobile": "9309543825",
         "area": "Nagpur & Vidarbha H.O."
@@ -14299,7 +14299,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     "salespersons": [
       {
         "id": "SP00",
-        "name": "Roshan Thakre",
+        "name": "SHYAM PIMPLKAR",
         "role": "Owner",
         "mobile": "9309543825",
         "area": "Nagpur & Vidarbha H.O."
@@ -14364,11 +14364,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       // Look up dynamic Owner from state.salespersons if saved
       let dynamicOwner = null;
       if (state && Array.isArray(state.salespersons)) {
-        dynamicOwner = state.salespersons.find(s => s && (s.id === "SP00" || (s.name && s.name.toUpperCase().includes("ROSHAN") && (s.role === "Owner" || s.role === "Co-Owner"))));
+        dynamicOwner = state.salespersons.find(s => s && (s.id === "SP00" || s.role === "Owner" || (s.name && (s.name.toUpperCase().includes("SHYAM") || s.name.toUpperCase().includes("ROSHAN")))));
       }
       
       const ownerMobile = (dynamicOwner && dynamicOwner.mobile) ? String(dynamicOwner.mobile).trim() : "9309543825";
-      const ownerName = (dynamicOwner && dynamicOwner.name) ? dynamicOwner.name : "ROSHAN THAKRE";
+      const ownerName = (dynamicOwner && dynamicOwner.name) ? dynamicOwner.name : "SHYAM PIMPLKAR";
       const ownerRole = (dynamicOwner && dynamicOwner.role) ? dynamicOwner.role : "Owner";
       const ownerArea = (dynamicOwner && dynamicOwner.area) ? dynamicOwner.area : "Nagpur & Vidarbha H.O.";
       const ownerAllowCash = (dynamicOwner && typeof dynamicOwner.allowCash !== "undefined") ? dynamicOwner.allowCash : true;
@@ -14404,8 +14404,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (state && Array.isArray(state.salespersons)) {
         state.salespersons.forEach(s => {
           if (!s || !s.mobile) return;
-          const isRoshanOrMaster = (s.id === "SP00") || (s.name && s.name.toUpperCase().includes("ROSHAN"));
-          if (isRoshanOrMaster) {
+          const isOwnerOrMaster = (s.id === "SP00") || (s.role === "Owner") || (s.name && (s.name.toUpperCase().includes("SHYAM") || s.name.toUpperCase().includes("ROSHAN")));
+          if (isOwnerOrMaster) {
             const master = map.get("MASTER_OWNER");
             map.set("MASTER_OWNER", {
               ...master,
@@ -14454,7 +14454,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     // Helper to retrieve current owner mobile number for WhatsApp closing reports
     function getOwnerMobileNumber() {
       const all = getAllStaffMembers();
-      const owner = all.find(m => m.role === "Owner" || m.id === "SP00" || (m.name && m.name.toUpperCase().includes("ROSHAN")));
+      const owner = all.find(m => m.role === "Owner" || m.id === "SP00" || (m.name && (m.name.toUpperCase().includes("SHYAM") || m.name.toUpperCase().includes("ROSHAN"))));
       return (owner && owner.mobile) ? String(owner.mobile).replace(/\D/g, "") : "9309543825";
     }
 
@@ -15232,7 +15232,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       // Ensure full registered team is in state.salespersons without overwriting custom added members
       if (!state.salespersons || !Array.isArray(state.salespersons) || state.salespersons.length === 0) {
         state.salespersons = [
-          { id: "SP00", name: "ROSHAN THAKRE", role: "Owner", mobile: "9309543825", area: "Nagpur & Vidarbha H.O.", allowCash: true, pin: "9850", active: true },
+          { id: "SP00", name: "SHYAM PIMPLKAR", role: "Owner", mobile: "9309543825", area: "Nagpur & Vidarbha H.O.", allowCash: true, pin: "9850", active: true },
           { id: "SP01", name: "PRASHIK HAJARE", role: "Manager", mobile: "7499477581", area: "Nagpur & Vidarbha H.O.", allowCash: true, active: true },
           { id: "SP02", name: "GOPAL AMBAGADE", role: "Salesperson", mobile: "9075479839", area: "Field Route", allowCash: true, active: true },
           { id: "SP03", name: "VIKARAM SING THAKUR", role: "Salesperson", mobile: "7028287698", area: "Field Route", allowCash: false, active: true }
@@ -15240,12 +15240,12 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         persistLocal();
       } else {
         let changed = false;
-        // 1. Locate Roshan Thakre / Owner entry and ensure mobile is 9309543825
-        const roshanList = state.salespersons.filter(s => s && (s.id === "SP00" || (s.name && s.name.toUpperCase().includes("ROSHAN"))));
-        if (roshanList.length === 0) {
+        // 1. Locate Shyam Pimplkar / Owner entry and ensure name is SHYAM PIMPLKAR and mobile is 9309543825
+        const ownerList = state.salespersons.filter(s => s && (s.id === "SP00" || s.role === "Owner" || (s.name && (s.name.toUpperCase().includes("SHYAM") || s.name.toUpperCase().includes("ROSHAN")))));
+        if (ownerList.length === 0) {
           state.salespersons.unshift({
             id: "SP00",
-            name: "ROSHAN THAKRE",
+            name: "SHYAM PIMPLKAR",
             role: "Owner",
             mobile: "9309543825",
             area: "Nagpur & Vidarbha H.O.",
@@ -15255,19 +15255,26 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           });
           changed = true;
         } else {
-          const primary = roshanList[0];
-          if (primary.mobile === "7499477581" || primary.mobile === "9372376310") {
+          const primary = ownerList[0];
+          if (primary.name !== "SHYAM PIMPLKAR") {
+            primary.name = "SHYAM PIMPLKAR";
+            changed = true;
+          }
+          if (primary.mobile !== "9309543825") {
             primary.mobile = "9309543825";
-            primary.role = "Owner";
+            changed = true;
+          }
+          if (primary.id !== "SP00" || primary.role !== "Owner" || !primary.allowCash) {
             primary.id = "SP00";
+            primary.role = "Owner";
             primary.allowCash = true;
             changed = true;
           }
-          // Remove duplicate Roshan entries if user had both Owner and Co-Owner
-          if (roshanList.length > 1) {
-            state.salespersons = state.salespersons.filter(s => !s || (!s.name.toUpperCase().includes("ROSHAN") && s.id !== "SP00"));
+          // Remove duplicate owner entries if user had duplicate records
+          if (ownerList.length > 1) {
+            state.salespersons = state.salespersons.filter(s => !s || (!s.name.toUpperCase().includes("SHYAM") && !s.name.toUpperCase().includes("ROSHAN") && s.id !== "SP00"));
             primary.id = "SP00";
-            primary.name = "ROSHAN THAKRE";
+            primary.name = "SHYAM PIMPLKAR";
             primary.role = "Owner";
             primary.mobile = primary.mobile || "9309543825";
             primary.allowCash = true;
@@ -15302,7 +15309,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
               const prefix = activeCompany.toLowerCase() + "_";
               db.collection(prefix + "salespersons").doc("SP00").set({
                 id: "SP00",
-                name: "ROSHAN THAKRE",
+                name: "SHYAM PIMPLKAR",
                 role: "Owner",
                 mobile: "9309543825",
                 area: "Nagpur & Vidarbha H.O.",
@@ -15576,6 +15583,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const member = allStaff.find(u => 
           u.mobile === rawId || 
           (u.name && u.name.toLowerCase().includes(idLower)) ||
+          (idLower === "shyam" && u.name && u.name.toUpperCase().includes("SHYAM")) ||
           (idLower === "prashik" && u.name && u.name.toUpperCase().includes("PRASHIK")) ||
           (idLower === "gopal" && u.name && u.name.toUpperCase().includes("GOPAL")) ||
           (idLower === "vikram" && u.name && u.name.toUpperCase().includes("VIKRAM"))
@@ -22025,7 +22033,7 @@ Thank you!`;
           ? `<span class="badge" style="background:#dcfce7;color:#166534;font-weight:700;font-size:0.73rem;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px;">✅ Cash + Online</span>`
           : `<span class="badge" style="background:#fee2e2;color:#991b1b;font-weight:700;font-size:0.73rem;padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px;">🚫 Online Only (No Cash)</span>`;
 
-        const isPrimaryOwner = (s.role === "Owner" || s.id === "SP00" || (s.name && s.name.toUpperCase().includes("ROSHAN")));
+        const isPrimaryOwner = (s.role === "Owner" || s.id === "SP00" || (s.name && (s.name.toUpperCase().includes("SHYAM") || s.name.toUpperCase().includes("ROSHAN"))));
 
         return `
           <tr>
@@ -22069,7 +22077,7 @@ Thank you!`;
       if (spId) {
         const allMembers = getAllStaffMembers();
         const member = (spId === "SP00" || spId === "MASTER_OWNER")
-          ? allMembers.find(m => m.id === "SP00" || (m.name && m.name.toUpperCase().includes("ROSHAN")))
+          ? allMembers.find(m => m.id === "SP00" || (m.name && (m.name.toUpperCase().includes("SHYAM") || m.name.toUpperCase().includes("ROSHAN"))))
           : allMembers.find(m => m.id === spId || m.mobile === spId);
         if (!member) {
           alert("Team member details not found.");
@@ -22137,10 +22145,10 @@ Thank you!`;
         return;
       }
 
-      const isOwnerEdit = (idVal === "SP00" || roleVal === "Owner" || nameVal.includes("ROSHAN"));
+      const isOwnerEdit = (idVal === "SP00" || roleVal === "Owner" || nameVal.includes("SHYAM") || nameVal.includes("ROSHAN"));
 
       // Check duplicate mobile for another user
-      const existing = (state.salespersons || []).find(s => s && s.mobile === mobileVal && s.id !== idVal && !(isOwnerEdit && (s.id === "SP00" || (s.name && s.name.toUpperCase().includes("ROSHAN")))));
+      const existing = (state.salespersons || []).find(s => s && s.mobile === mobileVal && s.id !== idVal && !(isOwnerEdit && (s.id === "SP00" || (s.name && (s.name.toUpperCase().includes("SHYAM") || s.name.toUpperCase().includes("ROSHAN"))))));
       if (existing) {
         alert(`Mobile number ${mobileVal} is already assigned to ${existing.name} (${existing.role}). Please use a different mobile number.`);
         return;
@@ -22171,7 +22179,7 @@ Thank you!`;
       };
 
       if (isOwnerEdit) {
-        state.salespersons = (state.salespersons || []).filter(s => !s || (!s.name.toUpperCase().includes("ROSHAN") && s.id !== "SP00"));
+        state.salespersons = (state.salespersons || []).filter(s => !s || (!s.name.toUpperCase().includes("SHYAM") && !s.name.toUpperCase().includes("ROSHAN") && s.id !== "SP00"));
         state.salespersons.unshift(memberObj);
         persistLocal();
         refreshAll();
@@ -22199,8 +22207,8 @@ Thank you!`;
       const member = allMembers.find(m => m.id === spId || m.mobile === spId);
       if (!member) return;
 
-      if ((member.role === "Owner" || member.id === "SP00") || (member.name && member.name.toUpperCase().includes("ROSHAN"))) {
-        alert("⚠️ Primary Owner (Roshan Thakre) cannot be deleted.");
+      if ((member.role === "Owner" || member.id === "SP00") || (member.name && (member.name.toUpperCase().includes("SHYAM") || member.name.toUpperCase().includes("ROSHAN")))) {
+        alert("⚠️ Primary Owner (Shyam Pimplkar) cannot be deleted.");
         return;
       }
 
