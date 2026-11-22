@@ -916,8 +916,10 @@
     @media print {
       body * { visibility: hidden; }
       #invoicePrintArea, #invoicePrintArea *,
-      #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
-      #invoicePrintArea, #receiptPrintArea {
+      #receiptPrintArea, #receiptPrintArea *,
+      #statementPrintArea, #statementPrintArea *,
+      #dailySummaryPrintArea, #dailySummaryPrintArea * { visibility: visible; }
+      #invoicePrintArea, #receiptPrintArea, #statementPrintArea, #dailySummaryPrintArea {
         position: fixed;
         left: 0;
         top: 0;
@@ -1600,6 +1602,9 @@
         <button type="button" class="btn btn-sm" onclick="forceAppRefresh()" title="Force Refresh & Update Cache" style="background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;padding:4px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:3px;" id="forceRefreshBtn">
           🔄 Refresh App
         </button>
+        <button type="button" class="btn btn-sm" onclick="openDailySummaryReportModal()" title="View Daily Business Closing Report" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;padding:4px 8px;font-size:0.75rem;font-weight:700;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;gap:3px;" id="dailySummaryHeaderBtn">
+          📊 Daily Summary
+        </button>
         <span id="staffBadgeWrap" style="display:none;align-items:center;gap:6px;">
           <span class="badge-staff" id="staffUserName">👤 Staff</span>
           <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="staffLogout()">🚪 Logout</button>
@@ -1762,6 +1767,9 @@
               </button>
               <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;" onclick="handleExportClick(true)">
                 ☁️ Sync to Google Drive / Sheets
+              </button>
+              <button type="button" class="btn btn-sm" style="background:#7c3aed;color:#fff;font-weight:700;" onclick="openDailySummaryReportModal()">
+                📑 Daily Summary PDF Report
               </button>
               <button type="button" class="btn btn-primary btn-sm" onclick="downloadExcelTemplate()" style="font-weight:700;">
                 📄 Download Template
@@ -3455,6 +3463,26 @@
     </div>
   </div>
 
+  <!-- Daily Closing Summary Report Modal -->
+  <div class="modal-backdrop" id="dailySummaryModal">
+    <div class="modal modal-lg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
+        <div>
+          <h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:6px;">📊 Daily Business Closing Summary (PDF)</h3>
+          <span style="font-size:0.75rem;color:var(--muted);">Audited Daily Orders, Collections, Expenses &amp; Dues Report</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <input type="date" id="dailySummaryDate" class="form-control" style="width:145px;padding:4px 8px;font-size:0.8rem;" onchange="renderDailySummaryContent(this.value)" />
+          <button type="button" class="btn btn-primary btn-sm" onclick="downloadDailySummaryPdf()" style="font-weight:700;">📄 Download PDF</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="triggerDocumentPrint('Daily_Closing_Summary')" style="font-weight:700;">🖨️ Print</button>
+          <button type="button" class="btn btn-whatsapp btn-sm" onclick="shareDailySummaryWhatsApp()" style="font-weight:700;">💬 WhatsApp to Owner</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:7px 14px;" onclick="closeModal('dailySummaryModal')">✕ Close</button>
+        </div>
+      </div>
+      <div id="dailySummaryPrintArea" class="invoice-paper" style="padding:20px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;"></div>
+    </div>
+  </div>
+
   <!-- Payment Proof Lightbox Modal -->
   <div class="modal-backdrop" id="proofModal">
     <div class="modal" style="max-width:550px;text-align:center;">
@@ -3635,6 +3663,26 @@
     // ==================== GOOGLE DRIVE AUTOMATION ====================
     const GOOGLE_DRIVE_UPLOADER_URL = "https://script.google.com/macros/s/AKfycbw06Fy3_B4I3QPOV6gA1pzT7Tu_eVOsOMNy3-uREQ68WNCNaR2wPqoBEzEJXVTzvehQ/exec";
     const GOOGLE_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1Rpl2zwQTUU5K4bKm5cfm2w07o6BIRabn";
+
+    // ==================== BASE URL & PUBLIC DOCUMENT URL HELPERS ====================
+    function getAppBaseUrl() {
+      if (typeof window !== "undefined" && window.location && window.location.origin && !window.location.origin.includes("file://")) {
+        return window.location.origin;
+      }
+      return "https://madhaventerprises.vercel.app";
+    }
+
+    function getPublicDocUrl(docType, id, companyKey) {
+      const base = getAppBaseUrl();
+      const co = (companyKey || activeCompany || "MADHAV").toUpperCase();
+      return `${base}/?view=${encodeURIComponent(docType)}&id=${encodeURIComponent(id)}&co=${co}`;
+    }
+
+    function getPartyStatementPublicUrl(partyId, companyKey) {
+      const base = getAppBaseUrl();
+      const co = (companyKey || activeCompany || "MADHAV").toUpperCase();
+      return `${base}/?view=statement&partyId=${encodeURIComponent(partyId)}&co=${co}`;
+    }
 
     function getShortDocLink(driveUrl) {
       if (!driveUrl) return "";
@@ -7627,6 +7675,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       initFirebase();
       updateInstallButtonsVisibility();
 
+      // Check if document viewer was requested via WhatsApp link (?view=...)
+      if ((new URLSearchParams(window.location.search)).has("view")) {
+        handlePublicDocViewer();
+      }
+
       // Enforce Option 1: Must be authenticated to enter App Shell
       if (isAdminLoggedIn || currentStaff) {
         const savedCo = localStorage.getItem(ACTIVE_CO_KEY);
@@ -9175,7 +9228,21 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const payDetailReminder = (activeCompany === "MADHAV")
           ? "UPI/Bank (IOB A/c: 308202000000378, IFSC: IOBA0003082 | UPI: 7499477581@ybl)"
           : "Cash or PhonePe / UPI (7499477581@ybl - Roshan Thakre / Prashik Hajare)";
-        const waMsg = encodeURIComponent(`Namaskar ${p.name}, gentle payment reminder from ${COMPANIES[activeCompany].name} (Nagpur). Your pending balance is ${fmtINR(p.netBalance)} (${p.pendingDays} days). Please arrange payment via ${payDetailReminder}. Thank you.`);
+        const statementWebLink = typeof getPartyStatementPublicUrl === "function" ? getPartyStatementPublicUrl(p.id, activeCompany) : "";
+        const reminderLines = [
+          `*PAYMENT REMINDER — ${COMPANIES[activeCompany].name}*`,
+          `Namaskar *${p.name}*,`,
+          `This is a gentle payment reminder regarding your outstanding balance.`,
+          `--------------------------------`,
+          `*Pending Balance Due: ${fmtINR(p.netBalance)}*`,
+          p.pendingDays > 0 ? `*Aging:* ${p.pendingDays} Days Overdue` : ``,
+          `--------------------------------`,
+          statementWebLink ? `📄 *View Complete Statement & Invoices:*\n👉 ${statementWebLink}` : ``,
+          `\n*Pay Easily via UPI / Bank:*`,
+          payDetailReminder,
+          `\nPlease arrange payment at your earliest convenience.\nThank you!`
+        ].filter(Boolean).join("\n");
+        const waMsg = encodeURIComponent(reminderLines);
         const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
         const isZero = p.netBalance <= 0;
 
@@ -9349,6 +9416,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         recentBills ? `\n*Recent Bills:*\n${recentBills}` : "",
         recentPays ? `\n*Recent Payments:*\n${recentPays}` : "",
         recentCns ? `\n*Credit Notes:*\n${recentCns}` : "",
+        `\n--------------------------------\n📄 *Open Official Statement & Full Ledger:*\n👉 ${typeof getPartyStatementPublicUrl === "function" ? getPartyStatementPublicUrl(p.id, activeCompany) : ""}`,
         `\n*Payment Details:*`,
         (activeCompany === "MADHAV")
           ? `UPI ID: ${upiId}\nBank: Indian Overseas Bank, Bhadravati (MADHAV ENTERPRISES)\nA/c: 308202000000378 | IFSC: IOBA0003082`
@@ -10102,9 +10170,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         : ord.orderQty;
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
-      const shortLink = ord.driveUrl ? getShortDocLink(ord.driveUrl) : "";
-      const docLinkSection = shortLink
-        ? `\n-----------------------------\n📄 *Open Digital Order Memo:*\n👉 ${shortLink}`
+      const memoWebLink = ord.driveUrl
+        ? getShortDocLink(ord.driveUrl)
+        : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("memo", ord.id, activeCompany) : "");
+      const docLinkSection = memoWebLink
+        ? `\n-----------------------------\n📄 *Open Digital Order Memo:*\n👉 ${memoWebLink}`
         : "";
 
       return `*${coName}*
@@ -14345,6 +14415,337 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
+    // ==================== PUBLIC DOCUMENT VIEWER HANDLER (?view=...) ====================
+    function handlePublicDocViewer() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewType = urlParams.get("view");
+        if (!viewType) return false;
+
+        const viewId = urlParams.get("id");
+        const viewPartyId = urlParams.get("partyId");
+        const viewCo = (urlParams.get("co") || "").toUpperCase();
+
+        if (viewCo === "SHIVOM" || viewCo === "MADHAV") {
+          activeCompany = viewCo;
+          localStorage.setItem(ACTIVE_CO_KEY, viewCo);
+        }
+
+        // Show document modal directly
+        function tryOpenDoc() {
+          if (viewType === "invoice") {
+            const ord = (state.orders || []).find(o => o.id === viewId || o.orderNo === viewId);
+            if (ord) {
+              currentPreviewInvoiceOrderId = ord.id;
+              currentPreviewDocType = "INVOICE";
+              openTaxInvoice(ord.id);
+              return true;
+            }
+          } else if (viewType === "memo") {
+            const ord = (state.orders || []).find(o => o.id === viewId || o.orderNo === viewId || o.memoNo === viewId);
+            if (ord) {
+              lastActiveMemoOrderId = ord.id;
+              openOrderBookingMemo(ord.id);
+              return true;
+            }
+          } else if (viewType === "receipt") {
+            const col = (state.collections || []).find(c => c.id === viewId || c.receiptNo === viewId);
+            if (col) {
+              lastActiveColId = col.id;
+              openPaymentReceipt(col.id);
+              return true;
+            }
+          } else if (viewType === "statement") {
+            const targetParty = viewPartyId || viewId;
+            const party = (typeof getComputedParties === "function" ? getComputedParties() : (state.parties || [])).find(p => p.id === targetParty || p.name === targetParty);
+            if (party) {
+              currentStatementPartyId = party.id;
+              printDealerStatement(party.id);
+              return true;
+            }
+          } else if (viewType === "challan") {
+            const ord = (state.orders || []).find(o => o.id === viewId || o.orderNo === viewId);
+            if (ord) {
+              openDeliveryChallan(ord.id);
+              return true;
+            }
+          } else if (viewType === "summary") {
+            const targetDate = urlParams.get("date") || viewId;
+            openDailySummaryReportModal(targetDate);
+            return true;
+          }
+          return false;
+        }
+
+        if (!tryOpenDoc()) {
+          let attempts = 0;
+          const pollTimer = setInterval(() => {
+            attempts++;
+            if (tryOpenDoc() || attempts >= 25) {
+              clearInterval(pollTimer);
+            }
+          }, 350);
+        }
+
+        return true;
+      } catch (err) {
+        console.warn("Public doc viewer handler error:", err);
+        return false;
+      }
+    }
+
+    // ==================== DAILY BUSINESS CLOSING SUMMARY REPORT ====================
+    function openDailySummaryReportModal(targetDate) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const selDate = targetDate || todayStr;
+      const dateEl = document.getElementById("dailySummaryDate");
+      if (dateEl) dateEl.value = selDate;
+      renderDailySummaryContent(selDate);
+      openModal("dailySummaryModal");
+    }
+
+    function renderDailySummaryContent(targetDate) {
+      const selDate = targetDate || (document.getElementById("dailySummaryDate") ? document.getElementById("dailySummaryDate").value : "") || new Date().toISOString().split("T")[0];
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const logoHtml = co.hasLogo
+        ? '<img src="' + getCompanyLogo(activeCompany) + '" alt="Logo" style="height:50px;object-fit:contain;border-radius:6px;" />'
+        : '<div style="font-size:2rem;">🏢</div>';
+
+      // 1. Filter Orders
+      const dayOrders = (state.orders || []).filter(o => o.date === selDate);
+      const bookedOrdersAmt = dayOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+      const dispatchedOrders = dayOrders.filter(o => Number(o.dispatchedQty || 0) > 0 || o.status === "DISPATCHED");
+      const dispatchedAmt = dispatchedOrders.reduce((s, o) => s + getOrderDispatchedAmount(o), 0);
+
+      // 2. Filter Collections
+      const dayCols = (state.collections || []).filter(c => c.date === selDate);
+      const cashCols = dayCols.filter(c => c.mode === 'Cash');
+      const bankCols = dayCols.filter(c => c.mode === 'Bank');
+      const totalCashAmt = cashCols.reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalBankAmt = bankCols.reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalColAmt = totalCashAmt + totalBankAmt;
+
+      // 3. Filter Expenses
+      const dayExps = (state.expenses || []).filter(e => e.date === selDate);
+      const cashExps = dayExps.filter(e => e.mode === 'Cash');
+      const totalCashExpAmt = cashExps.reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalExpAmt = dayExps.reduce((s, e) => s + Number(e.amount || 0), 0);
+
+      // 4. Net Cash Closing
+      const netCashBalance = totalCashAmt - totalCashExpAmt;
+
+      // 5. Total Market Dues
+      const parties = typeof getComputedParties === "function" ? getComputedParties() : (state.parties || []);
+      const totalMarketDue = parties.reduce((s, p) => s + Math.max(0, p.netBalance || 0), 0);
+
+      // Tables HTML
+      let orderRowsHtml = dayOrders.length === 0
+        ? '<tr><td colspan="5" class="text-center" style="padding:10px;color:var(--muted);">No orders booked on this date.</td></tr>'
+        : dayOrders.map((o, idx) => {
+            const memoNo = o.memoNo ? o.memoNo : `OB-${o.orderNo}`;
+            const itemDesc = (o.items && o.items.length > 0)
+              ? o.items.map(it => `${it.productName} (${it.qty})`).join(', ')
+              : `${o.productName} (${o.orderQty})`;
+            return `
+              <tr>
+                <td class="text-center" style="padding:6px;">${idx + 1}</td>
+                <td style="padding:6px;"><strong>#${memoNo}</strong></td>
+                <td style="padding:6px;"><strong>${o.partyName}</strong></td>
+                <td style="padding:6px;font-size:10px;color:#475569;">${itemDesc}</td>
+                <td class="text-right font-bold" style="padding:6px;color:var(--primary);">${fmtINR(getOrderTotalAmount(o))}</td>
+              </tr>
+            `;
+          }).join("");
+
+      let colRowsHtml = dayCols.length === 0
+        ? '<tr><td colspan="6" class="text-center" style="padding:10px;color:var(--muted);">No payment collections recorded on this date.</td></tr>'
+        : dayCols.map((c, idx) => `
+            <tr>
+              <td class="text-center" style="padding:6px;">${idx + 1}</td>
+              <td style="padding:6px;"><strong>#${c.receiptNo}</strong></td>
+              <td style="padding:6px;"><strong>${c.partyName}</strong></td>
+              <td style="padding:6px;"><span class="pill ${c.mode === 'Cash' ? 'pill-green' : 'pill-teal'}" style="font-size:9.5px;">${c.mode}</span></td>
+              <td style="padding:6px;font-size:10px;color:#475569;">${c.salespersonName || '-'}</td>
+              <td class="text-right font-bold" style="padding:6px;color:#15803d;">${fmtINR(c.amount)}</td>
+            </tr>
+          `).join("");
+
+      const container = document.getElementById("dailySummaryPrintArea");
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="inv-top">
+          ${logoHtml}
+          <div class="inv-company">
+            <h2>${co.name}</h2>
+            <div>${co.sub}</div>
+            <div>State: ${co.stateCode || "27"}-${co.stateName || "Maharashtra"}${co.gstin ? ` | <strong>GSTIN: ${co.gstin}</strong>` : ""}</div>
+            <div>Official Closing Report • Nagpur</div>
+          </div>
+        </div>
+
+        <div class="inv-title-bar" style="background:#0f766e;color:#fff;text-align:center;padding:7px;font-weight:800;font-size:13.5px;letter-spacing:1px;margin:10px 0;border-radius:4px;">
+          DAILY BUSINESS CLOSING AUDIT REPORT — ${fmtDate(selDate).toUpperCase()}
+        </div>
+
+        <!-- 4-KPI Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:14px;">
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:10px;border-radius:6px;text-align:center;">
+            <div style="font-size:10.5px;color:#64748b;font-weight:700;">Orders Booked</div>
+            <div style="font-size:15px;font-weight:800;color:var(--primary);margin-top:2px;">${fmtINR(bookedOrdersAmt)}</div>
+            <div style="font-size:10px;color:#64748b;">${dayOrders.length} Bookings</div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:10px;border-radius:6px;text-align:center;">
+            <div style="font-size:10.5px;color:#64748b;font-weight:700;">Dispatched Sales</div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;margin-top:2px;">${fmtINR(dispatchedAmt)}</div>
+            <div style="font-size:10px;color:#64748b;">${dispatchedOrders.length} Invoiced</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;padding:10px;border-radius:6px;text-align:center;">
+            <div style="font-size:10.5px;color:#166534;font-weight:700;">Total Collections</div>
+            <div style="font-size:15px;font-weight:800;color:#15803d;margin-top:2px;">${fmtINR(totalColAmt)}</div>
+            <div style="font-size:10px;color:#166534;">Cash: ${fmtINR(totalCashAmt)} | Bank: ${fmtINR(totalBankAmt)}</div>
+          </div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:6px;text-align:center;">
+            <div style="font-size:10.5px;color:#991b1b;font-weight:700;">Total Market Due</div>
+            <div style="font-size:15px;font-weight:800;color:#dc2626;margin-top:2px;">${fmtINR(totalMarketDue)}</div>
+            <div style="font-size:10px;color:#991b1b;">Active Outstanding</div>
+          </div>
+        </div>
+
+        <!-- Section: Today's Collections -->
+        <div style="font-size:12px;font-weight:700;margin:12px 0 6px;color:#15803d;display:flex;justify-content:space-between;align-items:center;">
+          <span>💵 Payments Received Today (${dayCols.length} Entries)</span>
+          <span style="font-weight:800;">Total: ${fmtINR(totalColAmt)}</span>
+        </div>
+        <div class="inv-table-wrap" style="margin-bottom:14px;">
+          <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
+                <th class="text-center" style="padding:6px;width:35px;">#</th>
+                <th style="padding:6px;width:95px;">Receipt #</th>
+                <th style="padding:6px;">Dealer / Party</th>
+                <th style="padding:6px;width:75px;">Mode</th>
+                <th style="padding:6px;">Collected By</th>
+                <th class="text-right" style="padding:6px;width:95px;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${colRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section: Today's Orders -->
+        <div style="font-size:12px;font-weight:700;margin:14px 0 6px;color:var(--primary);display:flex;justify-content:space-between;align-items:center;">
+          <span>🛒 Orders Booked Today (${dayOrders.length} Entries)</span>
+          <span style="font-weight:800;">Total: ${fmtINR(bookedOrdersAmt)}</span>
+        </div>
+        <div class="inv-table-wrap" style="margin-bottom:14px;">
+          <table class="inv-table" style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
+                <th class="text-center" style="padding:6px;width:35px;">#</th>
+                <th style="padding:6px;width:95px;">Memo #</th>
+                <th style="padding:6px;">Dealer / Party</th>
+                <th style="padding:6px;">Products / Units</th>
+                <th class="text-right" style="padding:6px;width:95px;">Estimated Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orderRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section: Cash in Hand & Net Movement -->
+        <div style="padding:10px 14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;">
+          <div>
+            <strong>Counter Cash Inflow:</strong> ${fmtINR(totalCashAmt)} &nbsp;|&nbsp;
+            <strong>Cash Expenses Paid:</strong> -${fmtINR(totalCashExpAmt)} &nbsp;|&nbsp;
+            <strong>Net Day Cash Balance:</strong> <span style="font-weight:800;color:#15803d;">${fmtINR(netCashBalance)}</span>
+          </div>
+          <div style="font-size:10.5px;color:#64748b;">
+            Bank / UPI Inflow: <strong>${fmtINR(totalBankAmt)}</strong>
+          </div>
+        </div>
+
+        <!-- Sign-off Block -->
+        <div style="margin-top:20px;padding-top:10px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:flex-end;font-size:10.5px;">
+          <div>
+            <strong>Report Generated At:</strong> ${new Date().toLocaleTimeString()} • ${fmtDate(selDate)}<br/>
+            <span>Audited &amp; Compiled by Madhav Shivom Dual ERP v39</span>
+          </div>
+          <div style="text-align:right;">
+            <br/><br/>
+            <strong>For ${co.name}</strong><br/>
+            <span>Authorized Signatory / Owner</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function downloadDailySummaryPdf() {
+      const el = document.getElementById("dailySummaryPrintArea");
+      if (!el) return;
+      const dateInput = document.getElementById("dailySummaryDate");
+      const selectedDate = (dateInput ? dateInput.value : "") || new Date().toISOString().split("T")[0];
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      const fileName = `Daily_Closing_Summary_${activeCompany}_${selectedDate}.pdf`;
+
+      if (window.html2pdf) {
+        showToast("⏳ Generating Daily Summary PDF...");
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(el).save().then(() => {
+          showToast("✅ Daily Summary PDF Downloaded!");
+        });
+      } else {
+        triggerDocumentPrint('Daily_Closing_Summary');
+      }
+    }
+
+    function shareDailySummaryWhatsApp() {
+      const dateInput = document.getElementById("dailySummaryDate");
+      const selectedDate = (dateInput ? dateInput.value : "") || new Date().toISOString().split("T")[0];
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
+      
+      const dayOrders = (state.orders || []).filter(o => o.date === selectedDate);
+      const totalOrdersAmt = dayOrders.reduce((s, o) => s + getOrderTotalAmount(o), 0);
+      
+      const dayCols = (state.collections || []).filter(c => c.date === selectedDate);
+      const totalCash = dayCols.filter(c => c.mode === 'Cash').reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalBank = dayCols.filter(c => c.mode === 'Bank').reduce((s, c) => s + Number(c.amount || 0), 0);
+      const totalCols = totalCash + totalBank;
+
+      const totalMarketDue = (typeof getComputedParties === "function" ? getComputedParties() : (state.parties || [])).reduce((s, p) => s + Math.max(0, p.netBalance || 0), 0);
+      const appOrigin = getAppBaseUrl();
+      const summaryUrl = `${appOrigin}/?view=summary&date=${selectedDate}&co=${activeCompany}`;
+
+      const msg = [
+        `*📊 DAILY BUSINESS CLOSING REPORT — ${co.name}*`,
+        `Date: *${fmtDate(selectedDate)}*`,
+        `--------------------------------`,
+        `🛒 *New Orders Booked:* ${dayOrders.length} Orders (${fmtINR(totalOrdersAmt)})`,
+        `💵 *Total Collections:* ${fmtINR(totalCols)}`,
+        `   • Cash: ${fmtINR(totalCash)}`,
+        `   • Bank / UPI: ${fmtINR(totalBank)}`,
+        `🔴 *Total Market Dues:* ${fmtINR(totalMarketDue)}`,
+        `--------------------------------`,
+        `📄 *Open Detailed Closing Report PDF:*\n👉 ${summaryUrl}`,
+        `--------------------------------`,
+        `Generated by Madhav Shivom ERP Portal`
+      ].join("\n");
+
+      const ownerPhone = "7499477581";
+      const waUrl = `https://wa.me/91${ownerPhone}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, "_blank");
+    }
+
     function openTaxInvoice(orderId) {
       const ord = state.orders.find(o => o.id === orderId);
       if (!ord) return;
@@ -14612,7 +15013,7 @@ Thank you! Your payment has been received successfully.`;
           ? `IGST: ${fmtINR(gst.totalIgst)}`
           : `CGST: ${fmtINR(gst.totalCgst)} | SGST: ${fmtINR(gst.totalSgst)}`,
         `*GRAND TOTAL: ${fmtINR(gst.roundedGrandTotal)}*`,
-        (ord.invoiceDriveUrl || ord.driveUrl) ? `\n📄 *Open Official GST Invoice:*\n👉 ${getShortDocLink(ord.invoiceDriveUrl || ord.driveUrl)}` : "",
+        `\n📄 *Open Official GST Invoice:*\n👉 ${(ord.invoiceDriveUrl || ord.driveUrl) ? getShortDocLink(ord.invoiceDriveUrl || ord.driveUrl) : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("invoice", ord.id, activeCompany) : "")}`,
         gst.ewayRequired ? `⚠️ E-Way Bill Applicable (≥ ₹50,000)` : "",
         `\n*Pay Easily via UPI / Bank:*`,
         (activeCompany === "MADHAV")
@@ -17256,7 +17657,7 @@ Thank you! Your payment has been received successfully.`;
       } else {
         itemsList = `• ${ord.productName || "General Goods"} — ${ord.orderQty} Units`;
       }
-      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery\nThank you!`;
+      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery\n📄 *Open Delivery Challan:*\n👉 ${typeof getPublicDocUrl === "function" ? getPublicDocUrl("challan", ord.id, activeCompany) : ""}\nThank you!`;
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -17418,9 +17819,9 @@ Thank you! Your payment has been received successfully.`;
       const remBal = computed ? computed.netBalance : 0;
       const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
       const targetDriveUrl = col.driveUrl || col.receiptDriveUrl || col.proofDriveUrl;
-      const shortLink = targetDriveUrl ? getShortDocLink(targetDriveUrl) : "";
-      const docLinkSection = shortLink
-        ? `\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${shortLink}`
+      const receiptWebLink = targetDriveUrl ? getShortDocLink(targetDriveUrl) : (typeof getPublicDocUrl === "function" ? getPublicDocUrl("receipt", col.id, activeCompany) : "");
+      const docLinkSection = receiptWebLink
+        ? `\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${receiptWebLink}`
         : "";
       const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
       const waUrl = cleanPhone.length >= 10
