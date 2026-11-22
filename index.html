@@ -142,44 +142,49 @@
     .brand p { font-size: 0.72rem; opacity: 0.9; margin-top: 2px; }
     .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    /* Header Company Switcher Tabs */
+    /* Header Company Switcher Tabs - Prominent & Thumb-Friendly */
     .company-switcher {
       display: inline-flex;
-      background: rgba(15, 23, 42, 0.5);
-      padding: 3px;
-      border-radius: 9px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      gap: 3px;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.65);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      gap: 5px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     .co-tab-btn {
-      padding: 5px 11px;
-      border-radius: 7px;
-      font-size: 0.76rem;
-      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
       color: rgba(255, 255, 255, 0.85);
       background: transparent;
-      border: none;
+      border: 1.5px solid transparent;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       transition: all 0.18s ease;
       white-space: nowrap;
+      letter-spacing: 0.2px;
     }
     .co-tab-btn:hover {
       color: #fff;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.18);
     }
     .co-tab-btn.active {
       background: #ffffff;
-      color: #0f172a;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+      font-weight: 900;
     }
     .co-tab-btn.active.madhav-active {
       color: #1e3a5f;
+      border-color: #3b82f6;
     }
     .co-tab-btn.active.shivom-active {
       color: #0f766e;
+      border-color: #10b981;
     }
 
     .badge-status {
@@ -1170,7 +1175,15 @@
         object-fit: contain !important;
       }
       .top-actions {
-        gap: 4px !important;
+        gap: 6px !important;
+      }
+      .company-switcher {
+        padding: 3px !important;
+        gap: 3px !important;
+      }
+      .co-tab-btn {
+        padding: 6px 12px !important;
+        font-size: 0.83rem !important;
       }
       .order-date-col, .order-party-col, .order-salesperson-col {
         flex: 1 1 100% !important;
