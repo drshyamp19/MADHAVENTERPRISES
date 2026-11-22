@@ -2358,14 +2358,25 @@
                 ℹ️ Rule: Party outstanding balance will only be credited once the cheque is marked Cleared. Until then, status remains 'In Hand'.
               </div>
             </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label>Attach Payment Proof / Cheque Photo / Slip (Optional)</label>
-              <div style="display:flex;gap:10px;align-items:center;">
-                <input type="file" id="colProofFile" accept="image/*" capture="environment" class="form-control" onchange="handleProofImageSelect(event)" style="padding:6px;" />
-                <button type="button" id="colClearProofBtn" class="btn btn-sm btn-danger" style="display:none;" onclick="clearProofImage()">✕ Remove</button>
+            <div class="form-group" id="colProofGroup" style="display:none;grid-column: span 2;">
+              <label id="colProofLabel" style="font-weight:700;">📸 Attach Payment Proof / Cheque Photo <span style="color:#ef4444;font-weight:800;">*</span></label>
+              <input type="file" id="colProofFile" accept="image/*" onchange="handleProofImageSelect(event)" style="display:none;" />
+              
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <button type="button" class="btn btn-sm" id="colPickProofBtn" onclick="document.getElementById('colProofFile').click()" style="background:#f0fdf4;border:1.5px dashed #16a34a;color:#15803d;font-weight:700;padding:12px 16px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font-size:0.92rem;cursor:pointer;">
+                  <span id="colPickProofBtnText">📷 Take Photo / 🖼️ Choose from Gallery</span>
+                </button>
+                <div id="colProofHint" style="font-size:0.75rem;color:#64748b;font-style:italic;">
+                  Tap to capture photo with camera or choose screenshot from gallery.
+                </div>
               </div>
-              <div id="colProofPreview" style="margin-top:8px;display:none;">
-                <img id="colProofImgTag" src="" style="max-height:100px;border-radius:6px;border:1px solid #cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,0.1);" />
+
+              <div id="colProofPreview" style="margin-top:10px;display:none;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #cbd5e1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <span id="colProofBadge" style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">✓ Photo Attached</span>
+                  <button type="button" id="colClearProofBtn" class="btn btn-sm btn-danger" style="padding:3px 10px;font-size:0.78rem;" onclick="clearProofImage()">✕ Remove Photo</button>
+                </div>
+                <img id="colProofImgTag" src="" alt="Payment Proof" style="max-height:140px;width:auto;border-radius:6px;border:1px solid #cbd5e1;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:block;" />
               </div>
             </div>
             <div class="form-group" style="grid-column: span 2;">
@@ -7300,6 +7311,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const modeEl = document.getElementById("colMode");
       const bankGrp = document.getElementById("colDepositAccountGroup");
       const chqGrp = document.getElementById("colChequeFieldsGroup");
+      const proofGrp = document.getElementById("colProofGroup");
+      const proofLabel = document.getElementById("colProofLabel");
+      const proofHint = document.getElementById("colProofHint");
 
       const isVikram = currentStaff && (currentStaff.name.toUpperCase().includes("VIKARAM") || currentStaff.name.toUpperCase().includes("VIKRAM"));
       if (isVikram && modeEl && modeEl.value === "Cash") {
@@ -7308,8 +7322,35 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       }
 
       if (modeEl) {
-        if (bankGrp) bankGrp.style.display = (modeEl.value === "Bank") ? "block" : "none";
-        if (chqGrp) chqGrp.style.display = (modeEl.value === "Cheque") ? "block" : "none";
+        const val = modeEl.value;
+        if (bankGrp) bankGrp.style.display = (val === "Bank") ? "block" : "none";
+        if (chqGrp) chqGrp.style.display = (val === "Cheque") ? "block" : "none";
+
+        if (proofGrp) {
+          if (val === "Cash") {
+            // For Cash: hide proof group completely & reset proof image
+            proofGrp.style.display = "none";
+            clearProofImage();
+          } else if (val === "Bank") {
+            // For Bank / UPI: proof is mandatory
+            proofGrp.style.display = "block";
+            if (proofLabel) {
+              proofLabel.innerHTML = '📸 Attach UPI Payment Screenshot / Transaction Slip <span style="color:#ef4444;font-weight:800;">*</span>';
+            }
+            if (proofHint) {
+              proofHint.textContent = 'ℹ️ Mandatory: Take photo or select UPI payment screenshot / bank slip.';
+            }
+          } else if (val === "Cheque") {
+            // For Cheque: cheque photo is mandatory
+            proofGrp.style.display = "block";
+            if (proofLabel) {
+              proofLabel.innerHTML = '📸 Attach Cheque Photo (Front Side) <span style="color:#ef4444;font-weight:800;">*</span>';
+            }
+            if (proofHint) {
+              proofHint.textContent = 'ℹ️ Mandatory: Take a clear photo of the physical cheque showing Cheque No, Bank, and Sign.';
+            }
+          }
+        }
       }
       updateColQrBanner();
     }
@@ -13772,6 +13813,20 @@ Thank you! Your payment has been received successfully.`;
         return;
       }
 
+      // Mandatory Proof Validation for Bank/UPI and Cheque
+      if (colModeVal === "Bank" && !currentProofBase64) {
+        alert("⚠️ Mandatory Proof Required: Please attach UPI payment screenshot or bank slip before saving receipt.");
+        const pickBtn = document.getElementById("colPickProofBtn");
+        if (pickBtn) pickBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (colModeVal === "Cheque" && !currentProofBase64) {
+        alert("⚠️ Mandatory Proof Required: Please attach a clear photo of the physical cheque before saving receipt.");
+        const pickBtn = document.getElementById("colPickProofBtn");
+        if (pickBtn) pickBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       let depositAccountVal = null;
       let chequeNo = null;
       let chequeBank = null;
@@ -13871,6 +13926,8 @@ Thank you! Your payment has been received successfully.`;
       }
       clearProofImage();
       document.getElementById("colAmount").value = "";
+      document.getElementById("colMode").value = "Cash";
+      toggleColDepositAccount();
       document.getElementById("colRef").value = "";
       document.getElementById("colPartyInput").value = "";
       if (document.getElementById("colChequeNo")) document.getElementById("colChequeNo").value = "";
@@ -17760,9 +17817,11 @@ Thank you! Your payment has been received successfully.`;
           const prevWrap = document.getElementById("colProofPreview");
           const imgTag = document.getElementById("colProofImgTag");
           const clrBtn = document.getElementById("colClearProofBtn");
+          const btnText = document.getElementById("colPickProofBtnText");
           if (imgTag) imgTag.src = currentProofBase64;
           if (prevWrap) prevWrap.style.display = "block";
           if (clrBtn) clrBtn.style.display = "inline-flex";
+          if (btnText) btnText.innerHTML = "🔄 Change Photo / Screenshot";
         };
         img.src = evt.target.result;
       };
@@ -17776,9 +17835,11 @@ Thank you! Your payment has been received successfully.`;
       const prevWrap = document.getElementById("colProofPreview");
       const imgTag = document.getElementById("colProofImgTag");
       const clrBtn = document.getElementById("colClearProofBtn");
+      const btnText = document.getElementById("colPickProofBtnText");
       if (imgTag) imgTag.src = "";
       if (prevWrap) prevWrap.style.display = "none";
       if (clrBtn) clrBtn.style.display = "none";
+      if (btnText) btnText.innerHTML = "📷 Take Photo / 🖼️ Choose from Gallery";
     }
 
     let activeProofColId = null;
