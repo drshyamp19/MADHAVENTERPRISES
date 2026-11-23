@@ -253,6 +253,17 @@
       text-decoration: none;
     }
     .btn:hover { transform: translateY(-1px); filter: brightness(1.04); }
+    .btn:active, button:active, input[type="button"]:active, input[type="submit"]:active {
+      transform: scale(0.96) translateY(1px) !important;
+      filter: brightness(0.9) !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.18) !important;
+    }
+    .btn-clicked-effect {
+      transform: scale(0.95) !important;
+      filter: brightness(0.85) !important;
+      opacity: 0.85 !important;
+      transition: transform 0.1s ease, filter 0.1s ease !important;
+    }
     .btn-white { background: #fff; color: var(--primary); }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-success { background: #15803d; color: #fff; }
@@ -1387,7 +1398,6 @@
         font-size: 0.85rem;
       }
       .memo-mobile-summary-card {
-        display: block !important;
         background: #f8fafc;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
@@ -2139,7 +2149,7 @@
                 No items added yet. Select a product above, enter rate and click "➕ Add Item".
               </div>
             </div>
-            <div class="memo-mobile-summary-card" id="memoMobileSummaryCard" style="display:none;">
+            <div class="memo-mobile-summary-card" id="memoMobileSummaryCard" style="display:none !important;">
               <div class="memo-mobile-summary-row">
                 <span style="color:#64748b;font-weight:600;">Total Units:</span>
                 <strong id="memoMobileTotalQty" style="font-size:0.95rem;color:#0f172a;">0 Units</strong>
@@ -2151,10 +2161,10 @@
             </div>
 
             <div class="memo-cart-action-btns" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-              <button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:9px 16px;font-weight:600;" onclick="clearMemoCart()">
+              <button id="btnClearMemoCart" type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:9px 16px;font-weight:600;touch-action:manipulation;cursor:pointer;" onclick="clearMemoCart()">
                 🗑️ Clear Items
               </button>
-              <button type="button" class="btn btn-primary" style="padding:12px 24px;font-size:0.95rem;font-weight:700;" onclick="submitOrderMemo()">
+              <button id="btnSubmitOrderMemo" type="button" class="btn btn-primary" style="padding:12px 24px;font-size:0.95rem;font-weight:700;touch-action:manipulation;cursor:pointer;" onclick="submitOrderMemo()">
                 📝 Save &amp; Generate Order Booking Memo
               </button>
             </div>
@@ -3515,7 +3525,7 @@
   <!-- ==================== ORDER BOOKING MEMO SUCCESS & WHATSAPP MODAL ==================== -->
   <div class="modal-backdrop" id="orderSuccessModal">
     <div class="modal" style="max-width:480px;text-align:center;position:relative;max-height:88vh;overflow-y:auto;padding:18px 14px;">
-      <button type="button" onclick="closeModal('orderSuccessModal')" style="position:absolute;top:10px;right:10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;" title="Close">✕</button>
+      <button type="button" onclick="closeOrderSuccessModal()" style="position:absolute;top:10px;right:10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;" title="Close">✕</button>
       <div style="font-size:2.2rem;margin-bottom:4px;">📝</div>
       <h3 style="color:#0f766e;margin-bottom:2px;font-size:1.18rem;">Order Saved Successfully!</h3>
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Memo No: <strong id="succOrdNo" style="color:var(--primary);">#OB-1050</strong></p>
@@ -3535,7 +3545,7 @@
             📒 Go to Ledger
           </button>
         </div>
-        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#64748b;font-weight:600;padding:8px;font-size:0.82rem;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="closeModal('orderSuccessModal')">
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#64748b;font-weight:600;padding:8px;font-size:0.82rem;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="closeOrderSuccessModal()">
           ✕ Done / Close
         </button>
       </div>
@@ -15470,6 +15480,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         if (typeof renderOpenDealers === "function") renderOpenDealers();
       } else if (tabId === "admin-orders") {
         if (typeof renderOrdersTable === "function") renderOrdersTable();
+        if (typeof renderMemoCart === "function") renderMemoCart();
         if (typeof updateSubTabBadges === "function") updateSubTabBadges();
       } else if (tabId === "admin-collection") {
         if (typeof renderCollectionTable === "function") renderCollectionTable();
@@ -15491,6 +15502,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
     function openModal(id) { document.getElementById(id).classList.add("open"); }
     function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+    function closeOrderSuccessModal() {
+      closeModal("orderSuccessModal");
+      memoCart = [];
+      if (typeof renderMemoCart === "function") renderMemoCart();
+    }
 
     // ==================== OWNER AUTHENTICATION ====================
     
@@ -18092,6 +18108,8 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         `;
         totalQtyEl.textContent = "0 Units";
         totalAmtEl.textContent = "₹0.00";
+        if (mobileTotalQtyEl) mobileTotalQtyEl.textContent = "0 Units";
+        if (mobileTotalAmtEl) mobileTotalAmtEl.textContent = "₹0.00";
         if (gstSummaryEl) gstSummaryEl.style.display = "none";
         if (mobileListEl) {
           mobileListEl.innerHTML = `
@@ -18100,7 +18118,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
             </div>
           `;
         }
-        if (mobileSumCard) mobileSumCard.style.display = "none";
+        if (mobileSumCard) {
+          mobileSumCard.style.setProperty("display", "none", "important");
+        }
         return;
       }
 
@@ -18144,7 +18164,9 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
       if (mobileTotalQtyEl) mobileTotalQtyEl.textContent = totalQty + " Units";
       if (mobileTotalAmtEl) mobileTotalAmtEl.textContent = fmtINR(totalGrand);
-      if (mobileSumCard) mobileSumCard.style.display = "block";
+      if (mobileSumCard) {
+        mobileSumCard.style.setProperty("display", "block", "important");
+      }
 
       if (mobileListEl) {
         mobileListEl.innerHTML = computedLines.map((it, idx) => {
@@ -18203,16 +18225,33 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
     }
 
     function clearMemoCart() {
-      if (memoCart.length === 0) return;
+      const btn = document.getElementById("btnClearMemoCart") || document.querySelector('button[onclick="clearMemoCart()"]');
+      if (btn) {
+        btn.classList.add("btn-clicked-effect");
+        setTimeout(() => btn.classList.remove("btn-clicked-effect"), 300);
+      }
+      if (memoCart.length === 0) {
+        memoCart = [];
+        renderMemoCart();
+        showToast("ℹ️ Cart is already empty.");
+        return;
+      }
       if (confirm("Are you sure you want to clear all items from this order memo?")) {
         memoCart = [];
         renderMemoCart();
+        showToast("🗑️ Cart items cleared!");
       }
     }
 
     async function submitOrderMemo() {
+      const submitBtn = document.getElementById("btnSubmitOrderMemo") || document.querySelector('button[onclick="submitOrderMemo()"]');
+      if (submitBtn) {
+        submitBtn.classList.add("btn-clicked-effect");
+      }
+
       if (!isAdminLoggedIn && !currentStaff) {
         alert("Please login first to book an order memo.");
+        if (submitBtn) submitBtn.classList.remove("btn-clicked-effect");
         return;
       }
 
@@ -18220,12 +18259,14 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const party = findPartyByName(partyInput.value);
       if (!party) {
         alert("Please select a valid Party from the dropdown list.");
+        if (submitBtn) submitBtn.classList.remove("btn-clicked-effect");
         partyInput.focus();
         return;
       }
 
       if (memoCart.length === 0) {
         alert("Order memo is empty! Please add at least 1 product item before saving.");
+        if (submitBtn) submitBtn.classList.remove("btn-clicked-effect");
         document.getElementById("ordProductInput").focus();
         return;
       }
@@ -18233,119 +18274,146 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const ordDate = document.getElementById("ordDate").value;
       if (!ordDate) {
         alert("Please select order memo date.");
+        if (submitBtn) submitBtn.classList.remove("btn-clicked-effect");
         return;
       }
 
-      const salespersonName = currentStaff ? currentStaff.name : (document.getElementById("ordSalesperson").value || "Direct");
-      let maxOrderNum = 199;
-      (state.orders || []).forEach(o => {
-        const m = String(o.memoNo || o.orderNo || "").match(/(\d+)$/);
-        if (m) {
-          const n = parseInt(m[1], 10);
-          if (!isNaN(n) && n > maxOrderNum) maxOrderNum = n;
-        }
-      });
-      const nextNum = maxOrderNum + 1;
-      const memoNo = "OB-" + nextNum;
-      const gstPricingMode = document.getElementById("ordGstMode")?.value || "inclusive";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "⏳ Saving Order Memo...";
+      }
 
-      const totalQty = memoCart.reduce((s, it) => s + Number(it.qty || 0), 0);
-      const savedItems = memoCart.map(it => {
-        const gstPct = Number(it.gst != null ? it.gst : 18);
-        const isFoc = Boolean(it.isFoc || Number(it.rate) === 0);
-        const base = Number(it.qty) * Number(it.rate);
-        let taxableAmt = 0, gstAmt = 0, lineTotal = 0;
-        if (!isFoc) {
-          if (gstPricingMode === "exclusive") {
-            taxableAmt = base;
-            gstAmt = Number((taxableAmt * gstPct / 100).toFixed(2));
-            lineTotal = Number((taxableAmt + gstAmt).toFixed(2));
-          } else {
-            lineTotal = Number(base.toFixed(2));
-            taxableAmt = gstPct > 0 ? Number((lineTotal / (1 + gstPct / 100)).toFixed(2)) : lineTotal;
-            gstAmt = Number((lineTotal - taxableAmt).toFixed(2));
+      try {
+        const salespersonName = currentStaff ? currentStaff.name : (document.getElementById("ordSalesperson").value || "Direct");
+        let maxOrderNum = 199;
+        (state.orders || []).forEach(o => {
+          const m = String(o.memoNo || o.orderNo || "").match(/(\d+)$/);
+          if (m) {
+            const n = parseInt(m[1], 10);
+            if (!isNaN(n) && n > maxOrderNum) maxOrderNum = n;
+          }
+        });
+        const nextNum = maxOrderNum + 1;
+        const memoNo = "OB-" + nextNum;
+        const gstPricingMode = document.getElementById("ordGstMode")?.value || "inclusive";
+
+        const totalQty = memoCart.reduce((s, it) => s + Number(it.qty || 0), 0);
+        const savedItems = memoCart.map(it => {
+          const gstPct = Number(it.gst != null ? it.gst : 18);
+          const isFoc = Boolean(it.isFoc || Number(it.rate) === 0);
+          const base = Number(it.qty) * Number(it.rate);
+          let taxableAmt = 0, gstAmt = 0, lineTotal = 0;
+          if (!isFoc) {
+            if (gstPricingMode === "exclusive") {
+              taxableAmt = base;
+              gstAmt = Number((taxableAmt * gstPct / 100).toFixed(2));
+              lineTotal = Number((taxableAmt + gstAmt).toFixed(2));
+            } else {
+              lineTotal = Number(base.toFixed(2));
+              taxableAmt = gstPct > 0 ? Number((lineTotal / (1 + gstPct / 100)).toFixed(2)) : lineTotal;
+              gstAmt = Number((lineTotal - taxableAmt).toFixed(2));
+            }
+          }
+          return {
+            productId: it.productId,
+            productName: it.productName,
+            code: it.code,
+            hsn: it.hsn || "85166000",
+            gst: gstPct,
+            qty: Number(it.qty),
+            rate: Number(it.rate),
+            isFoc: isFoc,
+            taxableAmt: taxableAmt,
+            gstAmt: gstAmt,
+            totalAmt: lineTotal,
+            dispatchedQty: 0
+          };
+        });
+        const totalAmt = Number(savedItems.reduce((s, it) => s + Number(it.totalAmt || 0), 0).toFixed(2));
+        const computedParty = getComputedParties().find(cp => cp.id === party.id);
+        if (computedParty) {
+          const projectedDue = Number(computedParty.netBalance || 0) + totalAmt;
+          const limit = Number(computedParty.creditLimit || 0);
+          if (limit > 0 && projectedDue > limit) {
+            if (!confirm(`⚠️ CREDIT LIMIT ALERT for "${party.name}"!\n\nCurrent Due: ${fmtINR(computedParty.netBalance)}\nThis Order: ${fmtINR(totalAmt)}\nNew Projected Due: ${fmtINR(projectedDue)}\nSet Credit Limit: ${fmtINR(limit)}\n\nDo you still want to book this order?`)) {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "📝 Save &amp; Generate Order Booking Memo";
+                submitBtn.classList.remove("btn-clicked-effect");
+              }
+              return;
+            }
+          } else if (computedParty.pendingDays >= 60 && computedParty.netBalance > 0) {
+            if (!confirm(`⚠️ OVERDUE PAYMENT WARNING for "${party.name}"!\n\nBalance Due: ${fmtINR(computedParty.netBalance)} (${computedParty.pendingDays} days overdue).\n\nDo you still want to book this new order (${fmtINR(totalAmt)})?`)) {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "📝 Save &amp; Generate Order Booking Memo";
+                submitBtn.classList.remove("btn-clicked-effect");
+              }
+              return;
+            }
           }
         }
-        return {
-          productId: it.productId,
-          productName: it.productName,
-          code: it.code,
-          hsn: it.hsn || "85166000",
-          gst: gstPct,
-          qty: Number(it.qty),
-          rate: Number(it.rate),
-          isFoc: isFoc,
-          taxableAmt: taxableAmt,
-          gstAmt: gstAmt,
-          totalAmt: lineTotal,
-          dispatchedQty: 0
+        const newOrder = {
+          id: "ORD_" + Date.now(),
+          orderNo: String(nextNum),
+          memoNo: memoNo,
+          gstInvoiceNo: null,
+          dispatchDate: null,
+          dcNo: null,
+          gstPricingMode: gstPricingMode,
+          date: ordDate,
+          partyId: party.id,
+          partyName: party.name,
+          salespersonName: salespersonName,
+          items: savedItems,
+          // For backwards compatibility with older reports and single-item tables:
+          productId: savedItems[0].productId,
+          productName: savedItems.map(it => `${it.productName} (${it.qty})`).join(", "),
+          orderQty: totalQty,
+          dispatchedQty: 0,
+          rate: totalAmt / (totalQty || 1),
+          gst: savedItems[0].gst,
+          totalAmt: totalAmt
         };
-      });
-      const totalAmt = Number(savedItems.reduce((s, it) => s + Number(it.totalAmt || 0), 0).toFixed(2));
-      const computedParty = getComputedParties().find(cp => cp.id === party.id);
-      if (computedParty) {
-        const projectedDue = Number(computedParty.netBalance || 0) + totalAmt;
-        const limit = Number(computedParty.creditLimit || 0);
-        if (limit > 0 && projectedDue > limit) {
-          if (!confirm(`⚠️ CREDIT LIMIT ALERT for "${party.name}"!\n\nCurrent Due: ${fmtINR(computedParty.netBalance)}\nThis Order: ${fmtINR(totalAmt)}\nNew Projected Due: ${fmtINR(projectedDue)}\nSet Credit Limit: ${fmtINR(limit)}\n\nDo you still want to book this order?`)) {
-            return;
-          }
-        } else if (computedParty.pendingDays >= 60 && computedParty.netBalance > 0) {
-          if (!confirm(`⚠️ OVERDUE PAYMENT WARNING for "${party.name}"!\n\nBalance Due: ${fmtINR(computedParty.netBalance)} (${computedParty.pendingDays} days overdue).\n\nDo you still want to book this new order (${fmtINR(totalAmt)})?`)) {
-            return;
-          }
+
+        // 1. Instantly clear memo cart and reset order form inputs
+        memoCart = [];
+        renderMemoCart();
+        if (partyInput) partyInput.value = "";
+        const pInp = document.getElementById("ordProductInput");
+        if (pInp) pInp.value = "";
+        const rInp = document.getElementById("ordRate");
+        if (rInp) rInp.value = "";
+        const qInp = document.getElementById("ordQty");
+        if (qInp) qInp.value = "1";
+        const dueAlert = document.getElementById("ordPartyDueAlert");
+        if (dueAlert) dueAlert.innerHTML = "";
+
+        // 2. Save order locally and refresh tables immediately
+        state.orders.unshift(newOrder);
+        persistLocal();
+        refreshAll();
+
+        // 3. Background Firebase sync (non-blocking)
+        if (isFirebaseLive && db) {
+          const prefix = activeCompany.toLowerCase() + "_";
+          db.collection(prefix + "orders").doc(newOrder.id).set(newOrder).catch(e => console.warn("Firebase sync error:", e));
+        }
+
+        showToast(`Order Booking Memo #${newOrder.memoNo} Saved Successfully!`);
+        autoBackupOrderMemoToDrive(newOrder, false);
+        showOrderSuccessModal(newOrder, party);
+      } catch (err) {
+        console.error("Order submit error:", err);
+        showToast("⚠️ Error saving order. Please try again.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = "📝 Save &amp; Generate Order Booking Memo";
+          submitBtn.classList.remove("btn-clicked-effect");
         }
       }
-      const newOrder = {
-        id: "ORD_" + Date.now(),
-        orderNo: String(nextNum),
-        memoNo: memoNo,
-        gstInvoiceNo: null,
-        dispatchDate: null,
-        dcNo: null,
-        gstPricingMode: gstPricingMode,
-        date: ordDate,
-        partyId: party.id,
-        partyName: party.name,
-        salespersonName: salespersonName,
-        items: savedItems,
-        // For backwards compatibility with older reports and single-item tables:
-        productId: savedItems[0].productId,
-        productName: savedItems.map(it => `${it.productName} (${it.qty})`).join(", "),
-        orderQty: totalQty,
-        dispatchedQty: 0,
-        rate: totalAmt / (totalQty || 1),
-        gst: savedItems[0].gst,
-        totalAmt: totalAmt
-      };
-
-      // 1. Instantly clear memo cart and reset order form inputs
-      memoCart = [];
-      renderMemoCart();
-      if (partyInput) partyInput.value = "";
-      const pInp = document.getElementById("ordProductInput");
-      if (pInp) pInp.value = "";
-      const rInp = document.getElementById("ordRate");
-      if (rInp) rInp.value = "";
-      const qInp = document.getElementById("ordQty");
-      if (qInp) qInp.value = "1";
-      const dueAlert = document.getElementById("ordPartyDueAlert");
-      if (dueAlert) dueAlert.innerHTML = "";
-
-      // 2. Save order locally and refresh tables immediately
-      state.orders.unshift(newOrder);
-      persistLocal();
-      refreshAll();
-
-      // 3. Background Firebase sync (non-blocking)
-      if (isFirebaseLive && db) {
-        const prefix = activeCompany.toLowerCase() + "_";
-        db.collection(prefix + "orders").doc(newOrder.id).set(newOrder).catch(e => console.warn("Firebase sync error:", e));
-      }
-
-      showToast(`Order Booking Memo #${newOrder.memoNo} Saved Successfully!`);
-      autoBackupOrderMemoToDrive(newOrder, false);
-      showOrderSuccessModal(newOrder, party);
     }
 
     function getOrderMemoWhatsAppText(ord, party) {
@@ -18427,6 +18495,8 @@ Thank you!`;
       if (typeof switchTab === "function") {
         switchTab("orders");
       }
+      memoCart = [];
+      renderMemoCart();
       const partyInp = document.getElementById("ordPartyInput");
       if (partyInp) {
         partyInp.value = "";
