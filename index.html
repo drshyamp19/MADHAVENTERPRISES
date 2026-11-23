@@ -3445,8 +3445,9 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
         <h3 style="margin:0;font-size:1.05rem;">Official Payment Receipt Preview</h3>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share on WhatsApp</button>
-          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('paymentReceiptModal')">← Back</button>
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;" onclick="shareCurrentReceiptWhatsApp(lastActiveColId)">💬 Share Text</button>
+          <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)" title="Share Payment Receipt PDF directly on WhatsApp">📤 Share PDF</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 14px;" onclick="closeModal('paymentReceiptModal')">← Back</button>
         </div>
       </div>
       <div id="receiptPrintArea" class="invoice-paper" style="max-width:680px;margin:0 auto;background:#fff;padding:24px;border:1px solid #cbd5e1;border-radius:8px;"></div>
@@ -3534,8 +3535,11 @@
         ⚡ Ready to Share on WhatsApp
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-        <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareOrderFromSuccessModal()">
-          💬 Share on WhatsApp
+        <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareOrderFromSuccessModal()">
+          💬 Share Summary on WhatsApp
+        </button>
+        <button id="succOrdPdfShareBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0284c7;color:#ffffff;box-shadow:0 2px 6px rgba(2,132,199,0.3);" onclick="shareOrderPdfOnWhatsApp(lastActiveOrd ? lastActiveOrd.id : null)">
+          📤 Share PDF Document on WhatsApp
         </button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="bookNewOrderFromSuccess()">
@@ -3578,8 +3582,11 @@
         ⚡ Ready to Share on WhatsApp
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-        <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareCollectionFromSuccessModal()">
-          💬 Share on WhatsApp
+        <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareCollectionFromSuccessModal()">
+          💬 Share Receipt on WhatsApp
+        </button>
+        <button id="succColPdfShareBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0284c7;color:#ffffff;box-shadow:0 2px 6px rgba(2,132,199,0.3);" onclick="sharePaymentReceiptPdfOnWhatsApp(lastActiveColId)">
+          📤 Share Receipt PDF on WhatsApp
         </button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="receiveNewPaymentFromSuccess()">
@@ -3784,9 +3791,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;" class="no-print">
         <h3 style="margin:0;font-size:1.1rem;" id="invoiceModalTitle">Official GST Tax Invoice Preview</h3>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 16px;display:flex;align-items:center;gap:6px;" onclick="handleInvoiceModalWhatsAppShare()">💬 Share on WhatsApp</button>
+          <button id="invoiceWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;" onclick="handleInvoiceModalWhatsAppShare()">💬 Share Text</button>
+          <button id="invoicePdfShareBtn" type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;" onclick="shareOrderPdfOnWhatsApp(currentPreviewInvoiceOrderId || lastActiveMemoOrderId)" title="Share PDF document directly on WhatsApp">📤 Share PDF</button>
           <button id="invoiceResyncDriveBtn" type="button" class="btn btn-sm btn-outline" style="font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;" onclick="resyncCurrentModalDocToDrive(this)" title="Re-generate high quality PDF and upload to Google Drive">☁️ Re-sync Drive PDF</button>
-          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 16px;" onclick="closeModal('invoiceModal')">← Back</button>
+          <button type="button" class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 14px;" onclick="closeModal('invoiceModal')">← Back</button>
         </div>
       </div>
       <div id="invoicePrintArea" class="invoice-paper"></div>
@@ -3800,7 +3808,8 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;" class="no-print">
         <h3 style="margin:0;color:var(--primary);">Party Account Statement Preview</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 14px;" onclick="shareCurrentStatementWhatsApp()">💬 Share on WhatsApp</button>
+          <button id="stmtWaShareBtn" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:7px 14px;" onclick="shareCurrentStatementWhatsApp()">💬 Share Text</button>
+          <button id="stmtPdfShareBtn" type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:7px 14px;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;" onclick="shareCurrentStatementPdfWhatsApp()" title="Share Statement PDF directly on WhatsApp">📤 Share PDF</button>
           <button class="btn btn-primary btn-sm" onclick="triggerDocumentPrint('Party_Statement')">🖨️ Print / Save PDF</button>
           <button class="btn btn-sm" style="background:#f1f5f9;font-weight:700;color:#334155;border:1px solid #cbd5e1;padding:7px 14px;" onclick="closeModal('statementModal')">← Back</button>
         </div>
@@ -26457,7 +26466,124 @@ Thank you! Your payment has been received successfully.`;
       }
     }
 
+    // ==================== UNIVERSAL DIRECT PDF SHARING (ZERO-LINK, 100% RELIABLE) ====================
+    let pendingPdfShareData = null;
+
+    function showPdfShareModal(fileName, title, isDesktopFallback = false) {
+      const modal = document.getElementById("directPdfShareModal");
+      if (!modal) return;
+      const titleEl = document.getElementById("directPdfShareTitle");
+      if (titleEl) titleEl.textContent = title || "PDF Document Ready!";
+      const fnEl = document.getElementById("directPdfShareFileName");
+      if (fnEl) fnEl.textContent = fileName || "Document.pdf";
+
+      const descEl = document.getElementById("directPdfShareDesc");
+      const actionBtn = document.getElementById("directPdfShareBtn");
+
+      if (isDesktopFallback) {
+        if (descEl) descEl.innerHTML = "Desktop browser cannot attach files directly. <strong>PDF has been saved to your computer</strong>.<br>Click below to open WhatsApp chat and attach the downloaded file with 📎:";
+        if (actionBtn) actionBtn.innerHTML = '<span>💬</span> <span>Open WhatsApp Web</span>';
+      } else {
+        if (descEl) descEl.innerHTML = "Your PDF document is ready. Tap below to send this PDF file directly on WhatsApp:";
+        if (actionBtn) actionBtn.innerHTML = '<span style="font-size:1.25rem;">📲</span> <span>Send PDF to WhatsApp</span>';
+      }
+
+      modal.classList.add("open");
+    }
+
+    function closePdfShareModal() {
+      const modal = document.getElementById("directPdfShareModal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function triggerDirectPdfShare(pdfFile, title, partyPhone, partyName, fallbackText) {
+      pendingPdfShareData = {
+        file: pdfFile,
+        title: title || pdfFile.name,
+        phone: partyPhone || "",
+        name: partyName || "",
+        fallbackText: fallbackText || ""
+      };
+
+      // Try immediate direct share if supported on mobile
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        navigator.share({
+          title: title || pdfFile.name,
+          files: [pdfFile]
+        }).then(() => {
+          showToast("✅ PDF shared successfully on WhatsApp!");
+          closePdfShareModal();
+        }).catch(err => {
+          if (err.name === "AbortError") {
+            closePdfShareModal();
+            return;
+          }
+          console.warn("Direct share required fresh user gesture:", err);
+          // Show the 1-tap modal so the user gets an immediate, fresh user gesture
+          showPdfShareModal(pdfFile.name, title, false);
+        });
+      } else {
+        // Desktop PC or unsupported browser
+        showPdfShareModal(pdfFile.name, title, true);
+      }
+    }
+
+    async function executePendingPdfShare() {
+      if (!pendingPdfShareData || !pendingPdfShareData.file) {
+        showToast("⚠️ No PDF file ready to share.");
+        closePdfShareModal();
+        return;
+      }
+
+      const { file, title, phone, fallbackText } = pendingPdfShareData;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: title || file.name,
+            files: [file]
+          });
+          showToast("✅ PDF shared successfully!");
+          closePdfShareModal();
+        } catch(err) {
+          if (err.name === "AbortError") {
+            closePdfShareModal();
+            return;
+          }
+          console.error("Direct share error:", err);
+          showToast("⚠️ Could not open share sheet: " + (err.message || ""));
+        }
+      } else {
+        downloadCurrentSharedPdf();
+        const cleanPhone = (phone || "").replace(/\D/g, "");
+        let text = fallbackText || `Official PDF: ${file.name}\n(Please attach the downloaded PDF)`;
+        const waUrl = cleanPhone.length >= 10
+          ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(text)}`
+          : `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(waUrl, "_blank");
+        closePdfShareModal();
+      }
+    }
+
+    function downloadCurrentSharedPdf() {
+      if (!pendingPdfShareData || !pendingPdfShareData.file) return;
+      try {
+        const blobUrl = URL.createObjectURL(pendingPdfShareData.file);
+        const dlA = document.createElement("a");
+        dlA.href = blobUrl;
+        dlA.download = pendingPdfShareData.file.name;
+        document.body.appendChild(dlA);
+        dlA.click();
+        document.body.removeChild(dlA);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        showToast("📥 PDF downloaded to device.");
+      } catch(e) {
+        showToast("⚠️ Download failed: " + e.message);
+      }
+    }
+
     async function shareOrderPdfOnWhatsApp(orderId) {
+      if (typeof closeAllOrderMenus === "function") closeAllOrderMenus();
       const targetId = orderId || currentPreviewInvoiceOrderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
       if (!targetId) {
         showToast("⚠️ Order reference not found.");
@@ -26534,27 +26660,8 @@ Thank you! Your payment has been received successfully.`;
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           } catch(e) {}
 
-          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            try {
-              await navigator.share({
-                title: fileName,
-                files: [pdfFile]
-              });
-              showToast("✅ PDF shared successfully on WhatsApp!");
-              return;
-            } catch (shareErr) {
-              if (shareErr.name === "AbortError") return;
-              console.warn("Share files error, falling back:", shareErr);
-            }
-          }
-
-          // Fallback on Desktop PC or browsers without Web Share Files support
-          const msg = getOrderMemoWhatsAppText(ord, party) + "\n\n📄 (Official PDF has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)";
-          const waUrl = cleanPhone.length >= 10
-            ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-          window.open(waUrl, "_blank");
-          showToast("📄 PDF downloaded to device. Opening WhatsApp chat...");
+          // Directly share via Web Share API or 1-tap user gesture prompt modal
+          triggerDirectPdfShare(pdfFile, fileName, cleanPhone, party.name, getOrderMemoWhatsAppText(ord, party));
         } else {
           window.print();
         }
@@ -26776,27 +26883,8 @@ Thank you! Your payment has been received successfully.`;
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           } catch(e) {}
 
-          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            try {
-              await navigator.share({
-                title: fileName,
-                files: [pdfFile]
-              });
-              showToast("✅ Payment Receipt PDF shared successfully!");
-              return;
-            } catch (shareErr) {
-              if (shareErr.name === "AbortError") return;
-              console.warn("Share col error, falling back:", shareErr);
-            }
-          }
-
-          // Fallback on Desktop PC or browsers without Web Share Files support
-          const msg = buildPaymentReceiptWhatsAppText(col) + "\n-----------------------------\n📄 (Official PDF receipt has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)";
-          const waUrl = cleanPhone.length >= 10
-            ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-          window.open(waUrl, "_blank");
-          showToast("📄 PDF downloaded to device. Opening WhatsApp chat...");
+          // Directly share via Web Share API or 1-tap user gesture prompt modal
+          triggerDirectPdfShare(pdfFile, fileName, cleanPhone, party.name, buildPaymentReceiptWhatsAppText(col));
         } else {
           window.print();
         }
@@ -26859,27 +26947,10 @@ Thank you! Your payment has been received successfully.`;
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           } catch(e) {}
 
-          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            try {
-              await navigator.share({
-                title: fileName,
-                files: [pdfFile]
-              });
-              showToast("✅ Statement PDF shared successfully!");
-              return;
-            } catch(shareErr) {
-              if (shareErr.name === "AbortError") return;
-              console.warn("Statement share error:", shareErr);
-            }
-          }
-
           const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
-          const msg = `*${co.name}*\n📄 *Account Statement: ${p.name}*\n-----------------------------\n*Total Outstanding Due:* ${fmtINR(p.netBalance)}\n-----------------------------\n📄 (Official Statement PDF has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)`;
-          const waUrl = cleanPhone.length >= 10
-            ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
-            : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-          window.open(waUrl, "_blank");
-          showToast("📄 Statement PDF downloaded to device. Opening WhatsApp chat...");
+          const fallbackMsg = `*${co.name}*\n📄 *Account Statement: ${p.name}*\n-----------------------------\n*Total Outstanding Due:* ${fmtINR(p.netBalance)}`;
+          // Directly share via Web Share API or 1-tap user gesture prompt modal
+          triggerDirectPdfShare(pdfFile, fileName, cleanPhone, p.name, fallbackMsg);
         } else {
           window.print();
         }
@@ -27621,6 +27692,42 @@ Thank you! Your payment has been received successfully.`;
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ==================== DIRECT PDF WHATSAPP SHARING MODAL ==================== -->
+  <div class="modal-backdrop" id="directPdfShareModal" style="z-index:9999999;">
+    <div class="modal" style="max-width:440px;text-align:center;position:relative;padding:26px 20px;border-radius:18px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);">
+      <button type="button" onclick="closePdfShareModal()" style="position:absolute;top:12px;right:12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;width:32px;height:32px;font-size:16px;font-weight:700;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Close">✕</button>
+      
+      <div style="width:64px;height:64px;border-radius:50%;background:#ecfdf5;border:2px solid #a7f3d0;color:#059669;font-size:32px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px auto;box-shadow:0 4px 12px rgba(16,185,129,0.15);">
+        📄
+      </div>
+      
+      <h3 id="directPdfShareTitle" style="color:#0f172a;margin-bottom:6px;font-size:1.2rem;font-weight:800;">
+        PDF Document Ready!
+      </h3>
+      
+      <div id="directPdfShareFileName" style="display:inline-block;background:#f1f5f9;border:1px solid #cbd5e1;color:#334155;padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;margin-bottom:12px;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        Document.pdf
+      </div>
+      
+      <p id="directPdfShareDesc" style="font-size:0.88rem;color:#475569;margin-bottom:20px;line-height:1.5;">
+        Your PDF document is ready. Tap below to send this PDF file directly on WhatsApp:
+      </p>
+
+      <button id="directPdfShareBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:800;padding:14px;font-size:1.05rem;border-radius:12px;display:flex;align-items:center;gap:10px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(37,211,102,0.45);background:linear-gradient(135deg, #25D366, #128C7E);color:#ffffff;margin-bottom:12px;transition:all 0.2s ease;" onclick="executePendingPdfShare()">
+        <span style="font-size:1.3rem;">📲</span> <span>Send PDF to WhatsApp</span>
+      </button>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button type="button" class="btn" style="justify-content:center;background:#f8fafc;color:#334155;font-weight:700;padding:10px;font-size:0.85rem;border:1px solid #cbd5e1;border-radius:10px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="downloadCurrentSharedPdf()">
+          <span>📥</span> <span>Download PDF</span>
+        </button>
+        <button type="button" class="btn" style="justify-content:center;background:#f1f5f9;color:#64748b;font-weight:600;padding:10px;font-size:0.85rem;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;" onclick="closePdfShareModal()">
+          ✕ Cancel
+        </button>
+      </div>
     </div>
   </div>
 
