@@ -3539,8 +3539,8 @@
         <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareOrderFromSuccessModal()">
           💬 Share Summary on WhatsApp
         </button>
-        <button id="succOrdDownloadPdfBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0284c7;color:#ffffff;box-shadow:0 2px 6px rgba(2,132,199,0.3);" onclick="downloadOrderPdf(lastActiveOrd ? lastActiveOrd.id : null)">
-          📥 Download Order PDF
+        <button id="succOrdViewDrivePdfBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0f766e;color:#ffffff;box-shadow:0 2px 6px rgba(15,118,110,0.3);" onclick="viewOrderDrivePdf(lastActiveOrd ? lastActiveOrd.id : null, false)">
+          📄 View PDF (Google Drive)
         </button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="bookNewOrderFromSuccess()">
@@ -3586,8 +3586,8 @@
         <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:12px;font-size:0.95rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareCollectionFromSuccessModal()">
           💬 Share Receipt on WhatsApp
         </button>
-        <button id="succColDownloadPdfBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0284c7;color:#ffffff;box-shadow:0 2px 6px rgba(2,132,199,0.3);" onclick="downloadPaymentReceiptPdf(lastActiveColId)">
-          📥 Download Receipt PDF
+        <button id="succColViewDrivePdfBtn" type="button" class="btn btn-sm" style="width:100%;justify-content:center;font-weight:700;padding:11px;font-size:0.92rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;background:#0f766e;color:#ffffff;box-shadow:0 2px 6px rgba(15,118,110,0.3);" onclick="viewReceiptDrivePdf(lastActiveColId)">
+          📄 View Receipt PDF (Google Drive)
         </button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="button" class="btn btn-primary" style="justify-content:center;font-weight:700;padding:11px 6px;font-size:0.88rem;border-radius:8px;display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="receiveNewPaymentFromSuccess()">
@@ -18838,10 +18838,10 @@ Thank you!`;
         </a>
       `);
 
-      // 1. Memo PDF
+      // 1. View PDF (Direct Google Drive with 20s Auto-Wait)
       items.push(`
-        <a href="javascript:void(0)" onclick="openOrderBookingMemo('${o.id}');closeAllOrderMenus();" class="order-menu-item">
-          <span>📄</span> <span>View Memo PDF</span>
+        <a href="javascript:void(0)" onclick="viewOrderDrivePdf('${o.id}', false);closeAllOrderMenus();" class="order-menu-item">
+          <span>📄</span> <span>View PDF (Google Drive)</span>
         </a>
       `);
 
@@ -18863,30 +18863,14 @@ Thank you!`;
       // 3. Tax Invoice Bill (if dispatched)
       if (isDispatched) {
         items.push(`
-          <a href="javascript:void(0)" onclick="openTaxInvoice('${o.id}');closeAllOrderMenus();" class="order-menu-item">
-            <span>🧾</span> <span>View Tax Invoice Bill</span>
+          <a href="javascript:void(0)" onclick="viewOrderDrivePdf('${o.id}', true);closeAllOrderMenus();" class="order-menu-item">
+            <span>🧾</span> <span>View Tax Invoice (Google Drive)</span>
           </a>
         `);
       } else {
         items.push(`
           <a href="javascript:void(0)" onclick="alert('Tax Invoice Bill will be generated after goods are dispatched.');closeAllOrderMenus();" class="order-menu-item" style="opacity:0.5;cursor:not-allowed;">
             <span>🔒</span> <span>Bill (After Dispatch)</span>
-          </a>
-        `);
-      }
-
-      // 4. Download Official PDF
-      items.push(`
-        <a href="javascript:void(0)" onclick="downloadOrderPdf('${o.id}');closeAllOrderMenus();" class="order-menu-item">
-          <span>📥</span> <span>Download Official PDF</span>
-        </a>
-      `);
-
-      // 5. Open in Google Drive
-      if (driveLink) {
-        items.push(`
-          <a href="${driveLink}" target="_blank" rel="noopener noreferrer" onclick="closeAllOrderMenus();" class="order-menu-item">
-            <span>📁</span> <span>Open in Google Drive</span>
           </a>
         `);
       }
@@ -26465,6 +26449,110 @@ Thank you! Your payment has been received successfully.`;
       } finally {
         isGeneratingOrderPdf = false;
       }
+    }
+
+    // ==================== SMART GOOGLE DRIVE PDF VIEWER (WITH 20-SEC AUTO-WAIT & SAFETY FALLBACK) ====================
+    async function viewOrderDrivePdf(orderId, isTaxInvoice = false) {
+      if (typeof closeAllOrderMenus === "function") closeAllOrderMenus();
+      const targetId = orderId || currentPreviewInvoiceOrderId || lastActiveMemoOrderId || (lastActiveOrd && lastActiveOrd.id);
+      if (!targetId) {
+        showToast("⚠️ Order reference not found.");
+        return;
+      }
+      const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
+      if (!ord) {
+        showToast("⚠️ Order details not found.");
+        return;
+      }
+
+      const existingDriveUrl = isTaxInvoice ? (ord.invoiceDriveUrl || ord.driveUrl) : ord.driveUrl;
+
+      // 1. If Google Drive link is already ready, open immediately in new tab!
+      if (existingDriveUrl) {
+        showToast("🚀 Opening Google Drive PDF...");
+        window.open(existingDriveUrl, "_blank");
+        return;
+      }
+
+      // 2. Otherwise inform user and wait up to 20 seconds
+      showToast("⏳ Uploading PDF to Google Drive, please wait (up to 20s)...");
+
+      let timeoutExpired = false;
+      const timeoutPromise = new Promise(resolve => {
+        setTimeout(() => {
+          timeoutExpired = true;
+          resolve(null);
+        }, 20000);
+      });
+
+      let uploadPromise = null;
+      if (isTaxInvoice) {
+        uploadPromise = autoBackupTaxInvoiceToDrive(ord);
+      } else {
+        uploadPromise = autoBackupOrderMemoToDrive(ord, false, true);
+      }
+
+      try {
+        const newDriveUrl = await Promise.race([uploadPromise, timeoutPromise]);
+        if (newDriveUrl && !timeoutExpired) {
+          showToast("✅ Google Drive PDF ready! Opening...");
+          window.open(newDriveUrl, "_blank");
+          return;
+        }
+      } catch (err) {
+        console.warn("Drive PDF auto-wait error:", err);
+      }
+
+      // 3. Safety Fallback: after 20 seconds, open in-app preview so user is never blocked
+      showToast("⚠️ Google Drive took >20s. Opening in-app preview...");
+      if (isTaxInvoice) {
+        openTaxInvoice(ord.id);
+      } else {
+        openOrderBookingMemo(ord.id);
+      }
+    }
+
+    async function viewReceiptDrivePdf(colId) {
+      const targetId = colId || lastActiveColId;
+      if (!targetId) {
+        showToast("⚠️ Receipt reference not found.");
+        return;
+      }
+      const col = state.collections.find(c => c.id === targetId || c.receiptNo === targetId);
+      if (!col) {
+        showToast("⚠️ Receipt details not found.");
+        return;
+      }
+
+      const existingDriveUrl = col.receiptDriveUrl || col.driveUrl;
+      if (existingDriveUrl) {
+        showToast("🚀 Opening Google Drive Receipt PDF...");
+        window.open(existingDriveUrl, "_blank");
+        return;
+      }
+
+      showToast("⏳ Preparing Receipt PDF for Google Drive (up to 20s)...");
+      let timeoutExpired = false;
+      const timeoutPromise = new Promise(resolve => {
+        setTimeout(() => {
+          timeoutExpired = true;
+          resolve(null);
+        }, 20000);
+      });
+
+      try {
+        const newDriveUrl = await Promise.race([autoBackupPaymentReceiptToDrive(col), timeoutPromise]);
+        if (newDriveUrl && !timeoutExpired) {
+          showToast("✅ Google Drive Receipt ready! Opening...");
+          window.open(newDriveUrl, "_blank");
+          return;
+        }
+      } catch (err) {
+        console.warn("Drive Receipt error:", err);
+      }
+
+      showToast("⚠️ Google Drive took >20s. Opening in-app receipt...");
+      openPaymentReceipt(col.id);
     }
 
     // ==================== OFFICIAL PDF DOWNLOAD SYSTEM (100% RELIABLE ACROSS ALL DEVICES) ====================
