@@ -3521,7 +3521,7 @@
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Memo No: <strong id="succOrdNo" style="color:var(--primary);">#OB-1050</strong></p>
       <div id="succOrdDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
       <div id="succOrdDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:6px;">
-        ☁️ Syncing PDF to Google Drive in background...
+        ⚡ Ready to Share on WhatsApp
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
         <button id="succOrdWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareOrderFromSuccessModal()">
@@ -3565,7 +3565,7 @@
       <p style="font-size:0.82rem;color:var(--muted);margin-bottom:6px;">Receipt No: <strong id="succColNo" style="color:var(--primary);">#REC-1050</strong></p>
       <div id="succColDetails" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.82rem;line-height:1.5;margin:8px 0;text-align:left;border:1px solid var(--border);max-height:190px;overflow-y:auto;"></div>
       <div id="succColDriveBadge" style="font-size:0.75rem;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bbf7d0;margin-bottom:6px;">
-        ☁️ Syncing Receipt to Google Drive in background...
+        ⚡ Ready to Share on WhatsApp
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
         <button id="succColWhatsAppBtn" type="button" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-weight:700;padding:13px;font-size:1rem;border-radius:8px;display:flex;align-items:center;gap:8px;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(34,197,94,0.3);" onclick="shareCollectionFromSuccessModal()">
@@ -3831,16 +3831,12 @@
           <input type="checkbox" id="remindIncludeBankChk" checked onchange="updateReminderPreviewText()" />
           <span>Include Bank &amp; UPI Details</span>
         </label>
-        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;">
-          <input type="checkbox" id="remindIncludeDriveChk" checked onchange="updateReminderPreviewText()" />
-          <span>Include Google Drive Link</span>
-        </label>
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <label style="font-weight:700;font-size:0.82rem;color:var(--text);">WhatsApp Message Text (Editable):</label>
-          <span id="remindDriveStatus" style="font-size:0.72rem;color:#0284c7;font-weight:700;">☁️ Google Drive Linked</span>
+          <span id="remindDriveStatus" style="font-size:0.72rem;color:#15803d;font-weight:700;">⚡ Instant Text Share</span>
         </div>
         <textarea id="remindMsgPreview" class="form-control" style="height:175px;font-family:monospace;font-size:0.8rem;line-height:1.45;"></textarea>
       </div>
@@ -17019,7 +17015,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           `*Pending Balance Due: ${fmtINR(p.netBalance)}*`,
           p.pendingDays > 0 ? `*Aging:* ${p.pendingDays} Days Overdue` : ``,
           `--------------------------------`,
-          statementDriveLink ? `📄 *View Complete Statement (Google Drive PDF):*\n👉 ${statementDriveLink}` : ``,
           `\n*Pay Easily via UPI / Bank:*`,
           payDetailReminder,
           `\nPlease arrange payment at your earliest convenience.\nThank you!`
@@ -17179,11 +17174,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const upiId = getCompanyUpiId();
 
-      if (!p.statementDriveUrl && typeof autoUploadPartyStatementToDrive === "function") {
-        showToast("⏳ Syncing Statement PDF to Google Drive...");
-        await autoUploadPartyStatementToDrive(p.id);
-      }
-
       const recentBills = (p.partyOrders || []).slice(0, 6).map(o =>
         `• ${formatOfficialGstInvoiceNo(o, activeCompany)} (${fmtDate(o.date)}): ${fmtINR(getOrderTotalAmount(o))}`
       ).join("\n");
@@ -17193,16 +17183,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const recentCns = (p.partyReturns || []).slice(0, 4).map(r =>
         `• ${r.cnNo} (${fmtDate(r.date)}): -${fmtINR(r.totalCreditAmt)}`
       ).join("\n");
-
-      let docLinkSection = "";
-      let driveUrl = p.statementDriveUrl ? getDirectDrivePdfUrl(p.statementDriveUrl) : "";
-      if (!driveUrl && p.partyOrders && p.partyOrders.length > 0) {
-        const latestWithDrive = p.partyOrders.find(o => o.invoiceDriveUrl || o.driveUrl);
-        if (latestWithDrive) driveUrl = getDirectDrivePdfUrl(latestWithDrive.invoiceDriveUrl || latestWithDrive.driveUrl);
-      }
-      if (driveUrl) {
-        docLinkSection = `\n--------------------------------\n📄 *Google Drive PDF Record:*\n👉 ${driveUrl}`;
-      }
 
       const lines = [
         `*ACCOUNT STATEMENT — ${co.name}*`,
@@ -17219,7 +17199,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         recentBills ? `\n*Recent Bills:*\n${recentBills}` : "",
         recentPays ? `\n*Recent Payments:*\n${recentPays}` : "",
         recentCns ? `\n*Credit Notes:*\n${recentCns}` : "",
-        docLinkSection,
         `\n*Payment Details:*`,
         (activeCompany === "MADHAV")
           ? `UPI ID: ${upiId}\nBank: Indian Overseas Bank, Bhadravati (MADHAV ENTERPRISES)\nA/c: 308202000000378 | IFSC: IOBA0003082`
@@ -17319,18 +17298,10 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const upiId = getCompanyUpiId();
 
       const incBank = document.getElementById("remindIncludeBankChk") ? document.getElementById("remindIncludeBankChk").checked : true;
-      const incDrive = document.getElementById("remindIncludeDriveChk") ? document.getElementById("remindIncludeDriveChk").checked : true;
-
-      // Find latest Drive PDF link
-      let driveLink = p.statementDriveUrl ? getDirectDrivePdfUrl(p.statementDriveUrl) : "";
-      if (!driveLink && p.partyOrders && p.partyOrders.length > 0) {
-        const latestWithDrive = p.partyOrders.find(o => o.invoiceDriveUrl || o.driveUrl);
-        if (latestWithDrive) driveLink = getDirectDrivePdfUrl(latestWithDrive.invoiceDriveUrl || latestWithDrive.driveUrl);
-      }
 
       const statEl = document.getElementById("remindDriveStatus");
       if (statEl) {
-        statEl.innerHTML = driveLink ? '✅ <span style="color:#15803d;font-weight:700;">Drive PDF Linked</span>' : '<span style="color:#0284c7;">☁️ Google Drive Ready</span>';
+        statEl.innerHTML = '⚡ <span style="color:#15803d;font-weight:700;">Direct WhatsApp</span>';
       }
 
       let bankSection = "";
@@ -17341,9 +17312,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       }
 
       let driveSection = "";
-      if (incDrive && driveLink) {
-        driveSection = `\n--------------------------------\n📄 *Open Google Drive Official Record:*\n👉 ${driveLink}`;
-      }
 
       let lines = [];
       if (currentReminderLevel === "GENTLE") {
@@ -17398,13 +17366,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (!currentReminderPartyId) return;
       const p = getComputedParties().find(x => x.id === currentReminderPartyId);
       if (!p) return;
-
-      const incDrive = document.getElementById("remindIncludeDriveChk") ? document.getElementById("remindIncludeDriveChk").checked : true;
-      if (incDrive && !p.statementDriveUrl && typeof autoUploadPartyStatementToDrive === "function") {
-        showToast("⏳ Syncing Statement PDF to Google Drive...");
-        await autoUploadPartyStatementToDrive(p.id);
-        updateReminderPreviewText();
-      }
 
       const cleanPhone = (p.mobile || "").replace(/\D/g, "");
       const area = document.getElementById("remindMsgPreview");
@@ -18412,10 +18373,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         : ord.orderQty;
 
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
-      const memoDriveLink = ord.driveUrl ? getDirectDrivePdfUrl(ord.driveUrl) : "";
-      const docLinkSection = memoDriveLink
-        ? `\n-----------------------------\n📄 *Open Google Drive PDF Memo:*\n👉 ${memoDriveLink}`
-        : "";
 
       // Compute Previous Balance (Before Order) and Total Due (After Order)
       const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
@@ -18444,7 +18401,7 @@ ${itemsList}
 • *This Order Amount:* +${fmtINR(orderAmt)}
 • *Total Balance Due (After Order):* ${fmtINR(afterBal)}
 -----------------------------
-*Status:* Order Booked (Pending Dispatch)${docLinkSection}
+*Status:* Order Booked (Pending Dispatch)
 -----------------------------
 Note: This is an order booking memo only. Official tax invoice will be issued upon dispatch.
 Thank you!`;
@@ -18456,11 +18413,6 @@ Thank you!`;
       const ord = lastActiveOrd;
       if (!ord) return;
       const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase())) || { name: ord.partyName };
-
-      // Trigger background upload silently if not already done, without blocking WhatsApp
-      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
-        autoBackupOrderMemoToDrive(ord, false);
-      }
 
       const cleanPhone = (party && party.mobile) ? party.mobile.replace(/\D/g, "") : "";
       const msg = getOrderMemoWhatsAppText(ord, party);
@@ -18567,11 +18519,7 @@ Thank you!`;
 
       const badge = document.getElementById("succOrdDriveBadge");
       if (badge) {
-        if (ord.driveUrl) {
-          badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
-        } else {
-          badge.innerHTML = '☁️ <span style="color:#0284c7;">Syncing PDF to Google Drive in background...</span>';
-        }
+        badge.innerHTML = '⚡ <span style="color:#15803d;font-weight:700;">Ready to Share on WhatsApp</span>';
       }
 
       const waBtn = document.getElementById("succOrdWhatsAppBtn");
@@ -22144,25 +22092,37 @@ Thank you!`;
 
     let lastActiveColId = null;
 
+    function buildPaymentReceiptWhatsAppText(col) {
+      if (!col) return "";
+      const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
+      const remBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
+      const paidAmt = Number(col.amount || 0);
+      const prevBal = remBal + paidAmt;
+      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+
+      return `*${coName}*
+🧾 *Payment Receipt*
+-----------------------------
+*Receipt No:* #${col.receiptNo}
+*Date:* ${fmtDate(col.date)}
+*Received From:* ${col.partyName}
+*Amount Received:* ${fmtINR(paidAmt)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})
+*Received By:* ${col.salespersonName || '-'}
+-----------------------------
+💰 *BALANCE DETAILS:*
+• *Previous Balance:* ${fmtINR(prevBal)}
+• *Amount Paid:* -${fmtINR(paidAmt)}
+• *Current Balance Due:* ${fmtINR(remBal)}
+-----------------------------
+Thank you! Your payment has been received successfully.`;
+    }
+
     function shareCollectionFromSuccessModal() {
       const col = state.collections.find(c => c.id === lastActiveColId || c.receiptNo === lastActiveColId);
       if (!col) return;
-      const computedParty = getComputedParties().find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
-
-      // Trigger background upload silently without blocking WhatsApp
-      if (!col.receiptDriveUrl && !col.driveUrl && typeof autoBackupPaymentReceiptToDrive === "function") {
-        autoBackupPaymentReceiptToDrive(col);
-      }
-
-      const targetDrive = col.receiptDriveUrl || col.driveUrl || col.proofDriveUrl;
-      const drivePdfLink = targetDrive ? getDirectDrivePdfUrl(targetDrive) : "";
-      const docLinkSection = drivePdfLink
-        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt:*\n👉 ${drivePdfLink}`
-        : "";
-      const remBal = computedParty ? computedParty.netBalance : 0;
-      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
       const cleanPhone = (computedParty && computedParty.mobile ? computedParty.mobile.replace(/\D/g, "") : "");
-      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+      const msg = buildPaymentReceiptWhatsAppText(col);
 
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
@@ -22208,23 +22168,23 @@ Thank you!`;
       lastActiveColId = newCol.id;
       const computed = getComputedParties().find(p => p.id === newCol.partyId || p.name === newCol.partyName);
       const remBal = computed ? computed.netBalance : 0;
+      const paidAmt = Number(newCol.amount || 0);
+      const prevBal = remBal + paidAmt;
 
       document.getElementById("succColNo").textContent = "#" + newCol.receiptNo;
       document.getElementById("succColDetails").innerHTML = `
         <div><strong>Dealer:</strong> ${newCol.partyName}</div>
         <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})</div>
         <div><strong>Collected By:</strong> ${newCol.salespersonName}</div>
-        <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
-        <div id="succColDriveLink" style="display:none;margin-top:6px;padding:6px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;"></div>
+        <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;">
+          <div style="font-size:0.78rem;color:var(--muted);">Previous Balance: <strong>${fmtINR(prevBal)}</strong></div>
+          <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
+        </div>
       `;
 
       const badge = document.getElementById("succColDriveBadge");
       if (badge) {
-        if (newCol.receiptDriveUrl || newCol.driveUrl) {
-          badge.innerHTML = '✅ <span style="color:#15803d;font-weight:700;">Google Drive PDF Ready</span>';
-        } else {
-          badge.innerHTML = '☁️ <span style="color:#0284c7;">Syncing Receipt to Google Drive in background...</span>';
-        }
+        badge.innerHTML = '⚡ <span style="color:#15803d;font-weight:700;">Ready to Share on WhatsApp</span>';
       }
 
       const cleanPhone = party && party.mobile ? party.mobile.replace(/\D/g, "") : "";
@@ -22880,22 +22840,6 @@ Thank you!`;
               newCol.driveUrl = res.fileUrl;
               await saveRecord("collections", newCol);
               renderCollectionTable();
-              const waBtn = document.getElementById("succColWhatsAppBtn");
-              if (waBtn && lastActiveColId === newCol.id) {
-                const updatedShort = getShortDocLink(res.fileUrl);
-                const computedParty = getComputedParties().find(cp => cp.id === newCol.partyId || (cp.name && newCol.partyName && cp.name.trim().toUpperCase() === newCol.partyName.trim().toUpperCase()));
-                const remBal = computedParty ? computedParty.netBalance : 0;
-                const updatedMsg = `*${COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : 'MADHAV ENTERPRISES'}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${newCol.receiptNo}\n*Date:* ${fmtDate(newCol.date)}\n*Received From:* ${newCol.partyName}\n*Amount Received:* ${fmtINR(newCol.amount)} (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})\n*Received By:* ${newCol.salespersonName}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 *Open Digital Receipt & Proof:*\n👉 ${updatedShort}\n-----------------------------\nThank you! Your payment has been received successfully.`;
-                const cleanPhone = (party && party.mobile ? party.mobile.replace(/\D/g, "") : "");
-                waBtn.href = cleanPhone.length >= 10
-                  ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(updatedMsg)}`
-                  : `https://wa.me/?text=${encodeURIComponent(updatedMsg)}`;
-              }
-              const succDriveLink = document.getElementById("succColDriveLink");
-              if (succDriveLink) {
-                succDriveLink.innerHTML = `<a href="${res.fileUrl}" target="_blank" rel="noopener noreferrer" style="color:#0284c7;font-weight:700;display:inline-flex;align-items:center;gap:4px;text-decoration:none;">📁 View Proof on Google Drive</a>`;
-                succDriveLink.style.display = "block";
-              }
             }
           })
           .catch(e => console.error("Drive upload failed in background:", e));
@@ -23918,11 +23862,6 @@ Thank you!`;
       const ord = state.orders.find(o => o.id === currentPreviewInvoiceOrderId);
       if (!ord) return;
 
-      // Trigger background upload silently without blocking WhatsApp
-      if (!ord.invoiceDriveUrl && !ord.driveUrl && typeof autoBackupTaxInvoiceToDrive === "function") {
-        autoBackupTaxInvoiceToDrive(ord);
-      }
-
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const gst = computeOrderGstBreakdown(ord);
       const upiId = getCompanyUpiId();
@@ -23930,11 +23869,8 @@ Thank you!`;
         `• ${ln.productName} (${ln.qty} pcs) — ${ln.isFoc ? "FOC Free" : fmtINR(ln.lineTotal)}`
       ).join("\n");
 
-      const targetDrive = ord.invoiceDriveUrl || ord.driveUrl;
-      const drivePdfLink = targetDrive ? getDirectDrivePdfUrl(targetDrive) : "";
-      const docLinkSection = drivePdfLink
-        ? `\n📄 *Open Google Drive Official Invoice (PDF):*\n👉 ${drivePdfLink}`
-        : "";
+      const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId || (p.name && ord.partyName && p.name.trim().toUpperCase() === ord.partyName.trim().toUpperCase()));
+      const currentNetBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
 
       const msg = [
         `*GST TAX INVOICE — ${co.name}*`,
@@ -23951,7 +23887,7 @@ Thank you!`;
           ? `IGST: ${fmtINR(gst.totalIgst)}`
           : `CGST: ${fmtINR(gst.totalCgst)} | SGST: ${fmtINR(gst.totalSgst)}`,
         `*GRAND TOTAL: ${fmtINR(gst.roundedGrandTotal)}*`,
-        docLinkSection,
+        computedParty ? `*Total Balance Due:* ${fmtINR(currentNetBal)}` : "",
         gst.ewayRequired ? `⚠️ E-Way Bill Applicable (≥ ₹50,000)` : "",
         `\n*Pay Easily via UPI / Bank:*`,
         (activeCompany === "MADHAV")
@@ -26641,11 +26577,6 @@ Thank you!`;
       const ord = (state.orders || []).find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
 
-      // Trigger background upload silently without blocking WhatsApp
-      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
-        autoBackupOrderMemoToDrive(ord, false);
-      }
-
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const party = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(p => p.id === ord.partyId) || { name: ord.partyName, area: "Nagpur", mobile: "-" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
@@ -26657,11 +26588,7 @@ Thank you!`;
       } else {
         itemsList = `• ${ord.productName || "General Goods"} — ${ord.orderQty} Units`;
       }
-      const challanDrive = ord.driveUrl ? getDirectDrivePdfUrl(ord.driveUrl) : "";
-      const docLinkSection = challanDrive
-        ? `\n📄 *Open Google Drive Record (PDF):*\n👉 ${challanDrive}`
-        : "";
-      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery${docLinkSection}\nThank you!`;
+      const msg = `*DELIVERY CHALLAN — ${co.name}*\n-----------------------------\n*Challan No:* ${dcNo}\n*Order Ref:* ${memoDisplay}\n*Date:* ${fmtDate(ord.dispatchDate || ord.date)}\n*Dealer:* ${party.name} (${party.area || "Nagpur"})\n-----------------------------\n*Dispatched Items:*\n${itemsList}\n-----------------------------\n*Status:* Goods Out for Delivery\nThank you!`;
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -26673,11 +26600,6 @@ Thank you!`;
       if (!targetId) return;
       const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
-
-      // Trigger background upload silently without blocking WhatsApp
-      if (!ord.driveUrl && typeof autoBackupOrderMemoToDrive === "function") {
-        autoBackupOrderMemoToDrive(ord, false);
-      }
 
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
@@ -26799,10 +26721,7 @@ Thank you!`;
           }
 
           // Fallback on Desktop PC or browsers without Web Share Files support
-          const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
-          const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
-          const remBal = computed ? computed.netBalance : 0;
-          const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}\n-----------------------------\n📄 (Official PDF receipt has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)`;
+          const msg = buildPaymentReceiptWhatsAppText(col) + "\n-----------------------------\n📄 (Official PDF receipt has been downloaded to your device — please tap Attach 📎 in WhatsApp to send it.)";
           const waUrl = cleanPhone.length >= 10
             ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
             : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -26824,22 +26743,9 @@ Thank you!`;
       const col = state.collections.find(c => c.id === targetId || c.receiptNo === targetId);
       if (!col) return;
 
-      if (!col.receiptDriveUrl && !col.driveUrl && typeof autoBackupPaymentReceiptToDrive === "function") {
-        showToast("⏳ Syncing Receipt PDF to Google Drive...");
-        await autoBackupPaymentReceiptToDrive(col);
-      }
-
       const party = state.parties.find(p => p.id === col.partyId || p.name === col.partyName) || { name: col.partyName, area: "Nagpur", mobile: "" };
       const cleanPhone = (party.mobile || "").replace(/\D/g, "");
-      const computed = getComputedParties().find(p => p.id === col.partyId || p.name === col.partyName);
-      const remBal = computed ? computed.netBalance : 0;
-      const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
-      const targetDriveUrl = col.driveUrl || col.receiptDriveUrl || col.proofDriveUrl;
-      const receiptPdfLink = targetDriveUrl ? getDirectDrivePdfUrl(targetDriveUrl) : "";
-      const docLinkSection = receiptPdfLink
-        ? `\n-----------------------------\n📄 *Open Google Drive Official Receipt (PDF):*\n👉 ${receiptPdfLink}`
-        : "";
-      const msg = `*${coName}*\n🧾 *Payment Receipt*\n-----------------------------\n*Receipt No:* #${col.receiptNo}\n*Date:* ${fmtDate(col.date)}\n*Received From:* ${col.partyName}\n*Amount Received:* ${fmtINR(col.amount)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})\n*Received By:* ${col.salespersonName || '-'}\n-----------------------------\n*Current Balance Due:* ${fmtINR(remBal)}${docLinkSection}\n-----------------------------\nThank you! Your payment has been received successfully.`;
+      const msg = buildPaymentReceiptWhatsAppText(col);
       const waUrl = cleanPhone.length >= 10
         ? `https://wa.me/91${cleanPhone.slice(-10)}?text=${encodeURIComponent(msg)}`
         : `https://wa.me/?text=${encodeURIComponent(msg)}`;
