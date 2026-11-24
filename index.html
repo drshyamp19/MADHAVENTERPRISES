@@ -757,9 +757,9 @@
 
     /* Dedicated PDF export wrapper to guarantee 100% full render without scroll cut-off or mobile compression */
     .pdf-export-container {
-      width: 760px !important;
-      min-width: 760px !important;
-      max-width: 760px !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
       overflow: visible !important;
       box-sizing: border-box !important;
     }
@@ -4209,10 +4209,7 @@ function toBase64Utf8(str) {
           logging: false,
           backgroundColor: "#ffffff",
           scrollX: 0,
-          scrollY: 0,
-          windowWidth: 760,
-          x: 0,
-          y: 0
+          scrollY: 0
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
@@ -4220,12 +4217,18 @@ function toBase64Utf8(str) {
 
       const wrap = document.createElement("div");
       wrap.className = "invoice-paper pdf-export-container";
-      wrap.style.cssText = "width: 760px !important; min-width: 760px !important; max-width: 760px !important; background: #ffffff !important; color: #0f172a !important; padding: 20px !important; box-sizing: border-box !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; font-size: 12px !important; margin: 0 auto !important; overflow: visible !important;";
+      wrap.style.cssText = "width: 100% !important; min-width: 0 !important; max-width: 100% !important; background: #ffffff !important; color: #0f172a !important; padding: 18px !important; border: 1px solid #94a3b8 !important; box-sizing: border-box !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; font-size: 12px !important; margin: 0 !important; overflow: visible !important;";
       if (typeof elementOrHtml === "string") {
         wrap.innerHTML = elementOrHtml;
       } else {
-        wrap.appendChild(elementOrHtml.cloneNode(true));
+        wrap.innerHTML = elementOrHtml.innerHTML || elementOrHtml.outerHTML;
       }
+
+      // Ensure all elements inside wrap have border-box and proper dimensions without border clipping
+      const allInside = wrap.querySelectorAll("*");
+      allInside.forEach(el => {
+        el.style.boxSizing = "border-box";
+      });
 
       // Ensure all table structures inside render with full width and no scroll clipping
       const tables = wrap.querySelectorAll("table, .inv-table, .inv-table-wrap, .inv-meta-grid, .inv-footer-grid");
@@ -4234,12 +4237,13 @@ function toBase64Utf8(str) {
         if (t.classList.contains("inv-table")) {
           t.style.width = "100%";
           t.style.minWidth = "0";
+          t.style.maxWidth = "100%";
         }
       });
 
       // Safely mount off-screen without collapsing layout, clipping height, or scroll offset
       const hiddenParent = document.createElement("div");
-      hiddenParent.style.cssText = "position: absolute; left: 0; top: 0; width: 760px; min-height: 100px; overflow: visible; opacity: 0.001; pointer-events: none; z-index: 9999;";
+      hiddenParent.style.cssText = "position: absolute; left: 0; top: 0; width: 750px; min-height: 100px; overflow: visible; opacity: 0.001; pointer-events: none; z-index: 9999;";
       hiddenParent.appendChild(wrap);
       document.body.appendChild(hiddenParent);
 
