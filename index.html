@@ -599,27 +599,27 @@
       border-top: 1px dashed var(--border);
     }
     .order-card-actions .btn {
-      flex: 1;
-      justify-content: center;
-      font-size: 0.82rem;
-      padding: 8px 6px;
-      font-weight: 700;
-      white-space: nowrap;
+      flex: 1 !important;
+      justify-content: center !important;
+      font-size: 0.82rem !important;
+      padding: 8px 6px !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
     }
     .order-card-actions .order-more-btn {
-      flex: 0 0 38px;
-      padding: 6px 0;
-      text-align: center;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      flex: 0 0 38px !important;
+      padding: 6px 0 !important;
+      text-align: center !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
     @media (max-width: 480px) {
       .order-card { padding: 12px; }
       .order-card-meta-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     }
 
-    /* Orders Register Table Fixes (No Clipping, Full Visibility & Responsive Scroll) */
+    /* Orders Register Table: Guaranteed Zero-Clipping, Full Visibility & Sticky Actions */
     #ordersTableWrap {
       overflow-x: auto !important;
       -webkit-overflow-scrolling: touch !important;
@@ -627,9 +627,10 @@
       border-radius: 0 0 12px 12px;
       scrollbar-width: thin;
       scrollbar-color: #94a3b8 #f1f5f9;
+      position: relative;
     }
     #ordersTableWrap::-webkit-scrollbar {
-      height: 8px;
+      height: 7px;
     }
     #ordersTableWrap::-webkit-scrollbar-track {
       background: #f1f5f9;
@@ -640,43 +641,76 @@
     }
     #ordersMainTable {
       width: 100% !important;
-      min-width: 1260px !important;
-      border-collapse: collapse !important;
+      min-width: 960px !important;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
       table-layout: auto !important;
+      margin: 0 !important;
     }
     #ordersMainTable th,
     #ordersMainTable td {
       vertical-align: middle !important;
-      padding: 10px 12px !important;
+      padding: 6px 7px !important;
+      font-size: 0.77rem !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+    #ordersMainTable th {
+      background: #f8fafc !important;
+      color: #64748b !important;
+      font-weight: 700 !important;
+    }
+    #ordersMainTable td {
+      background: #ffffff !important;
+      color: #1e293b !important;
+    }
+    #ordersMainTable tr:hover td {
+      background: #f8fafc !important;
     }
     #ordersMainTable th.order-actions-col,
     #ordersMainTable td.order-actions-cell {
-      min-width: 235px !important;
-      width: 235px !important;
+      position: sticky !important;
+      right: 0 !important;
+      background: #ffffff !important;
+      z-index: 5 !important;
+      box-shadow: -4px 0 8px rgba(0, 0, 0, 0.08) !important;
+      min-width: 180px !important;
+      width: 180px !important;
       text-align: center !important;
       white-space: nowrap !important;
+      padding: 5px 8px !important;
+    }
+    #ordersMainTable th.order-actions-col {
+      background: #f8fafc !important;
+      z-index: 6 !important;
+      color: #64748b !important;
+    }
+    #ordersMainTable tr:hover td.order-actions-cell {
+      background: #f1f5f9 !important;
     }
     #ordersMainTable .order-action-btn-group {
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 6px !important;
+      gap: 4px !important;
       white-space: nowrap !important;
       flex-shrink: 0 !important;
     }
     #ordersMainTable .order-action-btn-group .btn {
       white-space: nowrap !important;
       flex-shrink: 0 !important;
-      padding: 5px 9px !important;
-      font-size: 0.77rem !important;
+      padding: 4px 7px !important;
+      font-size: 0.73rem !important;
       font-weight: 700 !important;
+      border-radius: 5px !important;
+      line-height: 1.25 !important;
     }
     #ordersMainTable .order-action-btn-group .order-more-btn {
       white-space: nowrap !important;
       flex-shrink: 0 !important;
-      padding: 3px 9px !important;
-      font-size: 1.1rem !important;
+      padding: 3px 7px !important;
+      font-size: 0.95rem !important;
       line-height: 1 !important;
+      border-radius: 5px !important;
     }
 
     /* Dealer Outstanding Card */
@@ -2436,7 +2470,7 @@
 
               <!-- View Switcher: Cards vs Table -->
               <div style="display:inline-flex;align-items:center;gap:8px;">
-                <button type="button" class="btn btn-xs btn-outline order-admin-col" id="btnOrderCardSelectAll" onclick="toggleSelectAllCardOrders()" style="font-weight:700;padding:5px 9px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;display:inline-flex;align-items:center;gap:4px;" title="Select/Deselect All Visible Orders">
+                <button type="button" class="btn btn-xs btn-outline order-admin-col" id="btnOrderCardSelectAll" onclick="toggleSelectAllCardOrders()" style="font-weight:700;padding:5px 9px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;display:none;align-items:center;gap:4px;" title="Select/Deselect All Visible Orders">
                   <span>☑️</span> Select All
                 </button>
                 <div id="orderViewModeToggle" style="display:inline-flex;align-items:center;background:#f1f5f9;padding:3px;border-radius:8px;border:1px solid #cbd5e1;">
@@ -2475,44 +2509,39 @@
             <div class="field-card-grid" id="ordersCardsContainer"></div>
           </div>
 
-          <!-- Table View Swipe Hint (for Mobile/Tablets) -->
-          <div id="ordersTableScrollHint" style="display:none;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-size:0.75rem;font-weight:600;padding:6px 14px;margin:4px 14px 10px 14px;border-radius:6px;align-items:center;gap:6px;">
-            <span>↔️</span> <span>Swipe horizontally to view full table columns, status &amp; action buttons</span>
-          </div>
-
           <!-- Table View Container -->
           <div class="table-wrap" id="ordersTableWrap" style="display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;">
-            <table id="ordersMainTable" style="width:100%;min-width:1260px;border-collapse:collapse;">
+            <table id="ordersMainTable" style="width:100%;min-width:960px;border-collapse:separate;border-spacing:0;">
               <thead>
                 <tr>
-                  <th class="order-admin-col" style="width:38px;min-width:38px;text-align:center;">
+                  <th class="order-admin-col" style="width:34px;min-width:34px;text-align:center;padding:6px 2px;">
                     <input type="checkbox" id="orderSelectAllChk" onchange="toggleSelectAllOrders(this)" title="Select All Visible Orders" />
                   </th>
-                  <th style="cursor:pointer;user-select:none;white-space:nowrap;min-width:95px;" onclick="toggleOrderSort('memoNo')">
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;width:80px;" onclick="toggleOrderSort('memoNo')">
                     Memo No <span id="sortIcon_memoNo">⇅</span>
                   </th>
-                  <th style="cursor:pointer;user-select:none;white-space:nowrap;min-width:105px;" onclick="toggleOrderSort('date')">
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;width:95px;" onclick="toggleOrderSort('date')">
                     Date &amp; Age <span id="sortIcon_date">▼</span>
                   </th>
-                  <th style="cursor:pointer;user-select:none;min-width:210px;" onclick="toggleOrderSort('partyName')">
+                  <th style="cursor:pointer;user-select:none;min-width:140px;" onclick="toggleOrderSort('partyName')">
                     Party Name &amp; Balance <span id="sortIcon_partyName">⇅</span>
                   </th>
-                  <th class="order-sp-col" style="min-width:115px;white-space:nowrap;">Booked By</th>
-                  <th style="min-width:180px;">Items Details</th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('ordQty')">
-                    <span id="colHeaderOrdQty">Ord Qty</span> <span id="sortIcon_ordQty">⇅</span>
+                  <th class="order-sp-col" style="white-space:nowrap;width:95px;">Booked By</th>
+                  <th style="min-width:130px;">Items Details</th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;width:48px;" onclick="toggleOrderSort('ordQty')">
+                    <span id="colHeaderOrdQty">Ord</span> <span id="sortIcon_ordQty">⇅</span>
                   </th>
-                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('dispQty')">
-                    Disp Qty <span id="sortIcon_dispQty">⇅</span>
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;width:48px;" onclick="toggleOrderSort('dispQty')">
+                    Disp <span id="sortIcon_dispQty">⇅</span>
                   </th>
-                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('pendingQty')">
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;width:48px;" onclick="toggleOrderSort('pendingQty')">
                     Pending <span id="sortIcon_pendingQty">⇅</span>
                   </th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:100px;" onclick="toggleOrderSort('totalAmt')">
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;width:80px;" onclick="toggleOrderSort('totalAmt')">
                     Total Value <span id="sortIcon_totalAmt">⇅</span>
                   </th>
-                  <th class="text-center" style="min-width:90px;white-space:nowrap;">Status</th>
-                  <th class="text-center order-actions-col" style="min-width:235px;width:235px;white-space:nowrap;">Actions</th>
+                  <th class="text-center" style="white-space:nowrap;width:65px;">Status</th>
+                  <th class="text-center order-actions-col" style="white-space:nowrap;width:180px;min-width:180px;">Actions</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody"></tbody>
@@ -19122,6 +19151,12 @@ Thank you!`;
       const btnCards = document.getElementById("btnOrderViewCards");
       const btnTable = document.getElementById("btnOrderViewTable");
       const scrollHint = document.getElementById("ordersTableScrollHint");
+      const isSalesperson = currentStaff && currentStaff.role === "Salesperson";
+      const btnCardSelectAll = document.getElementById("btnOrderCardSelectAll");
+
+      if (btnCardSelectAll) {
+        btnCardSelectAll.style.display = (currentOrderViewMode === "cards" && currentOrderRegisterTab === "Pending" && !isSalesperson) ? "inline-flex" : "none";
+      }
 
       if (currentOrderViewMode === "cards") {
         if (cardsWrap) cardsWrap.style.display = "block";
@@ -19710,10 +19745,10 @@ Thank you!`;
         colOrdQtyHeader.textContent = isSalesperson ? "Total Qty" : "Ord Qty";
       }
 
-      // Hide or show batch selection controls based on showBatchSelect
+      // Hide or show batch selection controls based on showBatchSelect (only visible in Card view, not Table view)
       const btnCardSelectAll = document.getElementById("btnOrderCardSelectAll");
       if (btnCardSelectAll) {
-        btnCardSelectAll.style.display = showBatchSelect ? "inline-flex" : "none";
+        btnCardSelectAll.style.display = (showBatchSelect && currentOrderViewMode === "cards") ? "inline-flex" : "none";
       }
       if (!showBatchSelect) {
         const batchToolbar = document.getElementById("orderBatchActionToolbar");
@@ -19906,19 +19941,19 @@ Thank you!`;
         let primaryBtn2 = "";
 
         if (isCompleted) {
-          primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendInvoiceWhatsAppDirect('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send Bill to Party">💬 Send Bill</button>`;
+          primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendInvoiceWhatsAppDirect('${o.id}')" title="Send Bill to Party">💬 Send Bill</button>`;
         } else if (isPartial) {
-          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Dispatch remaining items">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send WhatsApp">💬 WhatsApp</button>`;
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" title="Dispatch remaining items">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send WhatsApp">💬 WhatsApp</button>`;
         } else {
           // Pending
-          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Dispatch order">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send Order Memo to Party">💬 WhatsApp</button>`;
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" title="Dispatch order">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" title="Send Order Memo to Party">💬 WhatsApp</button>`;
         }
 
         const moreBtn = `
-          <button type="button" class="btn btn-sm order-more-btn" onclick="toggleOrderActionMenu(event, '${o.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-weight:800;font-size:1.1rem;padding:3px 9px;border-radius:6px;line-height:1;cursor:pointer;white-space:nowrap;flex-shrink:0;" title="More Options">
+          <button type="button" class="btn btn-sm order-more-btn" onclick="toggleOrderActionMenu(event, '${o.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;cursor:pointer;" title="More Options">
             ⋮
           </button>
         `;
@@ -19942,32 +19977,32 @@ Thank you!`;
 
         tableRowsHtml += `
           <tr>
-            <td class="order-admin-col" style="text-align:center;vertical-align:middle;width:38px;">
+            <td class="order-admin-col" style="text-align:center;vertical-align:middle;width:34px;padding:6px 2px;">
               <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" />
             </td>
-            <td class="font-bold" style="white-space:nowrap;">
-              <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="color:var(--primary);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Click for Quick Preview">
+            <td class="font-bold" style="white-space:nowrap;padding:6px 8px;">
+              <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="color:var(--primary);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:3px;" title="Click for Quick Preview">
                 <span>${memoDisplay}</span>
-                <span style="font-size:0.75rem;opacity:0.75;">👁️</span>
+                <span style="font-size:0.72rem;opacity:0.75;">👁️</span>
               </a>
             </td>
-            <td style="white-space:nowrap;">
-              <div style="font-weight:600;">${fmtDate(o.date)}</div>
+            <td style="white-space:nowrap;padding:6px 8px;">
+              <div style="font-weight:600;font-size:0.76rem;">${fmtDate(o.date)}</div>
               ${ageingHtml}
             </td>
-            <td class="order-party-cell" style="min-width:210px;">
-              <div class="font-bold" style="color:#0f172a;line-height:1.3;">${escapeHtml(o.partyName)}</div>
+            <td class="order-party-cell" style="min-width:140px;max-width:210px;padding:6px 8px;">
+              <div class="font-bold" style="color:#0f172a;line-height:1.25;font-size:0.80rem;">${escapeHtml(o.partyName)}</div>
               ${partyDueHtml}
             </td>
-            <td class="order-sp-col" style="font-size:0.78rem;font-weight:600;color:#475569;white-space:nowrap;">${escapeHtml(o.salespersonName || "-")}</td>
-            <td class="order-items-cell" style="min-width:180px;">${itemsHtml}</td>
-            <td class="text-right font-bold">${o.orderQty}</td>
-            <td class="text-right order-disp-col" style="color:#15803d;font-weight:600;">${o.dispatchedQty || 0}</td>
-            <td class="text-right font-bold order-disp-col" style="color:#ea580c;">${pending}</td>
-            <td class="text-right font-bold" style="color:#0f172a;white-space:nowrap;">${fmtINR(lineTotal)}</td>
-            <td class="text-center" style="white-space:nowrap;"><span class="pill ${st[1]}">${st[0]}</span></td>
-            <td class="text-center order-actions-cell" style="white-space:nowrap;vertical-align:middle;min-width:235px;width:235px;">
-              <div class="order-action-btn-group" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;flex-shrink:0;">
+            <td class="order-sp-col" style="font-size:0.74rem;font-weight:600;color:#475569;white-space:nowrap;padding:6px 8px;">${escapeHtml(o.salespersonName || "-")}</td>
+            <td class="order-items-cell" style="min-width:130px;max-width:200px;padding:6px 8px;">${itemsHtml}</td>
+            <td class="text-right font-bold" style="padding:6px 8px;font-size:0.80rem;">${o.orderQty}</td>
+            <td class="text-right order-disp-col" style="color:#15803d;font-weight:600;padding:6px 8px;font-size:0.80rem;">${o.dispatchedQty || 0}</td>
+            <td class="text-right font-bold order-disp-col" style="color:#ea580c;padding:6px 8px;font-size:0.80rem;">${pending}</td>
+            <td class="text-right font-bold" style="color:#0f172a;white-space:nowrap;padding:6px 8px;font-size:0.80rem;">${fmtINR(lineTotal)}</td>
+            <td class="text-center" style="white-space:nowrap;padding:6px 6px;"><span class="pill ${st[1]}" style="font-size:0.70rem;padding:2px 6px;">${st[0]}</span></td>
+            <td class="text-center order-actions-cell" style="white-space:nowrap;vertical-align:middle;">
+              <div class="order-action-btn-group">
                 ${primaryBtn1}
                 ${primaryBtn2}
                 ${moreBtn}
