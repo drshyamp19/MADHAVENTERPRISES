@@ -4174,63 +4174,70 @@ function toBase64Utf8(str) {
       }
     }
 
-    async function generateDocPdfBase64(elementOrHtml, filename) {
+    async function generateDocPdfBlob(elementOrHtml, filename) {
       if (!window.html2pdf || !elementOrHtml) return null;
-      let tempWrap = null;
-      let targetEl = null;
 
+      const opt = {
+        margin: [6, 6, 6, 6],
+        filename: filename || "Document.pdf",
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff"
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      const wrap = document.createElement("div");
+      wrap.className = "invoice-paper";
+      wrap.style.cssText = "width: 760px; max-width: 760px; background: #ffffff; color: #0f172a; padding: 20px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; margin: 0 auto;";
       if (typeof elementOrHtml === "string") {
-        tempWrap = document.createElement("div");
-        tempWrap.id = "tempPdfRenderBox";
-        // Fixed at top-left, full opacity for crisp canvas rendering, background white, hidden behind UI with zIndex -99999
-        tempWrap.style.cssText = "position:fixed!important;left:0!important;top:0!important;width:794px!important;min-height:960px!important;z-index:-99999!important;opacity:1!important;pointer-events:none!important;background:#ffffff!important;color:#0f172a!important;padding:24px!important;box-sizing:border-box!important;font-family:sans-serif!important;overflow:visible!important;";
-        tempWrap.className = "invoice-paper";
-        tempWrap.innerHTML = elementOrHtml;
-        document.body.appendChild(tempWrap);
-        targetEl = tempWrap;
+        wrap.innerHTML = elementOrHtml;
+      } else {
+        wrap.appendChild(elementOrHtml.cloneNode(true));
+      }
 
-        // Ensure all contained images (including company logos) are completely loaded before capturing
-        const imgs = Array.from(tempWrap.querySelectorAll("img"));
+      // Safely mount off-screen without collapsing layout or height
+      const hiddenParent = document.createElement("div");
+      hiddenParent.style.cssText = "position: absolute; left: 0; top: 0; width: 760px; overflow: hidden; opacity: 0.001; pointer-events: none; z-index: 1;";
+      hiddenParent.appendChild(wrap);
+      document.body.appendChild(hiddenParent);
+
+      try {
+        const imgs = Array.from(wrap.querySelectorAll("img"));
         if (imgs.length > 0) {
           await Promise.all(imgs.map(img => {
             if (img.complete && img.naturalWidth > 0) return Promise.resolve();
             return new Promise(res => {
               img.onload = img.onerror = res;
-              setTimeout(res, 400);
+              setTimeout(res, 500);
             });
           }));
         }
-        // Brief pause for browser rendering and layout stabilization
-        await new Promise(r => setTimeout(r, 60));
-      } else {
-        targetEl = elementOrHtml;
-      }
+        await new Promise(r => setTimeout(r, 80));
 
-      try {
-        const opt = {
-          margin: [6, 6, 6, 6],
-          filename: filename || "Document.pdf",
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            scrollY: 0,
-            scrollX: 0,
-            x: 0,
-            y: 0,
-            windowWidth: 794,
-            backgroundColor: "#ffffff"
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        const pdfBlob = await html2pdf().set(opt).from(targetEl).outputPdf('blob');
-        if (!pdfBlob || pdfBlob.size < 500) {
-          console.warn("generateDocPdfBase64: Blob size unexpectedly small:", pdfBlob ? pdfBlob.size : 0);
+        const pdfBlob = await html2pdf().set(opt).from(wrap).outputPdf('blob');
+        if (!pdfBlob || pdfBlob.size < 1000) {
+          console.warn("generateDocPdfBlob: Blob size unexpectedly small:", pdfBlob ? pdfBlob.size : 0);
           return null;
         }
+        return pdfBlob;
+      } catch (err) {
+        console.warn("generateDocPdfBlob error:", err);
+        return null;
+      } finally {
+        if (hiddenParent && hiddenParent.parentNode) {
+          hiddenParent.parentNode.removeChild(hiddenParent);
+        }
+      }
+    }
 
+    async function generateDocPdfBase64(elementOrHtml, filename) {
+      const pdfBlob = await generateDocPdfBlob(elementOrHtml, filename);
+      if (!pdfBlob) return null;
+      try {
         const pureB64 = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -4240,15 +4247,42 @@ function toBase64Utf8(str) {
           reader.onerror = () => resolve(null);
           reader.readAsDataURL(pdfBlob);
         });
-
         return pureB64;
       } catch (err) {
-        console.warn("generateDocPdfBase64 error:", err);
+        console.warn("generateDocPdfBase64 conversion error:", err);
         return null;
-      } finally {
-        if (tempWrap && tempWrap.parentNode) {
-          tempWrap.parentNode.removeChild(tempWrap);
+      }
+    }
+
+    async function downloadDocPdf(elementOrHtml, filename) {
+      if (!window.html2pdf) {
+        window.print();
+        return false;
+      }
+      showToast("⏳ Preparing PDF document for download...");
+      try {
+        const blob = await generateDocPdfBlob(elementOrHtml, filename);
+        if (!blob || blob.size < 1000) {
+          console.warn("downloadDocPdf: Failed to generate valid PDF blob.");
+          showToast("⚠️ PDF generation issue. Opening print preview...");
+          window.print();
+          return false;
         }
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename || "Document.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        showToast(`✅ ${filename} downloaded successfully!`);
+        return true;
+      } catch (err) {
+        console.error("downloadDocPdf error:", err);
+        showToast("⚠️ PDF generation issue. Opening print preview...");
+        window.print();
+        return false;
       }
     }
 
@@ -17466,22 +17500,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const element = document.getElementById("statementPrintArea");
         if (!element || !window.html2pdf) return null;
         const fileName = `${activeCompany}_Statement_${p.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-        const opt = {
-          margin: [6, 6, 6, 6],
-          filename: fileName,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-        const reader = new FileReader();
-        const pureB64 = await new Promise((resolve) => {
-          reader.onloadend = () => {
-            const b64 = (reader.result || "").split(",")[1];
-            resolve(b64);
-          };
-          reader.readAsDataURL(pdfBlob);
-        });
+        const pureB64 = await generateDocPdfBase64(element, fileName);
         if (!pureB64) return null;
         const res = await uploadDocToGoogleDrive(activeCompany, "Statements", fileName, pureB64, "application/pdf");
         if (res && res.fileUrl) {
@@ -23691,29 +23710,13 @@ Thank you! Your payment has been received successfully.`;
       `;
     }
 
-    function downloadDailySummaryPdf() {
+    async function downloadDailySummaryPdf() {
       const el = document.getElementById("dailySummaryPrintArea");
       if (!el) return;
       const dateInput = document.getElementById("dailySummaryDate");
       const selectedDate = (dateInput ? dateInput.value : "") || new Date().toISOString().split("T")[0];
-      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const fileName = `Daily_Closing_Summary_${activeCompany}_${selectedDate}.pdf`;
-
-      if (window.html2pdf) {
-        showToast("⏳ Generating Daily Summary PDF...");
-        const opt = {
-          margin: [8, 8, 8, 8],
-          filename: fileName,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(el).save().then(() => {
-          showToast("✅ Daily Summary PDF Downloaded!");
-        });
-      } else {
-        triggerDocumentPrint('Daily_Closing_Summary');
-      }
+      await downloadDocPdf(el, fileName);
     }
 
     function shareDailySummaryWhatsApp() {
@@ -26633,23 +26636,12 @@ Thank you! Your payment has been received successfully.`;
         const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
         const docType = isDispatched ? "Tax_Invoice" : "Order_Memo";
         const fileName = `${docType}_${memoDisplayNo}.pdf`;
+        const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
+        const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
 
-        if (isDispatched) {
-          openTaxInvoice(ord.id);
-        } else {
-          openOrderBookingMemo(ord.id);
-        }
-
-        const element = document.getElementById("invoicePrintArea");
-        if (element && window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const docHtml = isDispatched ? buildTaxInvoiceContentHtml(ord) : buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, false);
+        const pdfBlob = await generateDocPdfBlob(docHtml, fileName);
+        if (pdfBlob) {
           cachedOrderPdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
           cachedOrderPdfOrderId = ord.id;
         }
@@ -26779,6 +26771,7 @@ Thank you! Your payment has been received successfully.`;
       }
 
       const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const isDispatched = Number(ord.dispatchedQty || 0) > 0;
       const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
       const docType = isDispatched ? "Tax_Invoice" : "Order_Memo";
@@ -26786,38 +26779,11 @@ Thank you! Your payment has been received successfully.`;
 
       showToast("⏳ Generating PDF for download...");
 
-      if (isDispatched) {
-        openTaxInvoice(ord.id);
-      } else {
-        openOrderBookingMemo(ord.id);
-      }
+      const docHtml = isDispatched
+        ? buildTaxInvoiceContentHtml(ord)
+        : buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, false);
 
-      const element = document.getElementById("invoicePrintArea");
-      if (!element) {
-        showToast("⚠️ Document preview element not found.");
-        return;
-      }
-
-      try {
-        if (window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-
-          await html2pdf().set(opt).from(element).save();
-          showToast(`✅ ${fileName} downloaded successfully!`);
-        } else {
-          window.print();
-        }
-      } catch (err) {
-        console.error("PDF download error:", err);
-        showToast("⚠️ PDF generation issue. Opening print preview...");
-        window.print();
-      }
+      await downloadDocPdf(docHtml, fileName);
     }
 
     async function shareOrderPdfOnWhatsApp(orderId) {
@@ -26954,16 +26920,11 @@ Thank you! Your payment has been received successfully.`;
         openPaymentReceipt(col.id);
         const element = document.getElementById("receiptPrintArea");
         if (element && window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-          cachedColPdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-          cachedColPdfId = col.id;
+          const pdfBlob = await generateDocPdfBlob(element, fileName);
+          if (pdfBlob) {
+            cachedColPdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+            cachedColPdfId = col.id;
+          }
         }
       } catch (err) {
         console.warn("Pre-generate Col PDF error:", err);
@@ -26989,26 +26950,7 @@ Thank you! Your payment has been received successfully.`;
       openPaymentReceipt(col.id);
       const element = document.getElementById("receiptPrintArea");
       if (!element) return;
-
-      try {
-        if (window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          await html2pdf().set(opt).from(element).save();
-          showToast(`✅ ${fileName} downloaded successfully!`);
-        } else {
-          window.print();
-        }
-      } catch (err) {
-        console.error("Col PDF download error:", err);
-        showToast("⚠️ Receipt PDF issue. Opening print preview...");
-        window.print();
-      }
+      await downloadDocPdf(element, fileName);
     }
 
     async function sharePaymentReceiptPdfOnWhatsApp(colId) {
@@ -27042,25 +26984,7 @@ Thank you! Your payment has been received successfully.`;
       if (!element) return;
 
       showToast("⏳ Generating Statement PDF for download...");
-      try {
-        if (window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, x: 0, y: 0, backgroundColor: "#ffffff" },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          await html2pdf().set(opt).from(element).save();
-          showToast(`✅ ${fileName} downloaded successfully!`);
-        } else {
-          window.print();
-        }
-      } catch (err) {
-        console.error("Statement PDF download error:", err);
-        showToast("⚠️ Statement PDF generation issue. Opening print preview...");
-        window.print();
-      }
+      await downloadDocPdf(element, fileName);
     }
 
     async function shareCurrentStatementPdfWhatsApp() {
@@ -27076,27 +27000,18 @@ Thank you! Your payment has been received successfully.`;
       const ord = state.orders.find(o => o.id === targetId || o.orderNo === String(targetId) || o.memoNo === targetId);
       if (!ord) return;
 
+      const party = state.parties.find(p => p.id === ord.partyId || p.name === ord.partyName) || { name: ord.partyName, area: "Nagpur", mobile: "" };
+      const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const isDispatched = Number(ord.dispatchedQty || 0) > 0;
-      if (isDispatched) {
-        openTaxInvoice(ord.id);
-      } else {
-        openOrderBookingMemo(ord.id);
-      }
+      const memoDisplayNo = ord.memoNo ? ord.memoNo : `OB-${ord.orderNo}`;
+      const fileName = `${isDispatched ? "Tax_Invoice" : "Booking_Memo"}_${memoDisplayNo}.pdf`;
+      const docHtml = isDispatched ? buildTaxInvoiceContentHtml(ord) : buildOrderMemoContentHtml(ord, party, co, memoDisplayNo, false);
 
-      const element = document.getElementById("invoicePrintArea");
-      if (!element) return;
       showToast("⏳ Opening Fullscreen PDF in viewer...");
 
       try {
-        if (window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: `${isDispatched ? "Tax_Invoice" : "Booking_Memo"}_${ord.memoNo || ord.orderNo}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          const blob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const blob = await generateDocPdfBlob(docHtml, fileName);
+        if (blob) {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
         } else {
@@ -27120,15 +27035,8 @@ Thank you! Your payment has been received successfully.`;
       showToast("⏳ Opening Fullscreen Receipt in viewer...");
 
       try {
-        if (window.html2pdf) {
-          const opt = {
-            margin: [6, 6, 6, 6],
-            filename: `Receipt_${targetId}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-          const blob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const blob = await generateDocPdfBlob(element, `Receipt_${targetId}.pdf`);
+        if (blob) {
           const blobUrl = URL.createObjectURL(blob);
           window.open(blobUrl, "_blank");
         } else {
