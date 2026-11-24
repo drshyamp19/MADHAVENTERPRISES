@@ -1787,10 +1787,12 @@
 
   <!-- ==================== MAIN APP SHELL ==================== -->
   <div id="appShell" style="display:none;">
+    <datalist id="partyDatalist"></datalist>
+    <datalist id="productDatalist"></datalist>
     <header class="topbar">
       <div class="brand">
         <div class="brand-logo-wrap" id="headerLogoWrap">
-          <img id="headerLogo" alt="Enterprise Logo" />
+          <img id="headerLogo" src="shivom-logo-cropped.png" alt="Enterprise Logo" style="height:42px;width:auto;display:block;border-radius:6px;object-fit:contain;" />
         </div>
         <div>
           <h1 id="headerTitle">MADHAV ENTERPRISES</h1>
@@ -2511,6 +2513,9 @@
 
           <!-- Table View Container -->
           <div class="table-wrap" id="ordersTableWrap" style="display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;">
+            <div id="ordersTableScrollHint" style="display:none;background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:7px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;margin-bottom:8px;text-align:center;align-items:center;justify-content:center;gap:6px;">
+              👉 Swipe horizontally on table to view all columns &amp; actions 👈
+            </div>
             <table id="ordersMainTable" style="width:100%;min-width:960px;border-collapse:separate;border-spacing:0;">
               <thead>
                 <tr>
@@ -17505,11 +17510,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
             <div class="dealer-actions">
               ${cleanPhone.length >= 10
                 ? `<a class="btn btn-call btn-sm" href="tel:${cleanPhone}">📞 Call</a>`
-                : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>📞 Call</button>`}
+                : `<button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;cursor:not-allowed;" title="No mobile number registered for this party" onclick="alert('No mobile number registered for ${escapeHtml(p.name)}. Please update mobile number in Masters.')">📞 Call</button>`}
 
               ${(p.netBalance > 0 && cleanPhone.length >= 10)
                 ? `<button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="openPaymentReminderModal('${p.id}')">🔔 Reminder</button>`
-                : `<button class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;" disabled>🔔 Reminder</button>`}
+                : `<button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#94a3b8;cursor:not-allowed;" title="${cleanPhone.length < 10 ? 'No mobile number registered' : 'No balance due'}" onclick="alert('${cleanPhone.length < 10 ? 'No mobile number registered for ' + escapeHtml(p.name) + '. Please update mobile in Masters.' : 'No pending balance due for ' + escapeHtml(p.name) + ' (Nil Due).'}')">🔔 Reminder</button>`}
 
               <button type="button" class="btn btn-sm" style="background:#15803d;color:#fff;font-weight:700;" onclick="quickCollectFromDue('${p.id}')">
                 💵 Collect
@@ -18413,14 +18418,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           focBtn.style.color = "#ffffff";
           focBtn.textContent = "✓ FOC Selected";
         }
-      }
-    }
-
-    function setEditItemFoc(idx) {
-      const rateEl = document.getElementById(`editRate_${idx}`);
-      if (rateEl) {
-        rateEl.value = 0;
-        recalcEditTotal();
       }
     }
 
@@ -21479,39 +21476,6 @@ Thank you!`;
       }
 
       showToast(`🗑️ Receipt #${col.receiptNo} deleted successfully.`);
-    }
-
-    function numberToWordsINR(num) {
-      const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
-      const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-      num = Math.floor(Number(num) || 0);
-      if (num === 0) return 'Zero Rupees Only';
-
-      function inWords(n) {
-        let str = '';
-        if (n > 9999999) {
-          str += inWords(Math.floor(n / 10000000)) + 'Crore ';
-          n %= 10000000;
-        }
-        if (n > 99999) {
-          str += inWords(Math.floor(n / 100000)) + 'Lakh ';
-          n %= 100000;
-        }
-        if (n > 999) {
-          str += inWords(Math.floor(n / 1000)) + 'Thousand ';
-          n %= 1000;
-        }
-        if (n > 99) {
-          str += inWords(Math.floor(n / 100)) + 'Hundred ';
-          n %= 100;
-        }
-        if (n > 0) {
-          if (n < 20) str += a[n];
-          else str += b[Math.floor(n / 10)] + ' ' + a[n % 10];
-        }
-        return str;
-      }
-      return inWords(num).trim() + ' Rupees Only';
     }
 
     function openPaymentReceipt(colId) {
@@ -25513,6 +25477,7 @@ Thank you! Your payment has been received successfully.`;
             Goods Condition: <strong>${r.returnCondition}</strong>
           </div>
         </div>
+        <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;margin-bottom:10px;">
         <table class="inv-table">
           <thead>
             <tr>
@@ -25539,6 +25504,7 @@ Thank you! Your payment has been received successfully.`;
             </tr>
           </tbody>
         </table>
+        </div>
         <div style="border:1px solid #94a3b8;padding:7px 10px;margin-bottom:8px;font-size:11.5px;">
           <strong>Credit Amount In Words:</strong> ${numberToWordsINR(r.totalCreditAmt || 0)}
         </div>

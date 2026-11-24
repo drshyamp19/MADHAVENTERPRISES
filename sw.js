@@ -1,10 +1,12 @@
-const CACHE_NAME = 'madhav-shivom-erp-v57';
+const CACHE_NAME = 'madhav-shivom-erp-v58';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
   '/madhav-qr-code.jpeg',
+  '/shivom-qr-code.jpeg',
   '/shivom-logo.jpg',
+  '/shivom-logo-cropped.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
