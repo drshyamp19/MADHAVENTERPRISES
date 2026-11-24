@@ -539,6 +539,86 @@
       .field-card-grid { grid-template-columns: 1fr; }
     }
 
+    /* Order Cards (Mobile Responsive Card View) */
+    .order-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: 0.2s ease;
+      position: relative;
+    }
+    .order-card:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.08); }
+    .order-card.order-card-pending-urgent {
+      border: 2px solid #ef4444 !important;
+      background: #fffafa !important;
+      box-shadow: 0 3px 12px rgba(239, 68, 68, 0.10) !important;
+    }
+    .order-card.order-card-partial {
+      border: 2px solid #f59e0b !important;
+      background: #fffdf5 !important;
+      box-shadow: 0 3px 12px rgba(245, 158, 11, 0.08) !important;
+    }
+    .order-card.order-card-completed {
+      border: 1.5px solid #86efac !important;
+      background: #fcfdfd !important;
+    }
+    .order-card-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #f1f5f9;
+      text-align: center;
+    }
+    .order-card-meta-cell .meta-lbl {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .order-card-meta-cell .meta-val {
+      font-size: 0.90rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+    .order-card-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+    .order-card-actions .btn {
+      flex: 1;
+      justify-content: center;
+      font-size: 0.82rem;
+      padding: 8px 6px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .order-card-actions .order-more-btn {
+      flex: 0 0 38px;
+      padding: 6px 0;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 480px) {
+      .order-card { padding: 12px; }
+      .order-card-meta-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    }
+
     /* Dealer Outstanding Card */
     .dealer-card {
       background: #fff;
@@ -2277,17 +2357,34 @@
               </div>
             </div>
 
-            <!-- Smart Filter Tabs for Orders (Default: Pending Only) -->
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
-              <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:6px 16px;background:#fff7ed;color:#c2410c;border:1.5px solid #f97316;box-shadow:0 1px 3px rgba(249,115,22,0.15);">
-                📦 Active Pending Orders (<span id="countPendingOrders">0</span>)
-              </button>
-              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                ✓ Dispatched Archive (<span id="countCompletedOrders">0</span>)
-              </button>
-              <button type="button" class="btn btn-sm order-tab-btn" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
-                📁 All Orders History (<span id="countAllOrders">0</span>)
-              </button>
+            <!-- Smart Filter Tabs for Orders (Default: Pending Only) & View Switcher -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;" id="orderFilterTabs">
+                <button type="button" class="btn btn-sm order-tab-btn active" id="orderTabPending" onclick="setOrderRegisterTab('Pending')" style="font-weight:700;border-radius:20px;padding:6px 16px;background:#fff7ed;color:#c2410c;border:1.5px solid #f97316;box-shadow:0 1px 3px rgba(249,115,22,0.15);">
+                  📦 Active Pending Orders (<span id="countPendingOrders">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm order-tab-btn" id="orderTabCompleted" onclick="setOrderRegisterTab('Completed')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                  ✓ Dispatched Archive (<span id="countCompletedOrders">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm order-tab-btn" id="orderTabAll" onclick="setOrderRegisterTab('All')" style="font-weight:700;border-radius:20px;padding:6px 14px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;">
+                  📁 All Orders History (<span id="countAllOrders">0</span>)
+                </button>
+              </div>
+
+              <!-- View Switcher: Cards vs Table -->
+              <div style="display:inline-flex;align-items:center;gap:8px;">
+                <button type="button" class="btn btn-xs btn-outline order-admin-col" id="btnOrderCardSelectAll" onclick="toggleSelectAllCardOrders()" style="font-weight:700;padding:5px 9px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;display:inline-flex;align-items:center;gap:4px;" title="Select/Deselect All Visible Orders">
+                  <span>☑️</span> Select All
+                </button>
+                <div id="orderViewModeToggle" style="display:inline-flex;align-items:center;background:#f1f5f9;padding:3px;border-radius:8px;border:1px solid #cbd5e1;">
+                  <button type="button" id="btnOrderViewCards" class="btn btn-xs" onclick="setOrderViewMode('cards')" style="padding:5px 12px;font-weight:700;border-radius:6px;border:none;background:#0f766e;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Switch to Mobile Responsive Card View">
+                    🗂️ Cards
+                  </button>
+                  <button type="button" id="btnOrderViewTable" class="btn btn-xs" onclick="setOrderViewMode('table')" style="padding:5px 12px;font-weight:600;border-radius:6px;border:none;background:transparent;color:#475569;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Switch to Spreadsheet Table View">
+                    📋 Table
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2310,7 +2407,13 @@
             </div>
           </div>
 
-          <div class="table-wrap">
+          <!-- Card View Container (Default & Mobile Responsive) -->
+          <div id="ordersCardsWrap" style="padding:10px 14px 18px 14px;">
+            <div class="field-card-grid" id="ordersCardsContainer"></div>
+          </div>
+
+          <!-- Table View Container -->
+          <div class="table-wrap" id="ordersTableWrap" style="display:none;">
             <table id="ordersMainTable">
               <thead>
                 <tr>
@@ -18934,6 +19037,59 @@ Thank you!`;
       openModal("orderMemoModal");
     }
 
+    // ==================== ORDERS REGISTER VIEW MODE (CARDS VS TABLE) ====================
+    let currentOrderViewMode = localStorage.getItem("orderViewMode") || "cards";
+
+    function setOrderViewMode(mode) {
+      currentOrderViewMode = mode;
+      try {
+        localStorage.setItem("orderViewMode", mode);
+      } catch (e) {}
+      updateOrderViewModeUI();
+    }
+
+    function updateOrderViewModeUI() {
+      const cardsWrap = document.getElementById("ordersCardsWrap");
+      const tableWrap = document.getElementById("ordersTableWrap");
+      const btnCards = document.getElementById("btnOrderViewCards");
+      const btnTable = document.getElementById("btnOrderViewTable");
+
+      if (currentOrderViewMode === "cards") {
+        if (cardsWrap) cardsWrap.style.display = "block";
+        if (tableWrap) tableWrap.style.display = "none";
+        if (btnCards) {
+          btnCards.style.background = "#0f766e";
+          btnCards.style.color = "#ffffff";
+          btnCards.style.fontWeight = "700";
+        }
+        if (btnTable) {
+          btnTable.style.background = "transparent";
+          btnTable.style.color = "#475569";
+          btnTable.style.fontWeight = "600";
+        }
+      } else {
+        if (cardsWrap) cardsWrap.style.display = "none";
+        if (tableWrap) tableWrap.style.display = "block";
+        if (btnCards) {
+          btnCards.style.background = "transparent";
+          btnCards.style.color = "#475569";
+          btnCards.style.fontWeight = "600";
+        }
+        if (btnTable) {
+          btnTable.style.background = "#0f766e";
+          btnTable.style.color = "#ffffff";
+          btnTable.style.fontWeight = "700";
+        }
+      }
+    }
+
+    function toggleSelectAllCardOrders() {
+      const masterChk = document.getElementById("orderSelectAllChk");
+      const newState = masterChk ? !masterChk.checked : (selectedOrderIds.size === 0);
+      if (masterChk) masterChk.checked = newState;
+      toggleSelectAllOrders({ checked: newState });
+    }
+
     let currentOrderRegisterTab = "Pending";
     function setOrderRegisterTab(tab) {
       currentOrderRegisterTab = tab;
@@ -19570,16 +19726,22 @@ Thank you!`;
       // Get filtered and sorted list
       const list = getFilteredAndSortedOrdersList();
       const tbody = document.getElementById("ordersTableBody");
-      if (!tbody) return;
+      const cardsCont = document.getElementById("ordersCardsContainer");
+      if (!tbody && !cardsCont) return;
 
       if (list.length === 0) {
         const colSpan = isSalesperson ? (currentOrderRegisterTab === "Pending" ? 8 : 9) : 12;
-        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding:24px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</td></tr>`;
+        if (cardsCont) cardsCont.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-weight:600;">No orders found matching selected filters.</div>`;
         updateSelectedOrdersBar();
+        updateOrderViewModeUI();
         return;
       }
 
-      tbody.innerHTML = list.map(o => {
+      let tableRowsHtml = "";
+      let cardsHtml = "";
+
+      list.forEach(o => {
         const pending = Number(o.orderQty || 0) - Number(o.dispatchedQty || 0);
         const st = Number(o.dispatchedQty || 0) === 0 ? ["Pending", "pill-red"] : (pending > 0 ? ["Partial", "pill-yellow"] : ["Completed", "pill-green"]);
         const isDispatched = Number(o.dispatchedQty || 0) > 0;
@@ -19590,6 +19752,7 @@ Thank you!`;
         // Party Live Due Calculation with Quick Collect Payment Shortcut
         const partyInfo = computedParties.find(p => p.name && p.name.trim().toLowerCase() === (o.partyName || "").trim().toLowerCase());
         let partyDueHtml = "";
+        let partyDueCardHtml = "";
         if (partyInfo) {
           const bal = Number(partyInfo.netBalance || 0);
           if (bal > 0) {
@@ -19598,22 +19761,30 @@ Thank you!`;
                 <span>🔴 Due: ${fmtINR(bal)}</span>
                 <button type="button" class="btn btn-xs" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.65rem;padding:1px 5px;border-radius:4px;font-weight:700;cursor:pointer;line-height:1.2;" onclick="quickCollectFromDue('${escapeHtml(partyInfo.id || o.partyName)}')" title="Record collection for ${escapeHtml(o.partyName)}">💵 Collect</button>
               </div>`;
+            partyDueCardHtml = `
+              <div style="font-size:0.75rem;color:#b45309;font-weight:700;margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span>🔴 Due: ${fmtINR(bal)}</span>
+                <button type="button" class="btn btn-xs" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.68rem;padding:2px 6px;border-radius:4px;font-weight:700;cursor:pointer;line-height:1.2;" onclick="quickCollectFromDue('${escapeHtml(partyInfo.id || o.partyName)}')" title="Record collection for ${escapeHtml(o.partyName)}">💵 Collect</button>
+              </div>`;
           } else if (bal === 0) {
             partyDueHtml = `<div style="font-size:0.71rem;color:#15803d;font-weight:600;margin-top:2px;">🟢 Nil Due</div>`;
+            partyDueCardHtml = `<div style="font-size:0.75rem;color:#15803d;font-weight:600;margin-top:3px;">🟢 Nil Due</div>`;
           } else {
             partyDueHtml = `<div style="font-size:0.71rem;color:#0284c7;font-weight:600;margin-top:2px;">🔵 Adv: ${fmtINR(Math.abs(bal))}</div>`;
+            partyDueCardHtml = `<div style="font-size:0.75rem;color:#0284c7;font-weight:600;margin-top:3px;">🔵 Adv: ${fmtINR(Math.abs(bal))}</div>`;
           }
         }
 
         // Date Ageing / Days Pending Calculation
         let ageingHtml = "";
+        let diffDays = 0;
         if (o.date) {
           const parts = o.date.split("-");
           if (parts.length === 3) {
             const oDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
             const now = new Date();
             const todayZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const diffDays = Math.round((todayZero - oDate) / (1000 * 60 * 60 * 24));
+            diffDays = Math.round((todayZero - oDate) / (1000 * 60 * 60 * 24));
 
             if (diffDays <= 0) {
               ageingHtml = `<span style="font-size:0.66rem;padding:1px 5px;border-radius:4px;background:#f0fdf4;color:#166534;font-weight:700;display:inline-block;margin-top:2px;">Today</span>`;
@@ -19631,13 +19802,16 @@ Thank you!`;
 
         // Formatted Item Details with Badges
         let itemsHtml = "";
+        let cardItemsHtml = "";
         if (Array.isArray(o.items) && o.items.length > 0) {
           const badgeItems = o.items.slice(0, 2).map(it => `<span style="display:inline-block;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:0.73rem;margin:1px 2px;white-space:nowrap;"><strong>${escapeHtml(it.productName)}</strong> (${it.qty})</span>`).join("");
           const extraCount = o.items.length - 2;
           const morePill = extraCount > 0 ? `<a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="font-size:0.7rem;color:#0284c7;font-weight:700;text-decoration:none;margin-left:2px;">+${extraCount} more</a>` : "";
           itemsHtml = `<div style="max-width:220px;line-height:1.3;">${badgeItems}${morePill}</div>`;
+          cardItemsHtml = `<div style="line-height:1.4;margin-top:2px;">${badgeItems}${morePill}</div>`;
         } else {
           itemsHtml = `<div style="max-width:220px;font-size:0.78rem;font-weight:600;color:#334155;">${escapeHtml(o.productName || "General Goods")}</div>`;
+          cardItemsHtml = `<div style="font-size:0.80rem;font-weight:600;color:#334155;margin-top:2px;">${escapeHtml(o.productName || "General Goods")}</div>`;
         }
 
         // Smart Primary Actions
@@ -19665,7 +19839,21 @@ Thank you!`;
         const memoDisplay = o.memoNo ? o.memoNo : `#${o.orderNo}`;
         const isChecked = selectedOrderIds.has(o.id) ? "checked" : "";
 
-        return `
+        // Card Alert Class
+        let cardAlertClass = "";
+        if (pending > 0 && diffDays >= 3) {
+          cardAlertClass = "order-card-pending-urgent";
+        } else if (isPartial) {
+          cardAlertClass = "order-card-partial";
+        } else if (isCompleted) {
+          cardAlertClass = "order-card-completed";
+        }
+
+        const ordQ = Number(o.orderQty || 0);
+        const dispQ = Number(o.dispatchedQty || 0);
+        const progressPct = ordQ > 0 ? Math.min(100, Math.round((dispQ / ordQ) * 100)) : (isCompleted ? 100 : 0);
+
+        tableRowsHtml += `
           <tr>
             <td class="order-admin-col" style="text-align:center;vertical-align:middle;">
               <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" />
@@ -19700,9 +19888,82 @@ Thank you!`;
             </td>
           </tr>
         `;
-      }).join("");
+
+        cardsHtml += `
+          <div class="order-card ${cardAlertClass}">
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <span class="pill ${st[1]}" style="font-size:0.72rem;padding:2px 8px;font-weight:700;">${st[0]}</span>
+                  <span style="font-size:0.75rem;font-weight:600;color:#64748b;">📅 ${fmtDate(o.date)}</span>
+                  ${ageingHtml}
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  ${!isSalesperson ? `
+                    <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" title="Select for Warehouse Slip" style="width:16px;height:16px;cursor:pointer;" />
+                  ` : ''}
+                  <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="color:var(--primary);font-weight:800;font-size:0.86rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;background:#f8fafc;padding:3px 8px;border-radius:6px;border:1px solid #e2e8f0;" title="Click for Quick Preview">
+                    <span>${memoDisplay}</span>
+                    <span style="font-size:0.75rem;opacity:0.75;">👁️</span>
+                  </a>
+                </div>
+              </div>
+
+              <div style="margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                  <div style="flex:1;">
+                    <div style="font-size:1.02rem;font-weight:800;color:#0f172a;line-height:1.25;">${escapeHtml(o.partyName)}</div>
+                    ${partyDueCardHtml}
+                  </div>
+                  <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-size:1.18rem;font-weight:900;color:#0f172a;">${fmtINR(lineTotal)}</div>
+                    <div style="font-size:0.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;">Order Total</div>
+                  </div>
+                </div>
+                <div style="margin-top:6px;font-size:0.76rem;color:#475569;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                  <span style="color:#64748b;">👤 Booked by:</span>
+                  <strong style="color:#1e293b;">${escapeHtml(o.salespersonName || "-")}</strong>
+                </div>
+                <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #e2e8f0;">
+                  <div style="font-size:0.68rem;text-transform:uppercase;font-weight:700;color:#64748b;margin-bottom:3px;">Ordered Items:</div>
+                  ${cardItemsHtml}
+                </div>
+              </div>
+
+              <div class="order-card-meta-grid">
+                <div class="order-card-meta-cell">
+                  <div class="meta-lbl">Ordered</div>
+                  <div class="meta-val">${ordQ}</div>
+                </div>
+                <div class="order-card-meta-cell">
+                  <div class="meta-lbl">Dispatched</div>
+                  <div class="meta-val" style="color:#15803d;">${dispQ}</div>
+                </div>
+                <div class="order-card-meta-cell">
+                  <div class="meta-lbl">Pending</div>
+                  <div class="meta-val" style="color:${pending > 0 ? '#ea580c' : '#15803d'};">${pending}</div>
+                </div>
+                <div class="order-card-meta-cell">
+                  <div class="meta-lbl">Progress</div>
+                  <div class="meta-val" style="font-size:0.80rem;">${progressPct}%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="order-card-actions">
+              ${primaryBtn1}
+              ${primaryBtn2}
+              ${moreBtn}
+            </div>
+          </div>
+        `;
+      });
+
+      if (tbody) tbody.innerHTML = tableRowsHtml;
+      if (cardsCont) cardsCont.innerHTML = cardsHtml;
 
       updateSelectedOrdersBar();
+      updateOrderViewModeUI();
     }
 
     // ==================== QUICK ORDER PREVIEW MODAL ====================
