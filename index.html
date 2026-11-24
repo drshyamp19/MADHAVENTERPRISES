@@ -619,6 +619,66 @@
       .order-card-meta-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     }
 
+    /* Orders Register Table Fixes (No Clipping, Full Visibility & Responsive Scroll) */
+    #ordersTableWrap {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      width: 100% !important;
+      border-radius: 0 0 12px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #94a3b8 #f1f5f9;
+    }
+    #ordersTableWrap::-webkit-scrollbar {
+      height: 8px;
+    }
+    #ordersTableWrap::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    #ordersTableWrap::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+    #ordersMainTable {
+      width: 100% !important;
+      min-width: 1260px !important;
+      border-collapse: collapse !important;
+      table-layout: auto !important;
+    }
+    #ordersMainTable th,
+    #ordersMainTable td {
+      vertical-align: middle !important;
+      padding: 10px 12px !important;
+    }
+    #ordersMainTable th.order-actions-col,
+    #ordersMainTable td.order-actions-cell {
+      min-width: 235px !important;
+      width: 235px !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+    }
+    #ordersMainTable .order-action-btn-group {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
+    #ordersMainTable .order-action-btn-group .btn {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      padding: 5px 9px !important;
+      font-size: 0.77rem !important;
+      font-weight: 700 !important;
+    }
+    #ordersMainTable .order-action-btn-group .order-more-btn {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      padding: 3px 9px !important;
+      font-size: 1.1rem !important;
+      line-height: 1 !important;
+    }
+
     /* Dealer Outstanding Card */
     .dealer-card {
       background: #fff;
@@ -2412,39 +2472,44 @@
             <div class="field-card-grid" id="ordersCardsContainer"></div>
           </div>
 
+          <!-- Table View Swipe Hint (for Mobile/Tablets) -->
+          <div id="ordersTableScrollHint" style="display:none;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-size:0.75rem;font-weight:600;padding:6px 14px;margin:4px 14px 10px 14px;border-radius:6px;align-items:center;gap:6px;">
+            <span>↔️</span> <span>Swipe horizontally to view full table columns, status &amp; action buttons</span>
+          </div>
+
           <!-- Table View Container -->
-          <div class="table-wrap" id="ordersTableWrap" style="display:none;">
-            <table id="ordersMainTable">
+          <div class="table-wrap" id="ordersTableWrap" style="display:none;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;">
+            <table id="ordersMainTable" style="width:100%;min-width:1260px;border-collapse:collapse;">
               <thead>
                 <tr>
-                  <th class="order-admin-col" style="width:36px;text-align:center;">
+                  <th class="order-admin-col" style="width:38px;min-width:38px;text-align:center;">
                     <input type="checkbox" id="orderSelectAllChk" onchange="toggleSelectAllOrders(this)" title="Select All Visible Orders" />
                   </th>
-                  <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('memoNo')">
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;min-width:95px;" onclick="toggleOrderSort('memoNo')">
                     Memo No <span id="sortIcon_memoNo">⇅</span>
                   </th>
-                  <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('date')">
+                  <th style="cursor:pointer;user-select:none;white-space:nowrap;min-width:105px;" onclick="toggleOrderSort('date')">
                     Date &amp; Age <span id="sortIcon_date">▼</span>
                   </th>
-                  <th style="cursor:pointer;user-select:none;" onclick="toggleOrderSort('partyName')">
+                  <th style="cursor:pointer;user-select:none;min-width:210px;" onclick="toggleOrderSort('partyName')">
                     Party Name &amp; Balance <span id="sortIcon_partyName">⇅</span>
                   </th>
-                  <th class="order-sp-col">Booked By</th>
-                  <th>Items Details</th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('ordQty')">
+                  <th class="order-sp-col" style="min-width:115px;white-space:nowrap;">Booked By</th>
+                  <th style="min-width:180px;">Items Details</th>
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('ordQty')">
                     <span id="colHeaderOrdQty">Ord Qty</span> <span id="sortIcon_ordQty">⇅</span>
                   </th>
-                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('dispQty')">
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('dispQty')">
                     Disp Qty <span id="sortIcon_dispQty">⇅</span>
                   </th>
-                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('pendingQty')">
+                  <th class="text-right order-disp-col" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:75px;" onclick="toggleOrderSort('pendingQty')">
                     Pending <span id="sortIcon_pendingQty">⇅</span>
                   </th>
-                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="toggleOrderSort('totalAmt')">
+                  <th class="text-right" style="cursor:pointer;user-select:none;white-space:nowrap;min-width:100px;" onclick="toggleOrderSort('totalAmt')">
                     Total Value <span id="sortIcon_totalAmt">⇅</span>
                   </th>
-                  <th class="text-center">Status</th>
-                  <th class="text-center" style="min-width:180px;">Actions</th>
+                  <th class="text-center" style="min-width:90px;white-space:nowrap;">Status</th>
+                  <th class="text-center order-actions-col" style="min-width:235px;width:235px;white-space:nowrap;">Actions</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody"></tbody>
@@ -19053,10 +19118,12 @@ Thank you!`;
       const tableWrap = document.getElementById("ordersTableWrap");
       const btnCards = document.getElementById("btnOrderViewCards");
       const btnTable = document.getElementById("btnOrderViewTable");
+      const scrollHint = document.getElementById("ordersTableScrollHint");
 
       if (currentOrderViewMode === "cards") {
         if (cardsWrap) cardsWrap.style.display = "block";
         if (tableWrap) tableWrap.style.display = "none";
+        if (scrollHint) scrollHint.style.display = "none";
         if (btnCards) {
           btnCards.style.background = "#0f766e";
           btnCards.style.color = "#ffffff";
@@ -19070,6 +19137,7 @@ Thank you!`;
       } else {
         if (cardsWrap) cardsWrap.style.display = "none";
         if (tableWrap) tableWrap.style.display = "block";
+        if (scrollHint) scrollHint.style.display = (window.innerWidth <= 1024 ? "flex" : "none");
         if (btnCards) {
           btnCards.style.background = "transparent";
           btnCards.style.color = "#475569";
@@ -19819,19 +19887,19 @@ Thank you!`;
         let primaryBtn2 = "";
 
         if (isCompleted) {
-          primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" style="font-weight:700;padding:5px 9px;" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendInvoiceWhatsAppDirect('${o.id}')" style="padding:5px 9px;" title="Send Bill to Party">💬 Send Bill</button>`;
+          primaryBtn1 = `<button class="btn btn-primary btn-sm" onclick="openTaxInvoice('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="View Final Tax Invoice Bill">🧾 Bill PDF</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendInvoiceWhatsAppDirect('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send Bill to Party">💬 Send Bill</button>`;
         } else if (isPartial) {
-          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;" title="Dispatch remaining items">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send WhatsApp">💬 WhatsApp</button>`;
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Dispatch remaining items">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send WhatsApp">💬 WhatsApp</button>`;
         } else {
           // Pending
-          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;" title="Dispatch order">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
-          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;" title="Send Order Memo to Party">💬 WhatsApp</button>`;
+          primaryBtn1 = canDispatch ? `<button class="btn btn-amber btn-sm" onclick="openDispatchModal('${o.id}')" style="font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Dispatch order">🚚 Dispatch</button>` : `<button class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:5px 9px;white-space:nowrap;flex-shrink:0;" onclick="openOrderBookingMemo('${o.id}')" title="View Memo PDF">📄 Memo</button>`;
+          primaryBtn2 = `<button class="btn btn-whatsapp btn-sm" onclick="sendOrderWhatsApp('${o.id}')" style="padding:5px 9px;white-space:nowrap;flex-shrink:0;" title="Send Order Memo to Party">💬 WhatsApp</button>`;
         }
 
         const moreBtn = `
-          <button type="button" class="btn btn-sm order-more-btn" onclick="toggleOrderActionMenu(event, '${o.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-weight:800;font-size:1.1rem;padding:3px 9px;border-radius:6px;line-height:1;cursor:pointer;" title="More Options">
+          <button type="button" class="btn btn-sm order-more-btn" onclick="toggleOrderActionMenu(event, '${o.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-weight:800;font-size:1.1rem;padding:3px 9px;border-radius:6px;line-height:1;cursor:pointer;white-space:nowrap;flex-shrink:0;" title="More Options">
             ⋮
           </button>
         `;
@@ -19855,7 +19923,7 @@ Thank you!`;
 
         tableRowsHtml += `
           <tr>
-            <td class="order-admin-col" style="text-align:center;vertical-align:middle;">
+            <td class="order-admin-col" style="text-align:center;vertical-align:middle;width:38px;">
               <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" />
             </td>
             <td class="font-bold" style="white-space:nowrap;">
@@ -19868,19 +19936,19 @@ Thank you!`;
               <div style="font-weight:600;">${fmtDate(o.date)}</div>
               ${ageingHtml}
             </td>
-            <td>
-              <div class="font-bold" style="color:#0f172a;">${escapeHtml(o.partyName)}</div>
+            <td class="order-party-cell" style="min-width:210px;">
+              <div class="font-bold" style="color:#0f172a;line-height:1.3;">${escapeHtml(o.partyName)}</div>
               ${partyDueHtml}
             </td>
-            <td class="order-sp-col" style="font-size:0.78rem;font-weight:600;color:#475569;">${escapeHtml(o.salespersonName || "-")}</td>
-            <td>${itemsHtml}</td>
+            <td class="order-sp-col" style="font-size:0.78rem;font-weight:600;color:#475569;white-space:nowrap;">${escapeHtml(o.salespersonName || "-")}</td>
+            <td class="order-items-cell" style="min-width:180px;">${itemsHtml}</td>
             <td class="text-right font-bold">${o.orderQty}</td>
             <td class="text-right order-disp-col" style="color:#15803d;font-weight:600;">${o.dispatchedQty || 0}</td>
             <td class="text-right font-bold order-disp-col" style="color:#ea580c;">${pending}</td>
-            <td class="text-right font-bold" style="color:#0f172a;">${fmtINR(lineTotal)}</td>
-            <td class="text-center"><span class="pill ${st[1]}">${st[0]}</span></td>
-            <td class="text-center" style="white-space:nowrap;vertical-align:middle;">
-              <div style="display:inline-flex;align-items:center;gap:5px;">
+            <td class="text-right font-bold" style="color:#0f172a;white-space:nowrap;">${fmtINR(lineTotal)}</td>
+            <td class="text-center" style="white-space:nowrap;"><span class="pill ${st[1]}">${st[0]}</span></td>
+            <td class="text-center order-actions-cell" style="white-space:nowrap;vertical-align:middle;min-width:235px;width:235px;">
+              <div class="order-action-btn-group" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;flex-shrink:0;">
                 ${primaryBtn1}
                 ${primaryBtn2}
                 ${moreBtn}
