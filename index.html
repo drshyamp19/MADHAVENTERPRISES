@@ -2402,19 +2402,19 @@
               <select id="colDepositAccount" class="form-control" onchange="handleColDepositAccountChange()">
                 <!-- Dynamically populated based on activeCompany -->
               </select>
-              <!-- Madhav Official QR Banner -->
+              <!-- Madhav & Shivom Official QR Banner -->
               <div id="madhavQrBanner" style="display:none;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;padding:12px;margin-top:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                   <div>
-                    <div style="font-weight:700;color:#15803d;font-size:0.88rem;">📲 MADHAV ENTERPRISES Official QR Code</div>
-                    <div style="font-size:0.75rem;color:#166534;">Scan & Pay directly via PhonePe, GPay, Paytm, or BHIM.</div>
+                    <div id="colQrBannerTitle" style="font-weight:700;color:#15803d;font-size:0.88rem;">📲 MADHAV ENTERPRISES Official QR Code</div>
+                    <div id="colQrBannerSub" style="font-size:0.75rem;color:#166534;">Scan & Pay directly via PhonePe, GPay, Paytm, or BHIM.</div>
                   </div>
                   <button type="button" class="btn btn-teal btn-sm" onclick="openMadhavQrModal()" style="font-weight:700;padding:5px 12px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">
                     👁️ Fullscreen QR
                   </button>
                 </div>
                 <div style="text-align:center;margin-top:10px;">
-<img id="madhavInlineQrImg" src="madhav-qr-code.jpeg" alt="Madhav QR Code" style="max-height:190px;width:auto;border-radius:8px;border:1px solid #bbf7d0;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;" onclick="openMadhavQrModal()" onerror="if(typeof MADHAV_QR_IMAGE !== 'undefined') this.src = MADHAV_QR_IMAGE;" />
+<img id="madhavInlineQrImg" src="madhav-qr-code.jpeg" alt="QR Code" style="max-height:190px;width:auto;border-radius:8px;border:1px solid #bbf7d0;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;" onclick="openMadhavQrModal()" onerror="if(typeof MADHAV_QR_IMAGE !== 'undefined') this.src = MADHAV_QR_IMAGE;" />
                   <div style="font-size:0.73rem;color:#15803d;margin-top:4px;font-weight:600;">(Tap image to view fullscreen QR Code for dealer)</div>
                 </div>
               </div>
@@ -3439,9 +3439,9 @@
           <label style="font-size:0.8rem;font-weight:600;">Deposit Account:</label>
           <select id="editColDepositAccount" class="form-control">
             <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
+            <option value="SAVITA">🏢 ICICI Bank (Yavatmal) — SAWITA DIGAMBER CHAUDHARI</option>
             <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
             <option value="PRASHIK">👤 PRASHIK HAJARE (Personal A/c / PhonePe)</option>
-            <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
           </select>
         </div>
 
@@ -3644,9 +3644,9 @@
           <label style="font-size:0.78rem;font-weight:700;color:var(--muted);">Deposit Into Account</label>
           <select id="bankDepAccount" class="form-control font-bold" required onchange="updateBankDepAccountHint()">
             <option value="IOB">🏢 Indian Overseas Bank (IOB Bhadravati) — MADHAV ENTERPRISES</option>
+            <option value="SAVITA">🏢 ICICI Bank (Yavatmal) — SAWITA DIGAMBER CHAUDHARI</option>
             <option value="ROSHAN">👤 ROSHAN THAKRE (Personal A/c / QR)</option>
             <option value="PRASHIK">👤 PRASHIK HAJARE (Personal A/c / PhonePe)</option>
-            <option value="SAVITA">👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)</option>
           </select>
           <div id="bankDepAccountHint" style="font-size:0.75rem;color:#0f766e;margin-top:4px;font-weight:600;">
             A/c: 308202000000378 | IFSC: IOBA0003082
@@ -14773,10 +14773,10 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         stateName: "Maharashtra",
         invPrefix: "SS",
         upiId: "savitachaudhari43@okicici",
-        bankName: "Google Pay / UPI (ICICI Bank)",
-        bankAccount: "savitachaudhari43@okicici",
-        bankIfsc: "ICIC0000000",
-        bankHolder: "SAVITA CHAUDHARI",
+        bankName: "ICICI Bank, Yavatmal Branch",
+        bankAccount: "109701000192",
+        bankIfsc: "ICIC0001097",
+        bankHolder: "SAWITA DIGAMBER CHAUDHARI",
         hasLogo: true
       }
     };
@@ -14801,6 +14801,15 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         company: "MADHAV"
       },
       {
+        id: "SAVITA",
+        name: "🏢 ICICI Bank (Yavatmal) — SAWITA DIGAMBER CHAUDHARI",
+        shortName: "ICICI (Sawita Chaudhari)",
+        holder: "SAWITA DIGAMBER CHAUDHARI",
+        type: "Savings A/c & QR",
+        details: "A/c: 109701000192 | IFSC: ICIC0001097 | UPI: savitachaudhari43@okicici",
+        company: "SHIVOM"
+      },
+      {
         id: "ROSHAN",
         name: "👤 ROSHAN THAKRE (Personal A/c / QR)",
         shortName: "Roshan Thakre A/c",
@@ -14816,15 +14825,6 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         holder: "PRASHIK HAJARE",
         type: "Personal / PhonePe",
         details: "PhonePe: 7499477581 / UPI",
-        company: "SHIVOM"
-      },
-      {
-        id: "SAVITA",
-        name: "👤 SAVITA CHOUDHARI / THAKRE (Personal A/c / UPI)",
-        shortName: "Savita Choudhari A/c",
-        holder: "SAVITA CHOUDHARI / THAKRE",
-        type: "Personal / UPI",
-        details: "UPI / Scanner / Personal Account",
         company: "SHIVOM"
       }
     ];
@@ -14853,7 +14853,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (colChqDep) {
         const chqAccs = isMadhav ? coAccs.filter(a => a.id !== "MADHAV_QR") : coAccs;
         colChqDep.innerHTML = chqAccs.map(a => `<option value="${a.id}">${a.name}</option>`).join("");
-        colChqDep.value = chqAccs[0] ? chqAccs[0].id : (isMadhav ? "IOB" : "ROSHAN");
+        colChqDep.value = chqAccs[0] ? chqAccs[0].id : (isMadhav ? "IOB" : "SAVITA");
       }
 
       const editDep = document.getElementById("editColDepositAccount");
@@ -14879,8 +14879,27 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const qrBanner = document.getElementById("madhavQrBanner");
       const modeEl = document.getElementById("colMode");
       if (!qrBanner) return;
-      if (activeCompany === "MADHAV" && modeEl && modeEl.value === "Bank") {
+      if (modeEl && modeEl.value === "Bank") {
         qrBanner.style.display = "block";
+        const isMadhav = (activeCompany === "MADHAV");
+        const titleEl = document.getElementById("colQrBannerTitle");
+        const subEl = document.getElementById("colQrBannerSub");
+        const imgEl = document.getElementById("madhavInlineQrImg");
+        if (isMadhav) {
+          if (titleEl) titleEl.textContent = "📲 MADHAV ENTERPRISES Official QR Code";
+          if (subEl) subEl.textContent = "Scan & Pay directly via PhonePe, GPay, Paytm, or BHIM.";
+          if (imgEl) {
+            imgEl.src = (typeof MADHAV_QR_IMAGE !== "undefined" && MADHAV_QR_IMAGE) ? MADHAV_QR_IMAGE : "madhav-qr-code.jpeg";
+            imgEl.onerror = function() { if (typeof MADHAV_QR_IMAGE !== "undefined") this.src = MADHAV_QR_IMAGE; };
+          }
+        } else {
+          if (titleEl) titleEl.textContent = "📲 SHIVOM SALES Official QR Code (Sawita Chaudhari)";
+          if (subEl) subEl.textContent = "Scan & Pay directly via Google Pay, PhonePe, Paytm, or BHIM.";
+          if (imgEl) {
+            imgEl.src = (typeof SHIVOM_QR_IMAGE !== "undefined" && SHIVOM_QR_IMAGE) ? SHIVOM_QR_IMAGE : "shivom-qr-code.jpeg";
+            imgEl.onerror = function() { if (typeof SHIVOM_QR_IMAGE !== "undefined") this.src = SHIVOM_QR_IMAGE; };
+          }
+        }
       } else {
         qrBanner.style.display = "none";
       }
@@ -14888,7 +14907,27 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
 
     function openMadhavQrModal() {
       const m = document.getElementById("madhavQrModal");
-      if (m) m.style.display = "flex";
+      if (!m) return;
+      const isMadhav = (activeCompany === "MADHAV");
+      const titleEl = document.getElementById("madhavQrModalTitle");
+      const subEl = document.getElementById("madhavQrModalSub");
+      const imgEl = document.getElementById("madhavFullQrImg");
+      if (isMadhav) {
+        if (titleEl) titleEl.textContent = "MADHAV ENTERPRISES QR";
+        if (subEl) subEl.textContent = "Scan with Google Pay, PhonePe, Paytm, or any UPI App to pay MADHAV ENTERPRISES directly.";
+        if (imgEl) {
+          imgEl.src = (typeof MADHAV_QR_IMAGE !== "undefined" && MADHAV_QR_IMAGE) ? MADHAV_QR_IMAGE : "madhav-qr-code.jpeg";
+          imgEl.onerror = function() { if (typeof MADHAV_QR_IMAGE !== "undefined") this.src = MADHAV_QR_IMAGE; };
+        }
+      } else {
+        if (titleEl) titleEl.textContent = "SHIVOM SALES & SERVICES QR";
+        if (subEl) subEl.textContent = "Scan with Google Pay, PhonePe, Paytm, or any UPI App to pay SAWITA DIGAMBER CHAUDHARI (SHIVOM SALES) directly.";
+        if (imgEl) {
+          imgEl.src = (typeof SHIVOM_QR_IMAGE !== "undefined" && SHIVOM_QR_IMAGE) ? SHIVOM_QR_IMAGE : "shivom-qr-code.jpeg";
+          imgEl.onerror = function() { if (typeof SHIVOM_QR_IMAGE !== "undefined") this.src = SHIVOM_QR_IMAGE; };
+        }
+      }
+      m.style.display = "flex";
     }
 
     function closeMadhavQrModal(e) {
@@ -16769,11 +16808,11 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const isMadhav = (activeCompany === "MADHAV");
         const coBankAccs = COMPANY_BANK_ACCOUNTS.filter(a => a.company === activeCompany && a.id !== "MADHAV_QR");
         depSel.innerHTML = coBankAccs.map(a => `<option value="${a.id}">${a.name} (${a.type})</option>`).join("");
-        depSel.value = coBankAccs[0] ? coBankAccs[0].id : (isMadhav ? "IOB" : "ROSHAN");
+        depSel.value = coBankAccs[0] ? coBankAccs[0].id : (isMadhav ? "IOB" : "SAVITA");
         if (depHint) {
           depHint.textContent = isMadhav
             ? "MADHAV cheques are deposited into Indian Overseas Bank (IOB)."
-            : "SHIVOM cheques are deposited into authorized company collection accounts.";
+            : "SHIVOM cheques are deposited into ICICI Bank (Sawita Digamber Chaudhari).";
         }
       }
 
@@ -17219,7 +17258,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         const cleanPhone = (p.mobile || "").replace(/\D/g, "");
         const payDetailReminder = (activeCompany === "MADHAV")
           ? "UPI/Bank (IOB A/c: 308202000000378, IFSC: IOBA0003082 | UPI: 7499477581@ybl)"
-          : "Cash or PhonePe / UPI (7499477581@ybl - Roshan Thakre / Prashik Hajare)";
+          : "UPI/Bank (ICICI A/c: 109701000192, IFSC: ICIC0001097 | UPI: savitachaudhari43@okicici — Sawita Chaudhari)";
         const statementDriveLink = p.statementDriveUrl ? getDirectDrivePdfUrl(p.statementDriveUrl) : "";
         const reminderLines = [
           `*PAYMENT REMINDER — ${COMPANIES[activeCompany].name}*`,
@@ -17416,7 +17455,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         `\n*Payment Details:*`,
         (activeCompany === "MADHAV")
           ? `UPI ID: ${upiId}\nBank: Indian Overseas Bank, Bhadravati (MADHAV ENTERPRISES)\nA/c: 308202000000378 | IFSC: IOBA0003082`
-          : `UPI ID: ${upiId} (PhonePe / GPay / Paytm)\nPayee: Roshan Thakre / Prashik Hajare (SHIVOM SALES)`,
+          : `UPI ID: ${upiId} (GPay / PhonePe / Paytm)\nBank: ICICI Bank, Yavatmal Branch\nA/c Name: SAWITA DIGAMBER CHAUDHARI\nA/c No: 109701000192 | IFSC: ICIC0001097 (SHIVOM SALES)`,
         `Thank you for your business!`
       ].filter(Boolean).join("\n");
 
@@ -17522,7 +17561,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       if (incBank) {
         bankSection = (activeCompany === "MADHAV")
           ? `\n*Payment Account Details:*\n• UPI ID: ${upiId} (GPay / PhonePe / Paytm)\n• Bank: Indian Overseas Bank, Bhadravati\n• A/c Name: MADHAV ENTERPRISES\n• A/c No: 308202000000378\n• IFSC Code: IOBA0003082`
-          : `\n*Payment Account Details:*\n• UPI ID: ${upiId} (GPay / PhonePe / Paytm)\n• Payee: Roshan Thakre / Prashik Hajare (SHIVOM SALES)`;
+          : `\n*Payment Account Details:*\n• UPI ID: ${upiId} (GPay / PhonePe / Paytm)\n• Bank: ICICI Bank, Yavatmal Branch\n• A/c Name: SAWITA DIGAMBER CHAUDHARI\n• A/c No: 109701000192\n• IFSC Code: ICIC0001097 (SHIVOM SALES)`;
       }
 
       let driveSection = "";
@@ -20960,7 +20999,7 @@ Thank you!`;
       document.getElementById("editColRef").value = col.bankRef || "";
       const editDepGrp = document.getElementById("editColDepositAccountGroup");
       const editDepSel = document.getElementById("editColDepositAccount");
-      const defaultDepAcc = (activeCompany === "MADHAV" ? "IOB" : "ROSHAN");
+      const defaultDepAcc = (activeCompany === "MADHAV" ? "IOB" : "SAVITA");
       if (editDepGrp && editDepSel) {
         if (col.mode === "Bank" || col.mode === "Cheque") {
           editDepGrp.style.display = "block";
@@ -21002,7 +21041,7 @@ Thank you!`;
         return;
       }
 
-      const depositAccountVal = (newMode === "Bank" || newMode === "Cheque") ? (document.getElementById("editColDepositAccount").value || (activeCompany === "MADHAV" ? "IOB" : "ROSHAN")) : null;
+      const depositAccountVal = (newMode === "Bank" || newMode === "Cheque") ? (document.getElementById("editColDepositAccount").value || (activeCompany === "MADHAV" ? "IOB" : "SAVITA")) : null;
 
       // Strict Company Separation Validation
       if (depositAccountVal) {
@@ -21332,10 +21371,11 @@ Thank you!`;
       const grandTotal = Object.values(accTotals).reduce((sum, v) => sum + v.total, 0);
 
       const colors = {
+        MADHAV_QR: "#16a34a",
         IOB: "#0f766e",
+        SAVITA: "#0891b2",
         ROSHAN: "#2563eb",
-        PRASHIK: "#7c3aed",
-        SAVITA: "#c026d3"
+        PRASHIK: "#7c3aed"
       };
 
       const coBankAccs = COMPANY_BANK_ACCOUNTS.filter(a => a.company === activeCompany);
@@ -23139,12 +23179,12 @@ Thank you! Your payment has been received successfully.`;
       let bankRef = document.getElementById("colRef").value.trim();
 
       if (colModeVal === "Bank") {
-        depositAccountVal = document.getElementById("colDepositAccount").value || (activeCompany === "MADHAV" ? "MADHAV_QR" : "ROSHAN");
+        depositAccountVal = document.getElementById("colDepositAccount").value || (activeCompany === "MADHAV" ? "MADHAV_QR" : "SAVITA");
       } else if (colModeVal === "Cheque") {
         chequeNo = (document.getElementById("colChequeNo") ? document.getElementById("colChequeNo").value.trim() : "") || "CHQ-" + Date.now().toString().slice(-6);
         chequeBank = (document.getElementById("colChequeBank") ? document.getElementById("colChequeBank").value.trim() : "") || "Bank";
         chequeDate = (document.getElementById("colChequeDate") ? document.getElementById("colChequeDate").value : "") || document.getElementById("colDate").value;
-        depositAccountVal = (document.getElementById("colChequeDepositAccount") ? document.getElementById("colChequeDepositAccount").value : (activeCompany === "MADHAV" ? "IOB" : "ROSHAN")) || (activeCompany === "MADHAV" ? "IOB" : "ROSHAN");
+        depositAccountVal = (document.getElementById("colChequeDepositAccount") ? document.getElementById("colChequeDepositAccount").value : (activeCompany === "MADHAV" ? "IOB" : "SAVITA")) || (activeCompany === "MADHAV" ? "IOB" : "SAVITA");
         chequeStatus = "Pending";
         bankRef = `Chq #${chequeNo} (${chequeBank}) - In Hand / Pending Clearing`;
       }
@@ -24087,18 +24127,19 @@ Thank you! Your payment has been received successfully.`;
           </div>
 
           <div class="inv-footer-grid" style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:12px;margin-top:10px;">
-            <div class="inv-footer-box" style="display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #cbd5e1;padding:10px;border-radius:6px;background:#f8fafc;">
+            <div class="inv-footer-box" style="display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #cbd5e1;padding:8px 10px;border-radius:6px;background:#f8fafc;">
               <div>
-                <strong style="color:#0f766e;">Payment Information:</strong><br/>
-                UPI / Google Pay: <strong>savitachaudhari43@okicici</strong><br/>
-                A/c Name: <strong>SAVITA CHAUDHARI</strong><br/>
-                Payment Mode: <strong>Google Pay / PhonePe / Paytm / Cash</strong><br/>
-                Helpline / Office: <strong>7499477581</strong><br/>
-                <span style="font-size:10px;color:#64748b;">Terms: Goods once sold will be serviced under warranty. Nagpur jurisdiction.</span>
+                <strong style="color:#0f766e;">Bank &amp; Payment Details (UPI / NEFT / RTGS):</strong><br/>
+                Bank Name: <strong>ICICI BANK, YAVATMAL BRANCH</strong><br/>
+                Account No.: <strong>109701000192</strong><br/>
+                IFSC Code: <strong>ICIC0001097</strong><br/>
+                A/c Name: <strong>SAWITA DIGAMBER CHAUDHARI</strong><br/>
+                UPI ID: <strong>savitachaudhari43@okicici</strong><br/>
+                <span style="font-size:9.5px;color:#64748b;">Terms: Goods once sold will be serviced under warranty. Nagpur jurisdiction.</span>
               </div>
               <div style="text-align:center;flex-shrink:0;border:1px solid #cbd5e1;padding:4px;border-radius:6px;background:#fff;">
-                <img src="${qrImg}" alt="Shivom UPI QR" style="width:85px;height:85px;object-fit:contain;display:block;margin:0 auto;" />
-                <div style="font-size:8.5px;font-weight:700;color:#0f766e;margin-top:2px;">Scan &amp; Pay (GPay)</div>
+                <img src="${qrImg}" alt="Shivom UPI QR" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto;" />
+                <div style="font-size:8px;font-weight:700;color:#0f766e;margin-top:2px;">Scan &amp; Pay (ICICI / UPI)</div>
               </div>
             </div>
             <div class="inv-footer-box" style="display:flex;flex-direction:column;justify-content:space-between;text-align:right;border:1px solid #cbd5e1;padding:10px;border-radius:6px;background:#f8fafc;">
@@ -24401,7 +24442,7 @@ Thank you! Your payment has been received successfully.`;
         `\n*Pay Easily via UPI / Bank:*`,
         (activeCompany === "MADHAV")
           ? `UPI ID: ${upiId}\nBank: Indian Overseas Bank, Bhadravati (MADHAV ENTERPRISES)\nA/c: 308202000000378 | IFSC: IOBA0003082`
-          : `UPI ID: ${upiId} (PhonePe / GPay / Paytm)\nPayee: Roshan Thakre / Prashik Hajare (SHIVOM SALES)`,
+          : `UPI ID: ${upiId} (GPay / PhonePe / Paytm)\nBank: ICICI Bank, Yavatmal Branch\nA/c Name: SAWITA DIGAMBER CHAUDHARI\nA/c No: 109701000192 | IFSC: ICIC0001097 (SHIVOM SALES)`,
         `Thank you for your business!`
       ].filter(Boolean).join("\n");
 
@@ -27355,9 +27396,9 @@ Thank you! Your payment has been received successfully.`;
 
       const qrImg = getCompanyQrImage(activeCompany);
       const bankDetailsHtml = isShivom
-        ? `<strong>Payment Details for Settlement (Shivom):</strong><br/>
-           UPI / Google Pay: <strong>savitachaudhari43@okicici</strong> | A/c Name: <strong>SAVITA CHAUDHARI</strong><br/>
-           Accepted: Google Pay / PhonePe / Paytm / Cash | Phone: <strong>7499477581</strong>`
+        ? `<strong>Bank &amp; Payment Details for Settlement (Shivom):</strong><br/>
+           Bank: <strong>ICICI BANK, YAVATMAL BRANCH</strong> | A/c: <strong>109701000192</strong> | IFSC: <strong>ICIC0001097</strong><br/>
+           A/c Name: <strong>SAWITA DIGAMBER CHAUDHARI</strong> | UPI ID: <strong>savitachaudhari43@okicici</strong>`
         : `<strong>Bank &amp; Payment Details for Settlement (Madhav):</strong><br/>
            Bank: <strong>INDIAN OVERSEAS BANK, BHADRAVATI</strong> | A/c: <strong>308202000000378</strong> | IFSC: <strong>IOBA0003082</strong><br/>
            UPI ID: <strong>madhaventerprises19@iob</strong> (PhonePe / Google Pay / BHIM)`;
@@ -27860,18 +27901,18 @@ Thank you! Your payment has been received successfully.`;
 
   </script>
 
-  <!-- Modal: Madhav QR Code Fullscreen -->
+  <!-- Modal: Madhav / Shivom QR Code Fullscreen -->
   <div id="madhavQrModal" class="modal-backdrop" style="display:none;z-index:99999;" onclick="closeMadhavQrModal(event)">
     <div class="modal-card" style="max-width:420px;width:92%;text-align:center;padding:18px;border-radius:14px;background:#ffffff;box-sizing:border-box;" onclick="event.stopPropagation()">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="font-weight:800;color:#15803d;font-size:1.05rem;">MADHAV ENTERPRISES QR</div>
+        <div id="madhavQrModalTitle" style="font-weight:800;color:#15803d;font-size:1.05rem;">MADHAV ENTERPRISES QR</div>
         <button type="button" class="btn btn-sm btn-outline" onclick="closeMadhavQrModal()" style="font-weight:700;padding:2px 8px;">✕</button>
       </div>
       <div style="background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:10px;">
-<img id="madhavFullQrImg" src="madhav-qr-code.jpeg" alt="Madhav QR Code" style="width:100%;max-height:460px;object-fit:contain;border-radius:8px;" onerror="if(typeof MADHAV_QR_IMAGE !== 'undefined') this.src = MADHAV_QR_IMAGE;" />
+<img id="madhavFullQrImg" src="madhav-qr-code.jpeg" alt="QR Code" style="width:100%;max-height:460px;object-fit:contain;border-radius:8px;" onerror="if(typeof MADHAV_QR_IMAGE !== 'undefined') this.src = MADHAV_QR_IMAGE;" />
       </div>
-      <div style="font-size:0.8rem;color:#334155;font-weight:600;margin-bottom:12px;">
-        Scan with Google Pay, PhonePe, Paytm, or any UPI App to pay MADHAV ENTERPRISES directly.
+      <div id="madhavQrModalSub" style="font-size:0.8rem;color:#334155;font-weight:600;margin-bottom:12px;">
+        Scan with Google Pay, PhonePe, Paytm, or any UPI App to pay directly.
       </div>
       <button type="button" class="btn btn-teal btn-block" onclick="closeMadhavQrModal()" style="font-weight:700;padding:10px;">
         ✓ Done / Close
