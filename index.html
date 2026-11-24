@@ -2107,7 +2107,7 @@
               <div class="order-qty-rate-row">
                 <div class="form-group col-qty">
                   <label>Quantity (Units)</label>
-                  <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" inputmode="numeric" />
+                  <input type="number" id="ordQty" class="form-control font-bold" min="1" value="1" placeholder="Qty" inputmode="numeric" onkeydown="if(event.key==='Enter'){event.preventDefault();const r=document.getElementById('ordRate');if(r)r.focus();}" />
                 </div>
                 <div class="form-group col-rate">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
@@ -2116,7 +2116,7 @@
                       🎁 FOC (Free)
                     </button>
                   </div>
-                  <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" inputmode="decimal" />
+                  <input type="number" id="ordRate" class="form-control font-bold" min="0" step="0.01" placeholder="Type Rate (₹)" inputmode="decimal" onkeydown="if(event.key==='Enter'){event.preventDefault();addItemToMemoCart();}" />
                 </div>
               </div>
               <div>
@@ -3507,14 +3507,15 @@
           <span>➕</span> Add Extra Product to Memo:
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <div>
-            <input type="text" id="editAddProdInput" class="form-control" placeholder="Search product name or code..." style="font-size:0.86rem;padding:6px 10px;" onchange="handleEditAddProdSelect(true)" />
+          <div class="custom-autocomplete-wrap">
+            <input type="text" id="editAddProdInput" class="form-control font-bold" placeholder="Search product name or code..." style="font-size:0.86rem;padding:6px 10px;" autocomplete="off" />
+            <div id="editAddProdSuggestions" class="custom-autocomplete-dropdown" style="display:none;"></div>
             <div id="editAddAvailHint" style="font-size:0.74rem;color:var(--muted);margin-top:2px;"></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
             <div style="width:75px;">
               <label style="font-size:0.72rem;color:#64748b;display:block;margin-bottom:2px;">Qty (Units):</label>
-              <input type="number" id="editAddQty" class="form-control font-bold" min="1" value="1" style="padding:6px 8px;font-size:0.88rem;" />
+              <input type="number" id="editAddQty" class="form-control font-bold" min="1" value="1" style="padding:6px 8px;font-size:0.88rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();const r=document.getElementById('editAddRate');if(r)r.focus();}" />
             </div>
             <div style="width:130px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
@@ -3523,7 +3524,7 @@
                   🎁 FOC
                 </button>
               </div>
-              <input type="number" id="editAddRate" class="form-control font-bold" min="0" step="0.01" placeholder="Rate (₹)" style="padding:6px 8px;font-size:0.88rem;" />
+              <input type="number" id="editAddRate" class="form-control font-bold" min="0" step="0.01" placeholder="Rate (₹)" style="padding:6px 8px;font-size:0.88rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addExtraItemToEditingOrder();}" />
             </div>
             <div>
               <button type="button" class="btn btn-teal btn-sm" onclick="addExtraItemToEditingOrder()" style="padding:7px 12px;font-weight:700;height:35px;white-space:nowrap;">
@@ -15024,6 +15025,25 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           handleProductSelected(false);
         });
       }
+
+      // 5. Edit Order Modal Product Autocomplete
+      setupAutocomplete({
+        inputId: "editAddProdInput",
+        dropdownId: "editAddProdSuggestions",
+        getItems: () => getComputedStock(),
+        renderItem: (prod, q) => renderProductAutocompleteItem(prod, q),
+        onEmpty: (q) => `<div style="padding:12px;text-align:center;color:#64748b;font-size:0.85rem;background:#ffffff;">No product found matching "<strong>${escapeHtml(q)}</strong>"</div>`,
+        onSelect: () => {
+          handleEditAddProdSelect(true);
+        }
+      });
+
+      const editProdInpEl = document.getElementById("editAddProdInput");
+      if (editProdInpEl) {
+        editProdInpEl.addEventListener("blur", () => {
+          handleEditAddProdSelect(false);
+        });
+      }
     }
 
     function setupAutocomplete({ inputId, dropdownId, getItems, renderItem, onEmpty, onSelect }) {
@@ -18070,7 +18090,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
         alertEl.innerHTML = "";
         return;
       }
-      const p = getComputedParties().find(party => party.name.toLowerCase() === val);
+      const p = getComputedParties().find(party => (party.name || "").trim().toLowerCase() === val);
       if (p) {
         const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
         const limitTxt = p.creditLimit > 0
@@ -18516,7 +18536,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
           items: savedItems,
           // For backwards compatibility with older reports and single-item tables:
           productId: savedItems[0].productId,
-          productName: savedItems.map(it => `${it.productName} (${it.qty})`).join(", "),
+          productName: savedItems.map(it => `${it.productName} (${it.qty}${it.isFoc ? ' 🎁 FOC' : ''})`).join(", "),
           orderQty: totalQty,
           dispatchedQty: 0,
           rate: totalAmt / (totalQty || 1),
@@ -18640,7 +18660,10 @@ Thank you!`;
     function bookNewOrderFromSuccess() {
       closeModal("orderSuccessModal");
       if (typeof switchTab === "function") {
-        switchTab("orders");
+        switchTab("admin-orders", document.querySelector('[data-tab="admin-orders"]'));
+      }
+      if (typeof switchOrderSubTab === "function") {
+        switchOrderSubTab("form");
       }
       memoCart = [];
       renderMemoCart();
@@ -18975,6 +18998,13 @@ Thank you!`;
         </a>
       `);
 
+      // WhatsApp Share Direct
+      items.push(`
+        <a href="javascript:void(0)" onclick="shareOrderTextOnWhatsApp('${o.id}');closeAllOrderMenus();" class="order-menu-item" style="color:#15803d;font-weight:600;">
+          <span>💬</span> <span>Share on WhatsApp</span>
+        </a>
+      `);
+
       // 1. View PDF (Direct Google Drive with 20s Auto-Wait)
       items.push(`
         <a href="javascript:void(0)" onclick="viewOrderDrivePdf('${o.id}', false);closeAllOrderMenus();" class="order-menu-item">
@@ -19203,10 +19233,11 @@ Thank you!`;
 
       const canDispatch = isAdminLoggedIn || (currentStaff && currentStaff.role === "Manager");
       if (btnCombine) {
-        if (count >= 2 && partiesSet.size === 1 && canDispatch) {
-          const partyDisplayName = selectedOrders[0].partyName;
+        const pendingSelected = selectedOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
+        if (pendingSelected.length >= 2 && partiesSet.size === 1 && canDispatch) {
+          const partyDisplayName = pendingSelected[0].partyName;
           btnCombine.style.display = "inline-flex";
-          btnCombine.textContent = `🚚 Combine Dispatch (${count} for ${partyDisplayName})`;
+          btnCombine.textContent = `🚚 Combine Dispatch (${pendingSelected.length} for ${partyDisplayName})`;
         } else {
           btnCombine.style.display = "none";
         }
@@ -19753,7 +19784,7 @@ Thank you!`;
           <button type="button" class="btn btn-sm" style="background:#0284c7;color:#fff;font-weight:700;padding:6px 14px;" onclick="closeModal('quickOrderPreviewModal');openOrderBookingMemo('${ord.id}')">
             📄 View Full PDF Memo
           </button>
-          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:6px 14px;" onclick="sendOrderWhatsApp('${ord.id}')">
+          <button type="button" class="btn btn-whatsapp btn-sm" style="font-weight:700;padding:6px 14px;" onclick="closeModal('quickOrderPreviewModal');sendOrderWhatsApp('${ord.id}')">
             💬 WhatsApp Memo
           </button>
           ${(pending > 0 && canDispatch) ? `
@@ -19960,19 +19991,20 @@ Thank you!`;
       }
 
       const selectedOrders = (state.orders || []).filter(o => selectedOrderIds.has(o.id));
-      if (selectedOrders.length < 2) {
-        alert("Please select at least 2 orders for the same dealer to combine dispatch.");
+      const pendingSelected = selectedOrders.filter(o => (Number(o.orderQty || 0) - Number(o.dispatchedQty || 0)) > 0);
+      if (pendingSelected.length < 2) {
+        alert("Please select at least 2 pending orders for the same dealer to combine dispatch.");
         return;
       }
 
-      const partyName = selectedOrders[0].partyName;
-      const diffParty = selectedOrders.some(o => (o.partyName || "").trim().toLowerCase() !== (partyName || "").trim().toLowerCase());
+      const partyName = pendingSelected[0].partyName;
+      const diffParty = pendingSelected.some(o => (o.partyName || "").trim().toLowerCase() !== (partyName || "").trim().toLowerCase());
       if (diffParty) {
         alert("All selected orders must belong to the SAME dealer/party for combined dispatch.");
         return;
       }
 
-      combineDispatchOrderList = selectedOrders;
+      combineDispatchOrderList = pendingSelected;
 
       const subEl = document.getElementById("combineDispatchSubtitle");
       if (subEl) {
@@ -20852,7 +20884,7 @@ Thank you!`;
         alertEl.innerHTML = "";
         return;
       }
-      const p = getComputedParties().find(party => party.name.toLowerCase() === val);
+      const p = getComputedParties().find(party => (party.name || "").trim().toLowerCase() === val);
       if (p) {
         const badgeClass = p.category === "Red" ? "pill-red" : (p.category === "Yellow" ? "pill-yellow" : (p.category === "Green" ? "pill-green" : "pill-gray"));
         if (p.netBalance > 0) {
