@@ -4209,7 +4209,23 @@ function toBase64Utf8(str) {
           logging: false,
           backgroundColor: "#ffffff",
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
+          onclone: function(clonedDoc) {
+            // Lock html2pdf container and overlay to top-left (0,0) in cloned document
+            // to eliminate browser centering drift and border clipping
+            const c = clonedDoc.querySelector('.html2pdf__container');
+            if (c) {
+              c.style.left = '0px';
+              c.style.right = 'auto';
+              c.style.margin = '0px';
+            }
+            const o = clonedDoc.querySelector('.html2pdf__overlay');
+            if (o) {
+              o.style.left = '0px';
+              o.style.right = 'auto';
+              o.style.margin = '0px';
+            }
+          }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
@@ -4247,6 +4263,7 @@ function toBase64Utf8(str) {
       hiddenParent.appendChild(wrap);
       document.body.appendChild(hiddenParent);
 
+      let worker = null;
       try {
         const imgs = Array.from(wrap.querySelectorAll("img"));
         if (imgs.length > 0) {
@@ -4260,7 +4277,22 @@ function toBase64Utf8(str) {
         }
         await new Promise(r => setTimeout(r, 80));
 
-        const pdfBlob = await html2pdf().set(opt).from(wrap).outputPdf('blob');
+        worker = html2pdf().set(opt).from(wrap);
+        await worker.toContainer();
+
+        // Pin container and overlay in main document to top-left (0,0) before canvas rendering
+        if (worker.prop && worker.prop.container) {
+          worker.prop.container.style.left = '0px';
+          worker.prop.container.style.right = 'auto';
+          worker.prop.container.style.margin = '0px';
+        }
+        if (worker.prop && worker.prop.overlay) {
+          worker.prop.overlay.style.left = '0px';
+          worker.prop.overlay.style.right = 'auto';
+          worker.prop.overlay.style.margin = '0px';
+        }
+
+        const pdfBlob = await worker.outputPdf('blob');
         if (!pdfBlob || pdfBlob.size < 1000) {
           console.warn("generateDocPdfBlob: Blob size unexpectedly small:", pdfBlob ? pdfBlob.size : 0);
           return null;
@@ -4272,6 +4304,9 @@ function toBase64Utf8(str) {
       } finally {
         if (hiddenParent && hiddenParent.parentNode) {
           hiddenParent.parentNode.removeChild(hiddenParent);
+        }
+        if (worker && worker.prop && worker.prop.overlay && worker.prop.overlay.parentNode) {
+          worker.prop.overlay.parentNode.removeChild(worker.prop.overlay);
         }
       }
     }
@@ -23798,9 +23833,8 @@ Thank you! Your payment has been received successfully.`;
       window.open(waUrl, "_blank");
     }
 
-    function openTaxInvoice(orderId) {
-      const ord = state.orders.find(o => o.id === orderId);
-      if (!ord) return;
+    function buildTaxInvoiceContentHtml(ord) {
+      if (!ord) return "";
       const co = COMPANIES[activeCompany] || COMPANIES.MADHAV;
       const isShivom = (activeCompany === "SHIVOM");
       const gst = computeOrderGstBreakdown(ord);
@@ -24143,6 +24177,14 @@ Thank you! Your payment has been received successfully.`;
         `;
       }
 
+      return contentHtml;
+    }
+
+    function openTaxInvoice(orderId) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+      const isShivom = (activeCompany === "SHIVOM");
+      const contentHtml = buildTaxInvoiceContentHtml(ord);
       document.getElementById("invoicePrintArea").innerHTML = contentHtml;
 
       currentPreviewInvoiceOrderId = orderId;
@@ -24153,6 +24195,10 @@ Thank you! Your payment has been received successfully.`;
       if (waBtn) waBtn.style.display = "inline-flex";
       openModal("invoiceModal");
       autoBackupTaxInvoiceToDrive(ord);
+    }
+
+    function openInvoice(orderId) {
+      openTaxInvoice(orderId);
     }
 
     let currentPreviewInvoiceOrderId = null;
