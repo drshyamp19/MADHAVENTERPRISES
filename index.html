@@ -1635,6 +1635,9 @@
     .salesperson-orders-view.hide-sp-col .order-sp-col {
       display: none !important;
     }
+    .hide-order-select .order-admin-col {
+      display: none !important;
+    }
 
 </style>
 </head>
@@ -19195,6 +19198,9 @@ Thank you!`;
           activeEl.style.boxShadow = "0 1px 3px rgba(59,130,246,0.15)";
         }
       }
+      if (tab !== "Pending" && typeof clearSelectedOrders === "function") {
+        clearSelectedOrders();
+      }
       renderOrdersTable();
     }
 
@@ -19674,9 +19680,18 @@ Thank you!`;
       if (kpiDispLblEl) kpiDispLblEl.textContent = isSalesperson ? "My Dispatched Value" : "Dispatched Value";
       if (kpiTotLblEl) kpiTotLblEl.textContent = isSalesperson ? "My Orders Booked" : "Total Orders Booked";
 
+      // Check whether to show batch select checkboxes (Only on Active Pending Orders for Admin/Manager)
+      const showBatchSelect = !isSalesperson && (currentOrderRegisterTab === "Pending");
+
       // Toggle Compact View Classes & Headers on Main Orders Table
       const tableEl = document.getElementById("ordersMainTable");
       if (tableEl) {
+        if (!showBatchSelect) {
+          tableEl.classList.add("hide-order-select");
+        } else {
+          tableEl.classList.remove("hide-order-select");
+        }
+
         if (isSalesperson) {
           tableEl.classList.add("salesperson-orders-view");
           // Hide salesperson column in Active Pending Orders (since all are own); show in Completed & All Orders History
@@ -19695,8 +19710,12 @@ Thank you!`;
         colOrdQtyHeader.textContent = isSalesperson ? "Total Qty" : "Ord Qty";
       }
 
-      // Hide batch selection toolbar for salespersons
-      if (isSalesperson) {
+      // Hide or show batch selection controls based on showBatchSelect
+      const btnCardSelectAll = document.getElementById("btnOrderCardSelectAll");
+      if (btnCardSelectAll) {
+        btnCardSelectAll.style.display = showBatchSelect ? "inline-flex" : "none";
+      }
+      if (!showBatchSelect) {
         const batchToolbar = document.getElementById("orderBatchActionToolbar");
         if (batchToolbar) batchToolbar.style.display = "none";
       }
@@ -19967,7 +19986,7 @@ Thank you!`;
                   ${ageingHtml}
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
-                  ${!isSalesperson ? `
+                  ${showBatchSelect ? `
                     <input type="checkbox" class="order-select-chk" value="${o.id}" data-party="${escapeHtml(o.partyName || '')}" ${isChecked} onchange="toggleSelectOrder(this, '${o.id}')" title="Select for Warehouse Slip" style="width:16px;height:16px;cursor:pointer;" />
                   ` : ''}
                   <a href="javascript:void(0)" onclick="openQuickOrderPreviewModal('${o.id}')" style="color:var(--primary);font-weight:800;font-size:0.86rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;background:#f8fafc;padding:3px 8px;border-radius:6px;border:1px solid #e2e8f0;" title="Click for Quick Preview">
