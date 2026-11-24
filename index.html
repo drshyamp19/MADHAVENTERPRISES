@@ -2387,7 +2387,7 @@
             </div>
             <div class="form-group">
               <label>Amount Received (₹)</label>
-              <input type="number" id="colAmount" class="form-control" min="1" step="0.01" placeholder="e.g. 5000" required />
+              <input type="number" id="colAmount" class="form-control" min="1" step="0.01" placeholder="e.g. 5000" onkeydown="if(event.key==='Enter'){event.preventDefault();const b=document.getElementById('colSubmitBtn');if(b)b.click();}" required />
             </div>
             <div class="form-group">
               <label>Mode</label>
@@ -2472,7 +2472,7 @@
             </div>
             <div class="form-group">
               <label>&nbsp;</label>
-              <button type="submit" class="btn btn-success" style="width:100%">+ Save Receipt</button>
+              <button type="submit" id="colSubmitBtn" class="btn btn-success" style="width:100%">+ Save Receipt</button>
             </div>
           </form>
         </div>
@@ -3429,7 +3429,8 @@
           <label style="font-size:0.8rem;font-weight:600;">Payment Mode:</label>
           <select id="editColMode" class="form-control" required onchange="toggleEditColDepositAccount()">
             <option value="Cash">Cash</option>
-            <option value="Bank">Bank / UPI / Cheque</option>
+            <option value="Bank">Bank / UPI</option>
+            <option value="Cheque">Cheque</option>
           </select>
         </div>
 
@@ -14947,7 +14948,7 @@ const MADHAV_QR_FILE = "madhav-qr-code.jpeg";
       const modeEl = document.getElementById("editColMode");
       const grp = document.getElementById("editColDepositAccountGroup");
       if (grp && modeEl) {
-        grp.style.display = (modeEl.value === "Bank") ? "block" : "none";
+        grp.style.display = (modeEl.value === "Bank" || modeEl.value === "Cheque") ? "block" : "none";
       }
     }
 
@@ -20927,6 +20928,9 @@ Thank you!`;
         alert("Please login first to edit receipt.");
         return;
       }
+      if (typeof populateDepositAccountDropdowns === "function") {
+        populateDepositAccountDropdowns();
+      }
       const col = state.collections.find(c => c.id === colId);
       if (!col) {
         alert("Collection receipt not found.");
@@ -20941,13 +20945,14 @@ Thank you!`;
       document.getElementById("editColRef").value = col.bankRef || "";
       const editDepGrp = document.getElementById("editColDepositAccountGroup");
       const editDepSel = document.getElementById("editColDepositAccount");
+      const defaultDepAcc = (activeCompany === "MADHAV" ? "IOB" : "ROSHAN");
       if (editDepGrp && editDepSel) {
-        if (col.mode === "Bank") {
+        if (col.mode === "Bank" || col.mode === "Cheque") {
           editDepGrp.style.display = "block";
-          editDepSel.value = col.depositAccount || "IOB";
+          editDepSel.value = col.depositAccount || defaultDepAcc;
         } else {
           editDepGrp.style.display = "none";
-          editDepSel.value = "IOB";
+          editDepSel.value = defaultDepAcc;
         }
       }
 
@@ -20982,16 +20987,18 @@ Thank you!`;
         return;
       }
 
-      const depositAccountVal = (newMode === "Bank") ? (document.getElementById("editColDepositAccount").value || (activeCompany === "MADHAV" ? "MADHAV_QR" : "ROSHAN")) : null;
+      const depositAccountVal = (newMode === "Bank" || newMode === "Cheque") ? (document.getElementById("editColDepositAccount").value || (activeCompany === "MADHAV" ? "IOB" : "ROSHAN")) : null;
 
       // Strict Company Separation Validation
-      if (activeCompany === "SHIVOM" && (depositAccountVal === "IOB" || depositAccountVal === "MADHAV_QR")) {
-        alert("⚠️ Security Rule: Madhav Enterprises accounts cannot be used for Shivom payments. Please select a Shivom account.");
-        return;
-      }
-      if (activeCompany === "MADHAV" && (depositAccountVal === "ROSHAN" || depositAccountVal === "PRASHIK" || depositAccountVal === "SAVITA")) {
-        alert("⚠️ Security Rule: Madhav payments must only be deposited to Madhav's Official QR or IOB Bank account.");
-        return;
+      if (depositAccountVal) {
+        if (activeCompany === "SHIVOM" && (depositAccountVal === "IOB" || depositAccountVal === "MADHAV_QR")) {
+          alert("⚠️ Security Rule: Madhav Enterprises accounts cannot be used for Shivom payments. Please select a Shivom account.");
+          return;
+        }
+        if (activeCompany === "MADHAV" && (depositAccountVal === "ROSHAN" || depositAccountVal === "PRASHIK" || depositAccountVal === "SAVITA")) {
+          alert("⚠️ Security Rule: Madhav payments must only be deposited to Madhav's Official QR or IOB Bank account.");
+          return;
+        }
       }
 
       col.date = document.getElementById("editColDate").value;
@@ -22352,8 +22359,31 @@ Thank you!`;
       const computedParty = (typeof getComputedParties === "function" ? getComputedParties() : state.parties).find(cp => cp.id === col.partyId || (cp.name && col.partyName && cp.name.trim().toUpperCase() === col.partyName.trim().toUpperCase()));
       const remBal = computedParty ? Number(computedParty.netBalance || 0) : 0;
       const paidAmt = Number(col.amount || 0);
-      const prevBal = remBal + paidAmt;
       const coName = COMPANIES[activeCompany] ? COMPANIES[activeCompany].name : "MADHAV ENTERPRISES";
+      const isCheque = (col.mode === "Cheque");
+      const isCleared = (col.chequeStatus === "Cleared");
+
+      let modeDisplay = "Cash";
+      if (col.mode === "Bank") {
+        modeDisplay = "Bank - " + getAccShortName(col.depositAccount);
+      } else if (isCheque) {
+        modeDisplay = `Cheque (#${col.chequeNo || "-"})`;
+      }
+
+      let balanceText = "";
+      if (isCheque && !isCleared) {
+        const expectedBal = Math.max(0, remBal - paidAmt);
+        balanceText = `💰 *BALANCE DETAILS:*
+• *Current Balance Due:* ${fmtINR(remBal)}
+• *Cheque Received:* ${fmtINR(paidAmt)} (Subject to Clearance)
+• *Expected Balance After Clearance:* ${fmtINR(expectedBal)}`;
+      } else {
+        const prevBal = remBal + paidAmt;
+        balanceText = `💰 *BALANCE DETAILS:*
+• *Previous Balance:* ${fmtINR(prevBal)}
+• *Amount Paid:* -${fmtINR(paidAmt)}
+• *Current Balance Due:* ${fmtINR(remBal)}`;
+      }
 
       return `*${coName}*
 🧾 *Payment Receipt*
@@ -22361,13 +22391,10 @@ Thank you!`;
 *Receipt No:* #${col.receiptNo}
 *Date:* ${fmtDate(col.date)}
 *Received From:* ${col.partyName}
-*Amount Received:* ${fmtINR(paidAmt)} (${col.mode === 'Bank' ? 'Bank - ' + getAccShortName(col.depositAccount) : 'Cash'})
+*Amount Received:* ${fmtINR(paidAmt)} (${modeDisplay})
 *Received By:* ${col.salespersonName || '-'}
 -----------------------------
-💰 *BALANCE DETAILS:*
-• *Previous Balance:* ${fmtINR(prevBal)}
-• *Amount Paid:* -${fmtINR(paidAmt)}
-• *Current Balance Due:* ${fmtINR(remBal)}
+${balanceText}
 -----------------------------
 Thank you! Your payment has been received successfully.`;
     }
@@ -22388,7 +22415,10 @@ Thank you! Your payment has been received successfully.`;
     function receiveNewPaymentFromSuccess() {
       closeModal("colSuccessModal");
       if (typeof switchTab === "function") {
-        switchTab("collections");
+        switchTab("admin-collection", document.querySelector('[data-tab="admin-collection"]'));
+      }
+      if (typeof switchColSubTab === "function") {
+        switchColSubTab("form");
       }
       const partyInp = document.getElementById("colPartyInput");
       if (partyInp) {
@@ -22424,16 +22454,39 @@ Thank you! Your payment has been received successfully.`;
       const computed = getComputedParties().find(p => p.id === newCol.partyId || p.name === newCol.partyName);
       const remBal = computed ? computed.netBalance : 0;
       const paidAmt = Number(newCol.amount || 0);
-      const prevBal = remBal + paidAmt;
+      const isCheque = (newCol.mode === "Cheque");
+      const isCleared = (newCol.chequeStatus === "Cleared");
+
+      let modeLabel = "Cash";
+      if (newCol.mode === "Bank") {
+        modeLabel = "Bank - " + getAccShortName(newCol.depositAccount);
+      } else if (isCheque) {
+        modeLabel = `Cheque (#${newCol.chequeNo || "-"}) [${newCol.chequeStatus || "Pending"}]`;
+      }
+
+      let balHtml = "";
+      if (isCheque && !isCleared) {
+        const expBal = Math.max(0, remBal - paidAmt);
+        balHtml = `
+          <div style="font-size:0.78rem;color:var(--muted);">Current Balance Due: <strong>${fmtINR(remBal)}</strong></div>
+          <div style="font-size:0.8rem;color:#d97706;font-weight:700;margin-top:2px;">⏳ Cheque Pending Clearance: -${fmtINR(paidAmt)}</div>
+          <div style="margin-top:2px;"><strong>Expected After Clearance:</strong> <span style="font-weight:700;color:#15803d;">${fmtINR(expBal)}</span></div>
+        `;
+      } else {
+        const prevBal = remBal + paidAmt;
+        balHtml = `
+          <div style="font-size:0.78rem;color:var(--muted);">Previous Balance: <strong>${fmtINR(prevBal)}</strong></div>
+          <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
+        `;
+      }
 
       document.getElementById("succColNo").textContent = "#" + newCol.receiptNo;
       document.getElementById("succColDetails").innerHTML = `
         <div><strong>Dealer:</strong> ${newCol.partyName}</div>
-        <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${newCol.mode === 'Bank' ? 'Bank - ' + getAccShortName(newCol.depositAccount) : 'Cash'})</div>
+        <div><strong>Amount Received:</strong> <span style="font-size:1.05rem;color:#15803d;font-weight:800;">${fmtINR(newCol.amount)}</span> (${modeLabel})</div>
         <div><strong>Collected By:</strong> ${newCol.salespersonName}</div>
         <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;">
-          <div style="font-size:0.78rem;color:var(--muted);">Previous Balance: <strong>${fmtINR(prevBal)}</strong></div>
-          <div><strong>Remaining Balance:</strong> <span style="font-weight:700;color:#dc2626;">${fmtINR(remBal)}</span></div>
+          ${balHtml}
         </div>
       `;
 
